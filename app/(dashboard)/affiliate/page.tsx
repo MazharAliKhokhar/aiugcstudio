@@ -69,7 +69,7 @@ export default async function AffiliatePage() {
             <Input readOnly value={affiliateLink} className="font-mono bg-muted/50 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
-            When users click this link, our system tracks their session context using Lemon Squeezy's built-in affiliate engine. Once they make a purchase, the commission is credited securely to your Lemon Squeezy Affiliate account.
+            When users click this link, our system tracks their referral. Once they make a manual purchase via PayPal, the commission will be tracked and credited to your account.
           </p>
         </CardContent>
       </Card>

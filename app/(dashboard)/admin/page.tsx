@@ -106,7 +106,6 @@ export default async function AdminDashboard() {
                   <thead className="bg-muted text-muted-foreground">
                     <tr>
                       <th className="px-4 py-3 font-medium">Email</th>
-                      <th className="px-4 py-3 font-medium">Customer ID</th>
                       <th className="px-4 py-3 font-medium w-[200px]">Credits Balance</th>
                       <th className="px-4 py-3 font-medium text-right">Admin Role</th>
                     </tr>
@@ -118,9 +117,6 @@ export default async function AdminDashboard() {
                           <Mail className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">{u.email}</span>
                           {u.id === user.id && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full ml-2">You</span>}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                          {u.lemon_squeezy_customer_id || 'Free Tier'}
                         </td>
                         <td className="px-4 py-3">
                           <form action={updateUserCredits} className="flex items-center gap-2">

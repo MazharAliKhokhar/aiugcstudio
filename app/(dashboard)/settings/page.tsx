@@ -3,11 +3,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Coins, Settings as SettingsIcon, ExternalLink } from 'lucide-react'
 
-// Lemon Squeezy Checkout URLs for the 3 Tiers
-const STARTER_URL = process.env.NEXT_PUBLIC_LS_STARTER_URL || '#'
-const GROWTH_URL = process.env.NEXT_PUBLIC_LS_GROWTH_URL || '#'
-const SCALE_URL = process.env.NEXT_PUBLIC_LS_SCALE_URL || '#'
-
 export default async function SettingsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -46,7 +41,7 @@ export default async function SettingsPage() {
           <CardTitle className="flex items-center gap-2">
             <Coins className="w-5 h-5 text-yellow-500" /> Credit Balance
           </CardTitle>
-          <CardDescription>Purchase more credits to generate more AI video ads.</CardDescription>
+          <CardDescription>Upgrade your account to generate more AI video ads.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-5xl font-bold my-4">
@@ -57,26 +52,43 @@ export default async function SettingsPage() {
           </p>
         </CardContent>
         <CardFooter className="bg-muted/30 pt-4 flex flex-col items-start gap-4">
-          <p className="text-sm font-medium w-full border-b pb-2">Purchase Credits</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            <a href={`${STARTER_URL}?checkout[custom][user_id]=${user.id}`} target="_blank" rel="noreferrer" className="w-full">
-              <Button variant="outline" className="w-full flex-col h-auto py-3 items-start gap-1">
-                <span className="font-bold">Starter ($69)</span>
-                <span className="text-xs text-muted-foreground font-normal">4 Video Credits</span>
-              </Button>
-            </a>
-            <a href={`${GROWTH_URL}?checkout[custom][user_id]=${user.id}`} target="_blank" rel="noreferrer" className="w-full">
-              <Button className="w-full flex-col h-auto py-3 items-start gap-1 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 border-0">
-                <span className="font-bold">Growth Pro ($149)</span>
-                <span className="text-xs text-white/80 font-normal">10 Video Credits</span>
-              </Button>
-            </a>
-            <a href={`${SCALE_URL}?checkout[custom][user_id]=${user.id}`} target="_blank" rel="noreferrer" className="w-full">
-              <Button variant="outline" className="w-full flex-col h-auto py-3 items-start gap-1 border-primary/20 hover:bg-primary/5">
-                <span className="font-bold">Ad Scale ($399)</span>
-                <span className="text-xs text-muted-foreground font-normal">30 Video Credits</span>
-              </Button>
-            </a>
+          <div className="w-full space-y-4">
+            <div className="flex items-center gap-2 font-bold text-lg border-b pb-2">
+              <ExternalLink className="w-5 h-5" /> How to Upgrade
+            </div>
+            
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 space-y-3">
+              <p className="text-sm">
+                To upgrade your plan or purchase more credits, please send the payment via <strong>PayPal</strong> to:
+              </p>
+              <div className="bg-background p-3 rounded border font-mono text-center text-primary font-bold">
+                saanimazhar@gmail.com
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                <div className="p-3 bg-background rounded border text-center">
+                  <div className="font-bold">Starter ($69)</div>
+                  <div className="text-xs text-muted-foreground">4 Video Credits</div>
+                </div>
+                <div className="p-3 bg-primary/10 rounded border border-primary/30 text-center ring-1 ring-primary/20">
+                  <div className="font-bold">Growth Pro ($149)</div>
+                  <div className="text-xs text-muted-foreground">10 Video Credits</div>
+                </div>
+                <div className="p-3 bg-background rounded border text-center">
+                  <div className="font-bold">Ad Scale ($399)</div>
+                  <div className="text-xs text-muted-foreground">30 Video Credits</div>
+                </div>
+              </div>
+
+              <div className="text-sm pt-2 text-muted-foreground">
+                <p><strong>Step 2:</strong> After payment, send an email to the same address with:</p>
+                <ul className="list-disc ml-5 mt-1 space-y-1">
+                  <li>Your registered email: <span className="text-foreground font-medium">{user.email}</span></li>
+                  <li>The Transaction ID / Screenshot</li>
+                </ul>
+                <p className="mt-3 font-medium text-primary">Your account will be upgraded within 24 hours.</p>
+              </div>
+            </div>
           </div>
         </CardFooter>
       </Card>
