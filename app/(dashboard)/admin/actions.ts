@@ -14,33 +14,40 @@ export async function createManualUser(formData: FormData) {
 
   if (!email || !password) return
 
-  const adminClient = createAdminClient()
-  
-  // 1. Create the user in auth.users
-  const { data: userData, error: userError } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true
-  })
-
-  if (userError) throw new Error(userError.message)
-
-  // 2. Set credits (The trigger should have created the profile, but we'll ensure it has the right credits)
-  await adminClient
-    .from('profiles')
-    .update({ credits })
-    .eq('id', userData.user.id)
-
-  // 3. Log the credit addition
-  const { data: { user: admin } } = await (await createClient()).auth.getUser()
-  await adminClient
-    .from('credit_logs')
-    .insert({
-      user_id: userData.user.id,
-      amount: credits,
-      reason: 'Manual Account Creation',
-      admin_id: admin?.id
+  try {
+    const adminClient = createAdminClient()
+    
+    // 1. Create the user in auth.users
+    const { data: userData, error: userError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true
     })
+
+    if (userError) {
+       console.error('Auth User Error:', userError.message)
+       return 
+    }
+
+    // 2. Set credits
+    await adminClient
+      .from('profiles')
+      .update({ credits })
+      .eq('id', userData.user.id)
+
+    // 3. Log the credit addition (Attempt)
+    const { data: { user: admin } } = await (await createClient()).auth.getUser()
+    await adminClient
+      .from('credit_logs')
+      .insert({
+        user_id: userData.user.id,
+        amount: credits,
+        reason: 'Manual Account Creation',
+        admin_id: admin?.id
+      })
+  } catch (err: any) {
+    console.error('Server Side Manual User Creation Error:', err.message)
+  }
 
   revalidatePath('/admin')
 }
