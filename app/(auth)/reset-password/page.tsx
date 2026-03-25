@@ -1,25 +1,24 @@
 'use client'
 
 import { useActionState } from 'react'
-import { login } from '../actions'
+import { updatePassword } from '../actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, KeyRound } from 'lucide-react'
 
-// Wrap login in a promise that returns the state shape expected by useActionState
-const loginAction = async (prevState: any, formData: FormData) => {
-  const result = await login(formData)
+const updateAction = async (prevState: any, formData: FormData) => {
+  const result = await updatePassword(formData)
   if (result?.error) {
     return { error: result.error }
   }
   return { error: null }
 }
 
-export default function LoginPage() {
-  const [state, formAction, isPending] = useActionState(loginAction, { error: null })
+export default function ResetPasswordPage() {
+  const [state, formAction, isPending] = useActionState(updateAction, { error: null })
 
   return (
     <Card className="w-full max-w-md mx-4 shadow-xl border-primary/20">
@@ -29,25 +28,18 @@ export default function LoginPage() {
           <span className="font-bold tracking-tight">ViralUGC</span>
         </Link>
         <div className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>Log in to your account</CardDescription>
+          <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
+            <KeyRound className="w-6 h-6 text-primary" /> New Password
+          </CardTitle>
+          <CardDescription>Enter your new secure password below</CardDescription>
         </div>
       </CardHeader>
       
       <form action={formAction}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="name@example.com" required />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-            <Input id="password" name="password" type="password" required />
+            <Label htmlFor="password">New Password</Label>
+            <Input id="password" name="password" type="password" placeholder="••••••••" required minLength={6} />
           </div>
 
           {state?.error && (
@@ -58,14 +50,8 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'Logging in...' : 'Log in'}
+            {isPending ? 'Updating...' : 'Set New Password'}
           </Button>
-          <p className="text-sm text-center text-muted-foreground w-full">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-primary hover:underline font-medium">
-              Sign up
-            </Link>
-          </p>
         </CardFooter>
       </form>
     </Card>
