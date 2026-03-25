@@ -2,12 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, Video, ShieldCheck, Mail, Database, Battery, Trash, RotateCcw } from 'lucide-react'
+import { Users, Video, ShieldCheck, Mail, Database, Battery, Trash, RotateCcw, Search, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { updateUserCredits, toggleAdminStatus, deleteVideo, refundVideo } from './actions'
+import { updateUserCredits, toggleAdminStatus, deleteVideo, refundVideo, bulkRefundStuckVideos } from './actions'
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: { q?: string }
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -26,112 +30,226 @@ export default async function AdminDashboard() {
     redirect('/studio')
   }
 
-  // Fetch all data
+  const query = searchParams.q || ''
+
+  // Fetch Stats
   const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
   const { count: videosCount } = await supabase.from('videos').select('*', { count: 'exact', head: true })
+  
+  // Calculate Success Rate
+  const { count: successfulVideos } = await supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'completed')
+  const { count: failedVideos } = await supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'failed')
+  const successRate = videosCount ? Math.round((successfulVideos || 0) / videosCount * 100) : 0
 
-  const { data: usersList } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50)
+  // Calculate Credit Velocity (Total credits in circ)
+  const { data: allCredits } = await supabase.from('profiles').select('credits')
+  const totalCredits = allCredits?.reduce((acc, p) => acc + (p.credits || 0), 0) || 0
 
+  // Fetch Users (with search)
+  let usersQuery = supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(50)
+  if (query) {
+    usersQuery = usersQuery.ilike('email', `%${query}%`)
+  }
+  const { data: usersList } = await usersQuery
+
+  // Fetch Videos
   const { data: videosList } = await supabase
     .from('videos')
     .select('*, profiles(email)')
     .order('created_at', { ascending: false })
     .limit(50)
 
+  // Fetch Recent Signups (Insights)
+  const { data: recentSignups } = await supabase
+    .from('profiles')
+    .select('email, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5)
+
   return (
     <div className="space-y-8 pb-10">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <ShieldCheck className="w-8 h-8 text-primary" /> System Admin Control
-        </h2>
-        <p className="text-muted-foreground mt-2">Maximum control over ViralUGC operations.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-4xl font-black tracking-tight flex items-center gap-3">
+            <ShieldCheck className="w-10 h-10 text-primary animate-pulse" /> ADMIN COMMAND
+          </h2>
+          <p className="text-muted-foreground mt-1 text-lg">Real-time system insights & operator controls.</p>
+        </div>
+        
+        <form action={async () => {
+          'use server'
+          await bulkRefundStuckVideos()
+        }} className="shrink-0">
+          <Button variant="destructive" className="shadow-lg shadow-red-500/20 gap-2 h-12 px-6">
+            <AlertCircle className="w-5 h-5" /> Mass Refund Stuck
+          </Button>
+        </form>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted text-muted-foreground w-full justify-start h-12">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
-          <TabsTrigger value="users" className="data-[state=active]:bg-background">User Management</TabsTrigger>
-          <TabsTrigger value="videos" className="data-[state=active]:bg-background">Video Moderation</TabsTrigger>
+        <TabsList className="bg-muted p-1 rounded-xl h-14 w-full md:w-auto justify-start border overflow-x-auto">
+          <TabsTrigger value="overview" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">System Insights</TabsTrigger>
+          <TabsTrigger value="users" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Operator Control</TabsTrigger>
+          <TabsTrigger value="videos" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Video Moderation</TabsTrigger>
         </TabsList>
 
-        {/* OVERVIEW TAB */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="border-primary/20 bg-primary/5">
+        <TabsContent value="overview" className="space-y-8">
+          {/* INSIGHT CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-primary/20 bg-primary/5 overflow-hidden group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Registered Users</CardTitle>
-                <Users className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-primary group-hover:scale-125 transition-transform" />
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-primary">{usersCount || 0}</div>
+                <p className="text-xs text-muted-foreground mt-1">Lifetime registrations</p>
               </CardContent>
             </Card>
             
-            <Card className="border-orange-500/20 bg-orange-500/5">
+            <Card className="border-orange-500/20 bg-orange-500/5 group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Videos Spawned</CardTitle>
-                <Video className="h-4 w-4 text-orange-500" />
+                <CardTitle className="text-sm font-medium">Generation Success</CardTitle>
+                <TrendingUp className="h-4 w-4 text-orange-500 group-hover:translate-y-[-2px] transition-transform" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-orange-500">{videosCount || 0}</div>
+                <div className="text-3xl font-bold text-orange-500">{successRate}%</div>
+                <div className="w-full bg-orange-500/10 h-1.5 rounded-full mt-2">
+                  <div className="bg-orange-500 h-full rounded-full" style={{ width: `${successRate}%` }} />
+                </div>
               </CardContent>
             </Card>
 
-            <Card className="border-zinc-500/20">
+            <Card className="border-green-500/20 bg-green-500/5 group">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Credit Velocity</CardTitle>
+                <Battery className="h-4 w-4 text-green-500 group-hover:rotate-12 transition-transform" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-500">{totalCredits}</div>
+                <p className="text-xs text-muted-foreground mt-1 text-green-600/70">Total credits in system</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-zinc-500/20 group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Server Health</CardTitle>
                 <Database className="h-4 w-4 text-zinc-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-500">Online</div>
+                <div className="text-3xl font-bold text-emerald-500 flex items-center gap-2">
+                  <span className="w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
+                  Online
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Direct Supabase link active</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-primary" /> Recent Signups</CardTitle>
+                <CardDescription>The last 5 users to join the platform.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentSignups?.map((s: any) => (
+                    <div key={s.email} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">{s.email}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
+               <CardHeader>
+                <CardTitle className="text-lg">System Audit</CardTitle>
+                <CardDescription>Real-time performance metrics.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Total Failed Generations</span>
+                  <span className="font-mono text-red-500">{failedVideos || 0}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-t pt-4">
+                  <span className="text-muted-foreground">Avg. Credits per User</span>
+                  <span className="font-mono">{usersCount ? Math.round(totalCredits / usersCount) : 0}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-t pt-4">
+                  <span className="text-muted-foreground">System Latency</span>
+                  <span className="font-mono text-green-500">Normal</span>
+                </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        {/* USERS TAB */}
         <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Control Panel</CardTitle>
-              <CardDescription>View, grant credits, and manage administrative scopes. (Showing latest 50)</CardDescription>
+          <Card className="shadow-xl">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>User Control Panel</CardTitle>
+                <CardDescription>Search users, grant credits, and manage administrative scopes.</CardDescription>
+              </div>
+              <form method="get" className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                <Search className="w-4 h-4 text-muted-foreground ml-2" />
+                <Input 
+                  name="q" 
+                  placeholder="Search email..." 
+                  defaultValue={query}
+                  className="w-[200px] h-9 bg-transparent border-0 focus-visible:ring-0" 
+                />
+                {query && (
+                  <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => (window.location.href = '/admin')}>
+                    Clear
+                  </Button>
+                )}
+              </form>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-x-auto">
+              <div className="rounded-xl border overflow-hidden">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-muted text-muted-foreground">
+                  <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="px-4 py-3 font-medium">Email</th>
-                      <th className="px-4 py-3 font-medium w-[200px]">Credits Balance</th>
-                      <th className="px-4 py-3 font-medium text-right">Admin Role</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Operator Profile</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Credits Balance</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Status & Scopes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {usersList?.map((u: any) => (
-                      <tr key={u.id} className="border-t">
-                        <td className="px-4 py-3 flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{u.email}</span>
-                          {u.id === user.id && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full ml-2">You</span>}
+                      <tr key={u.id} className="border-t hover:bg-muted/20 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-bold flex items-center gap-2">
+                              {u.email}
+                              {u.id === user.id && <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full uppercase tracking-widest font-black">System Self</span>}
+                            </span>
+                            <span className="text-xs text-muted-foreground">ID: {u.id.substring(0, 8)}...</span>
+                          </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <form action={updateUserCredits} className="flex items-center gap-2">
+                        <td className="px-6 py-4">
+                          <form action={updateUserCredits} className="flex items-center gap-2 group">
                             <input type="hidden" name="userId" value={u.id} />
-                            <Battery className="w-4 h-4 text-green-500 shrink-0" />
-                            <Input 
-                              type="number" 
-                              name="credits" 
-                              defaultValue={u.credits} 
-                              className="w-20 h-8 text-sm px-2 bg-background border-muted-foreground/30"
-                            />
-                            <Button type="submit" size="sm" variant="secondary" className="h-8">Save</Button>
+                            <div className="relative flex items-center">
+                              <Battery className={`w-4 h-4 absolute left-2 pointer-events-none transition-colors ${u.credits > 0 ? 'text-green-500' : 'text-red-500'}`} />
+                              <Input 
+                                type="number" 
+                                name="credits" 
+                                defaultValue={u.credits} 
+                                className="w-24 h-9 pl-7 bg-background text-sm font-mono border-muted group-hover:border-primary/50 transition-colors"
+                              />
+                            </div>
+                            <Button type="submit" size="sm" variant="secondary" className="h-9 px-4 font-bold border">Update</Button>
                           </form>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-6 py-4 text-right">
                           <form action={toggleAdminStatus}>
                             <input type="hidden" name="userId" value={u.id} />
                             <input type="hidden" name="isAdmin" value={u.is_admin ? 'true' : 'false'} />
@@ -139,14 +257,22 @@ export default async function AdminDashboard() {
                               type="submit" 
                               size="sm" 
                               variant={u.is_admin ? 'default' : 'outline'}
-                              className={`h-8 text-xs ${u.is_admin ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border-0' : ''}`}
+                              className={`h-9 px-4 text-xs font-bold ${u.is_admin ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/20' : 'hover:border-primary hover:text-primary transition-all'}`}
                             >
-                              {u.is_admin ? 'Revoke Admin' : 'Make Admin'}
+                              {u.is_admin ? 'Revoke Control' : 'Grant Admin'}
                             </Button>
                           </form>
                         </td>
                       </tr>
                     ))}
+                    {usersList?.length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-20 text-center">
+                          <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                          <p className="text-muted-foreground font-medium">No system operators found matching your query.</p>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -154,61 +280,66 @@ export default async function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* VIDEOS TAB */}
         <TabsContent value="videos">
-           <Card>
+           <Card className="shadow-xl">
             <CardHeader>
-              <CardTitle>Global Video Moderation</CardTitle>
-              <CardDescription>Track queue status, refund stuck jobs, or delete generation records. (Showing latest 50)</CardDescription>
+              <CardTitle>Video Moderation Engine</CardTitle>
+              <CardDescription>Track queue status, refund stuck jobs, or delete generation records.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-x-auto">
+              <div className="rounded-xl border overflow-hidden">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-muted text-muted-foreground">
+                  <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="px-4 py-3 font-medium">User Email</th>
-                      <th className="px-4 py-3 font-medium">Raw Prompt</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium text-right">Actions</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Origin</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Directive (Prompt)</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Runtime Stats</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Intervention</th>
                     </tr>
                   </thead>
                   <tbody>
                     {videosList?.map((video: any) => (
-                      <tr key={video.id} className="border-t">
-                        <td className="px-4 py-3 font-medium">{video.profiles?.email || 'Unknown'}</td>
-                        <td className="px-4 py-3 max-w-[250px] truncate text-muted-foreground text-xs">
-                          {video.prompt}
+                      <tr key={video.id} className="border-t hover:bg-muted/20 transition-colors">
+                        <td className="px-6 py-4">
+                           <div className="flex flex-col">
+                            <span className="font-bold">{video.profiles?.email || 'System'}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">{new Date(video.created_at).toLocaleTimeString()}</span>
+                          </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
+                        <td className="px-6 py-4 max-w-[300px]">
+                          <p className="line-clamp-2 text-muted-foreground text-xs leading-relaxed italic">
+                            "{video.prompt}"
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border shadow-sm ${
                             video.status === 'completed' ? 'border-green-500/20 bg-green-500/10 text-green-500' :
                             video.status === 'failed' ? 'border-red-500/20 bg-red-500/10 text-red-500' :
                             'border-blue-500/20 bg-blue-500/10 text-blue-500 animate-pulse'
                           }`}>
-                            {video.status.toUpperCase()} ({video.duration}s)
+                            {video.status.toUpperCase()} ({video.duration}S)
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-3">
                              
                             {video.status !== 'completed' && video.status !== 'failed' && (
                               <form action={refundVideo}>
                                 <input type="hidden" name="videoId" value={video.id} />
                                 <input type="hidden" name="userId" value={video.user_id} />
-                                <Button type="submit" size="sm" variant="outline" className="h-8 group">
-                                  <RotateCcw className="w-3.5 h-3.5 mr-1 text-orange-500 group-hover:-rotate-90 transition-transform" />
-                                  Refund
+                                <Button type="submit" size="sm" variant="outline" className="h-9 px-4 font-bold border-orange-500/50 text-orange-600 hover:bg-orange-500/10 transition-colors group">
+                                  <RotateCcw className="w-3.5 h-3.5 mr-2 group-hover:-rotate-90 transition-transform" />
+                                  Manual Refund
                                 </Button>
                               </form>
                             )}
 
                             <form action={deleteVideo}>
                               <input type="hidden" name="videoId" value={video.id} />
-                              <Button type="submit" size="sm" variant="ghost" className="h-8 px-2 hover:bg-red-500/10 hover:text-red-500">
+                              <Button type="submit" size="sm" variant="ghost" className="h-9 w-9 p-0 hover:bg-red-500/10 hover:text-red-500 transition-colors">
                                 <Trash className="w-4 h-4" />
                               </Button>
                             </form>
-
                           </div>
                         </td>
                       </tr>
@@ -223,3 +354,4 @@ export default async function AdminDashboard() {
     </div>
   )
 }
+

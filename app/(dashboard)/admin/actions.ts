@@ -114,3 +114,51 @@ export async function refundVideo(formData: FormData) {
 
   revalidatePath('/admin')
 }
+export async function bulkRefundStuckVideos() {
+  if (!(await verifyAdmin())) throw new Error('Unauthorized')
+  
+  const supabase = await createClient()
+  
+  // Find videos stuck in 'processing' or 'pending' created more than 15 minutes ago
+  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+  
+  const { data: stuckVideos } = await supabase
+    .from('videos')
+    .select('id, user_id, duration')
+    .in('status', ['pending', 'processing'])
+    .lt('created_at', fifteenMinutesAgo)
+
+  if (!stuckVideos || stuckVideos.length === 0) return
+
+  let refundCount = 0
+  for (const video of stuckVideos) {
+    // 1. Mark video as failed
+    await supabase
+      .from('videos')
+      .update({ status: 'failed' })
+      .eq('id', video.id)
+
+    // 2. Calculate refund amount
+    let refundAmount = 1
+    if (video.duration === 30) refundAmount = 2
+    if (video.duration === 60) refundAmount = 4
+
+    // 3. Add credits back to user
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', video.user_id)
+      .single()
+
+    if (profile) {
+      await supabase
+        .from('profiles')
+        .update({ credits: profile.credits + refundAmount })
+        .eq('id', video.user_id)
+      
+      refundCount++
+    }
+  }
+
+  revalidatePath('/admin')
+}
