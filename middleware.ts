@@ -6,27 +6,38 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
+  // Diagnostic logging for Vercel troubleshooting
+  console.log('Middleware Invoked - URL:', request.nextUrl.pathname)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) console.error('MISSING env var: NEXT_PUBLIC_SUPABASE_URL')
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) console.error('MISSING env var: NEXT_PUBLIC_SUPABASE_ANON_KEY')
+
   // Create an unmodified client purely for session update
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
+  let supabase;
+  try {
+    supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({
+              request,
+            })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+      }
+    )
+  } catch (err) {
+    console.error('Supabase Client Error in Middleware:', err)
+    return supabaseResponse
+  }
 
   // This will refresh session if expired
   const {
