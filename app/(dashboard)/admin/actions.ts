@@ -1,8 +1,49 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+
+export async function createManualUser(formData: FormData) {
+  if (!(await verifyAdmin())) throw new Error('Unauthorized')
+  
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const credits = parseInt(formData.get('credits') as string, 10) || 0
+
+  if (!email || !password) return
+
+  const adminClient = createAdminClient()
+  
+  // 1. Create the user in auth.users
+  const { data: userData, error: userError } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true
+  })
+
+  if (userError) throw new Error(userError.message)
+
+  // 2. Set credits (The trigger should have created the profile, but we'll ensure it has the right credits)
+  await adminClient
+    .from('profiles')
+    .update({ credits })
+    .eq('id', userData.user.id)
+
+  // 3. Log the credit addition
+  const { data: { user: admin } } = await (await createClient()).auth.getUser()
+  await adminClient
+    .from('credit_logs')
+    .insert({
+      user_id: userData.user.id,
+      amount: credits,
+      reason: 'Manual Account Creation',
+      admin_id: admin?.id
+    })
+
+  revalidatePath('/admin')
+}
 
 async function verifyAdmin() {
   const supabase = await createClient()
@@ -27,10 +68,26 @@ export async function updateUserCredits(formData: FormData) {
   if (!userId || isNaN(credits)) return
 
   const supabase = await createClient()
+  
+  // Get current credits for delta calculation
+  const { data: profile } = await supabase.from('profiles').select('credits').eq('id', userId).single()
+  const delta = profile ? credits - profile.credits : 0
+
   await supabase
     .from('profiles')
     .update({ credits })
     .eq('id', userId)
+
+  // Log the change
+  const { data: { user: admin } } = await supabase.auth.getUser()
+  await supabase
+    .from('credit_logs')
+    .insert({
+      user_id: userId,
+      amount: delta,
+      reason: 'Manual Administrative Adjustment',
+      admin_id: admin?.id
+    })
 
   revalidatePath('/admin')
 }

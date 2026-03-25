@@ -2,10 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, Video, ShieldCheck, Mail, Database, Battery, Trash, RotateCcw, Search, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Users, Video, ShieldCheck, Mail, Database, Battery, Trash, RotateCcw, Search, TrendingUp, AlertCircle, CheckCircle2, Plus, History as HistoryIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { updateUserCredits, toggleAdminStatus, deleteVideo, refundVideo, bulkRefundStuckVideos } from './actions'
+import { Label } from '@/components/ui/label'
+import { updateUserCredits, toggleAdminStatus, deleteVideo, refundVideo, bulkRefundStuckVideos, createManualUser } from './actions'
 
 export default async function AdminDashboard({
   searchParams,
@@ -45,12 +46,24 @@ export default async function AdminDashboard({
   const { data: allCredits } = await supabase.from('profiles').select('credits')
   const totalCredits = allCredits?.reduce((acc, p) => acc + (p.credits || 0), 0) || 0
 
-  // Fetch Users (with search)
-  let usersQuery = supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(50)
+  // Fetch Users (with search and video count)
+  let usersQuery = supabase.from('profiles').select('*, videos!left(id)').order('created_at', { ascending: false }).limit(50)
   if (query) {
     usersQuery = usersQuery.ilike('email', `%${query}%`)
   }
-  const { data: usersList } = await usersQuery
+  const { data: rawUsersList } = await usersQuery
+  
+  const usersList = rawUsersList?.map((u: any) => ({
+    ...u,
+    videoCount: u.videos?.length || 0
+  }))
+
+  // Fetch Credit Logs
+  const { data: creditLogs } = await supabase
+    .from('credit_logs')
+    .select('*, profiles(email)')
+    .order('created_at', { ascending: false })
+    .limit(50)
 
   // Fetch Videos
   const { data: videosList } = await supabase
@@ -91,6 +104,7 @@ export default async function AdminDashboard({
           <TabsTrigger value="overview" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">System Insights</TabsTrigger>
           <TabsTrigger value="users" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Operator Control</TabsTrigger>
           <TabsTrigger value="videos" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Video Moderation</TabsTrigger>
+          <TabsTrigger value="audit" className="px-6 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Credit Audit</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8">
@@ -190,7 +204,33 @@ export default async function AdminDashboard({
           </div>
         </TabsContent>
 
-        <TabsContent value="users">
+        <TabsContent value="users" className="space-y-6">
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-lg">Manual User Onboarding</CardTitle>
+              <CardDescription>Register a new user directly into the system with initial credits.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createManualUser} className="flex flex-wrap gap-4 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="manual-email">Email Address</Label>
+                  <Input id="manual-email" name="email" type="email" placeholder="user@example.com" required className="w-64" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manual-password">Temporary Password</Label>
+                  <Input id="manual-password" name="password" type="password" placeholder="••••••••" required className="w-48" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="manual-credits">Initial Credits</Label>
+                  <Input id="manual-credits" name="credits" type="number" defaultValue={5} className="w-24" />
+                </div>
+                <Button type="submit" className="gap-2">
+                  <Plus className="w-4 h-4" /> Create & Promote User
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
           <Card className="shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -218,6 +258,7 @@ export default async function AdminDashboard({
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
                       <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Operator Profile</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-center">Stats</th>
                       <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Credits Balance</th>
                       <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-right">Status & Scopes</th>
                     </tr>
@@ -231,8 +272,14 @@ export default async function AdminDashboard({
                               {u.email}
                               {u.id === user.id && <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full uppercase tracking-widest font-black">System Self</span>}
                             </span>
-                            <span className="text-xs text-muted-foreground">ID: {u.id.substring(0, 8)}...</span>
+                            <span className="text-xs text-muted-foreground">Joined: {new Date(u.created_at).toLocaleDateString()}</span>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                           <div className="flex flex-col items-center">
+                             <span className="text-lg font-bold">{u.videoCount}</span>
+                             <span className="text-[10px] text-muted-foreground uppercase">Videos</span>
+                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <form action={updateUserCredits} className="flex items-center gap-2 group">
@@ -344,6 +391,57 @@ export default async function AdminDashboard({
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="audit">
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle>Credit Transaction Ledger</CardTitle>
+              <CardDescription>A complete log of manual credit adjustments and system on-boarding events.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl border overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-muted/50 text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Timestamp</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Target User</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs text-center">Amount</th>
+                      <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Reason/Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {creditLogs?.map((log: any) => (
+                      <tr key={log.id} className="border-t hover:bg-muted/20 transition-colors">
+                        <td className="px-6 py-4 text-xs font-mono text-muted-foreground">
+                          {new Date(log.created_at).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 font-medium">
+                          {log.profiles?.email || 'Unknown User'}
+                        </td>
+                        <td className={`px-6 py-4 text-center font-bold ${log.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {log.amount > 0 ? `+${log.amount}` : log.amount}
+                        </td>
+                        <td className="px-6 py-4 text-xs">
+                          <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
+                            {log.reason}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {(!creditLogs || creditLogs.length === 0) && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-20 text-center text-muted-foreground">
+                          <HistoryIcon className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                          No credit transactions logged yet.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
