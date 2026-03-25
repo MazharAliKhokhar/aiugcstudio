@@ -12,7 +12,7 @@ import { StepProductUrl } from '@/components/studio/StepProductUrl'
 import { StepGoal } from '@/components/studio/StepGoal'
 import { StepScriptPreview } from '@/components/studio/StepScriptPreview'
 import { StepGenerate } from '@/components/studio/StepGenerate'
-import { Loader2, CheckCircle2 } from 'lucide-react'
+import { Loader2, CheckCircle2, Copy } from 'lucide-react'
 
 // Steps: 1: URL, 2: Goal, 3: Script, 4: Generate, 5: Generating/Completed
 type Step = 1 | 2 | 3 | 4 | 5
@@ -204,7 +204,7 @@ export default function StudioPage() {
         </div>
       </div>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden relative min-h-[450px]">
+      <Card className="shadow-lg border-primary/10 overflow-hidden relative min-h-[500px] md:min-h-[450px]">
         <AnimatePresence mode="wait" custom={1}>
           
           {step === 1 && (
@@ -290,6 +290,18 @@ export default function StudioPage() {
                     <a href={videoUrl} download="viralugc-ad.mp4" className="flex-1">
                       <Button className="w-full">Download Ad</Button>
                     </a>
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="shrink-0" 
+                      title="Copy Prompt"
+                      onClick={() => {
+                        navigator.clipboard.writeText(prompt) // Assuming 'prompt' is the correct state variable to copy
+                        toast.success('Prompt copied to clipboard!')
+                      }}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ) : (

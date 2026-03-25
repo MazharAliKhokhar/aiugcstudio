@@ -1,21 +1,41 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Download, Copy, Play } from 'lucide-react'
+import { Download, Copy, Play, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-export default async function GalleryPage() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+export default function GalleryPage() {
+  const [videos, setVideos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const { data: videos } = await supabase
-    .from('videos')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  useEffect(() => {
+    async function fetchVideos() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      if (data) setVideos(data)
+      setLoading(false)
+    }
+    fetchVideos()
+  }, [])
+
+  if (loading) return (
+    <div className="h-[60vh] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  )
 
   if (!videos || videos.length === 0) {
     return (
@@ -71,8 +91,16 @@ export default async function GalleryPage() {
                     <Download className="w-4 h-4 mr-2" /> Download
                   </Button>
                 </a>
-                {/* We use a simple mailto or clipboard helper for script if present */}
-                <Button variant="secondary" size="icon" className="shrink-0" title="Prompt Script">
+                <Button 
+                  variant="secondary" 
+                  size="icon" 
+                  className="shrink-0" 
+                  title="Copy Prompt"
+                  onClick={() => {
+                    navigator.clipboard.writeText(video.prompt)
+                    toast.success('Prompt copied to clipboard!')
+                  }}
+                >
                   <Copy className="w-4 h-4" />
                 </Button>
               </CardFooter>
