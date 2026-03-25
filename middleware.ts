@@ -2,70 +2,61 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
   })
 
-  // Diagnostic logging for Vercel troubleshooting
-  console.log('Middleware Invoked - URL:', request.nextUrl.pathname)
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) console.error('MISSING env var: NEXT_PUBLIC_SUPABASE_URL')
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) console.error('MISSING env var: NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  // Short-circuit if env vars are missing to avoid crash
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Middleware Error: Missing Supabase Environment Variables')
+    return response
+  }
 
-  // Create an unmodified client purely for session update
-  let supabase;
   try {
-    supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-            supabaseResponse = NextResponse.next({
-              request,
-            })
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            )
-          },
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
         },
-      }
-    )
-  } catch (err) {
-    console.error('Supabase Client Error in Middleware:', err)
-    return supabaseResponse
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Protected route logic
+    const path = request.nextUrl.pathname
+    const isDashboard = path.startsWith('/studio') || path.startsWith('/gallery') || path.startsWith('/settings')
+    const isAuth = path.startsWith('/login') || path.startsWith('/signup')
+
+    if (!user && isDashboard) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    if (user && isAuth) {
+      return NextResponse.redirect(new URL('/studio', request.url))
+    }
+
+    return response
+  } catch (e) {
+    console.error('Middleware Processing Error:', e)
+    return response
   }
-
-  // This will refresh session if expired
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Define protected routes
-  const isDashboardRoute = request.nextUrl.pathname.startsWith('/studio') ||
-                           request.nextUrl.pathname.startsWith('/gallery') ||
-                           request.nextUrl.pathname.startsWith('/affiliate') ||
-                           request.nextUrl.pathname.startsWith('/settings');
-
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
-                      request.nextUrl.pathname.startsWith('/signup');
-
-  if (!user && isDashboardRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/studio'
-    return NextResponse.redirect(url)
-  }
-
-  return supabaseResponse
 }
 
 export const config = {
