@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Video, Settings, UserPlus, ShieldCheck, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Video, Settings, ShieldCheck, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signout } from '@/app/(auth)/actions'
 import { createClient } from '@/lib/supabase/client'
@@ -37,12 +37,6 @@ export const Sidebar = () => {
       icon: LayoutDashboard,
       href: '/gallery',
       color: 'text-blue-500',
-    },
-    {
-      label: 'Affiliate',
-      icon: UserPlus,
-      href: '/affiliate',
-      color: 'text-green-500',
     },
     {
       label: 'Settings',

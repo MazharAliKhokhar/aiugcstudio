@@ -17,7 +17,9 @@ export interface Database {
           avatar_url: string | null
           credits: number
           lemon_squeezy_customer_id: string | null
-          referrer_id: string | null
+          subscription_id: string | null
+          subscription_status: string | null
+          variant_id: string | null
           created_at: string
           updated_at: string
         }
@@ -28,7 +30,9 @@ export interface Database {
           avatar_url?: string | null
           credits?: number
           lemon_squeezy_customer_id?: string | null
-          referrer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          variant_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -39,7 +43,9 @@ export interface Database {
           avatar_url?: string | null
           credits?: number
           lemon_squeezy_customer_id?: string | null
-          referrer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          variant_id?: string | null
           created_at?: string
           updated_at?: string
         }

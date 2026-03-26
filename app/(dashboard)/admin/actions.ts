@@ -178,22 +178,16 @@ export async function refundVideo(formData: FormData): Promise<{ success: boolea
 
     if (updateError) throw updateError
 
-    // 2. Add credits back to user
+    // 2. Add credits back to user atomically
     const { data: video } = await supabase.from('videos').select('duration').eq('id', videoId).single()
     const refundAmount = video?.duration === 30 ? 2 : (video?.duration === 60 ? 4 : 1)
 
     const { error: rpcError } = await supabase.rpc('increment_credits', { 
-      user_id: userId, 
-      amount: refundAmount 
+      p_user_id: userId, 
+      p_amount: refundAmount 
     })
 
-    if (rpcError) {
-       // Fallback if RPC isn't available
-       const { data: profile } = await supabase.from('profiles').select('credits').eq('id', userId).single()
-       if (profile) {
-         await supabase.from('profiles').update({ credits: profile.credits + refundAmount }).eq('id', userId)
-       }
-    }
+    if (rpcError) throw rpcError
 
     revalidatePath('/admin')
     return { success: true, message: 'Video refunded!' }
@@ -225,17 +219,11 @@ export async function bulkRefundStuckVideos(): Promise<{ success: boolean; messa
       
       await supabase.from('videos').update({ status: 'failed' }).eq('id', video.id)
       
-      const { error: rpcError } = await supabase.rpc('increment_credits', { 
-        user_id: video.user_id, 
-        amount: refundAmount 
+      await supabase.rpc('increment_credits', { 
+        p_user_id: video.user_id, 
+        p_amount: refundAmount 
       })
 
-      if (rpcError) {
-        const { data: profile } = await supabase.from('profiles').select('credits').eq('id', video.user_id).single()
-        if (profile) {
-          await supabase.from('profiles').update({ credits: profile.credits + refundAmount }).eq('id', video.user_id)
-        }
-      }
       count++
     }
 

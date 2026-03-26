@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Coins, Settings as SettingsIcon, ExternalLink } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -51,43 +52,93 @@ export default async function SettingsPage() {
             Generating a 15s video costs 1 credit. 30s costs 2 credits. 60s costs 4 credits.
           </p>
         </CardContent>
-        <CardFooter className="bg-muted/30 pt-4 flex flex-col items-start gap-4">
-          <div className="w-full space-y-4">
-            <div className="flex items-center gap-2 font-bold text-lg border-b pb-2">
-              <ExternalLink className="w-5 h-5" /> How to Upgrade
+        <CardFooter className="bg-muted/30 pt-6 flex flex-col items-start gap-6">
+          <div className="w-full space-y-6">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div className="flex items-center gap-2 font-bold text-lg">
+                <ExternalLink className="w-5 h-5 text-primary" /> Subscription Plans
+              </div>
+              {profile?.subscription_status && (
+                <div className={cn(
+                  "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
+                  profile.subscription_status === 'active' ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
+                )}>
+                  {profile.subscription_status}
+                </div>
+              )}
             </div>
             
-            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 space-y-3">
-              <p className="text-sm">
-                To upgrade your plan or purchase more credits, please send the payment via <strong>PayPal</strong> to:
-              </p>
-              <div className="bg-background p-3 rounded border font-mono text-center text-primary font-bold">
-                saanimazhar@gmail.com
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                <div className="p-3 bg-background rounded border text-center">
-                  <div className="font-bold">Starter ($69)</div>
-                  <div className="text-xs text-muted-foreground">4 Video Credits</div>
-                </div>
-                <div className="p-3 bg-primary/10 rounded border border-primary/30 text-center ring-1 ring-primary/20">
-                  <div className="font-bold">Growth Pro ($149)</div>
-                  <div className="text-xs text-muted-foreground">10 Video Credits</div>
-                </div>
-                <div className="p-3 bg-background rounded border text-center">
-                  <div className="font-bold">Ad Scale ($399)</div>
-                  <div className="text-xs text-muted-foreground">30 Video Credits</div>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Starter */}
+              <Card className={cn(
+                "relative overflow-hidden border-2 transition-all hover:shadow-md",
+                profile?.variant_id?.includes('03189911') ? "border-primary bg-primary/5" : "border-border"
+              )}>
+                <CardHeader className="p-4 pb-2">
+                  <div className="font-bold text-lg">Starter</div>
+                  <div className="text-2xl font-black">$69<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
+                  4 Video Credits / Month
+                </CardContent>
+                <CardFooter className="p-4 pt-0">
+                  <a href={`${process.env.NEXT_PUBLIC_LS_STARTER_URL}?checkout[email]=${user.email}`} className="w-full">
+                    <Button variant={profile?.variant_id?.includes('03189911') ? "outline" : "default"} className="w-full h-9 text-xs">
+                      {profile?.variant_id?.includes('03189911') ? "Current Plan" : "Upgrade"}
+                    </Button>
+                  </a>
+                </CardFooter>
+              </Card>
 
-              <div className="text-sm pt-2 text-muted-foreground">
-                <p><strong>Step 2:</strong> After payment, send an email to the same address with:</p>
-                <ul className="list-disc ml-5 mt-1 space-y-1">
-                  <li>Your registered email: <span className="text-foreground font-medium">{user.email}</span></li>
-                  <li>The Transaction ID / Screenshot</li>
-                </ul>
-                <p className="mt-3 font-medium text-primary">Your account will be upgraded within 24 hours.</p>
-              </div>
+              {/* Growth Pro */}
+              <Card className={cn(
+                "relative overflow-hidden border-2 transition-all hover:shadow-md",
+                profile?.variant_id?.includes('6ffe83cf') ? "border-primary bg-primary/5" : "border-border"
+              )}>
+                <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold rounded-bl-lg">POPULAR</div>
+                <CardHeader className="p-4 pb-2">
+                  <div className="font-bold text-lg">Growth Pro</div>
+                  <div className="text-2xl font-black">$149<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
+                  10 Video Credits / Month
+                </CardContent>
+                <CardFooter className="p-4 pt-0">
+                  <a href={`${process.env.NEXT_PUBLIC_LS_GROWTH_URL}?checkout[email]=${user.email}`} className="w-full">
+                    <Button variant={profile?.variant_id?.includes('6ffe83cf') ? "outline" : "default"} className="w-full h-9 text-xs">
+                      {profile?.variant_id?.includes('6ffe83cf') ? "Current Plan" : "Upgrade"}
+                    </Button>
+                  </a>
+                </CardFooter>
+              </Card>
+
+              {/* Ad Scale */}
+              <Card className={cn(
+                "relative overflow-hidden border-2 transition-all hover:shadow-md",
+                profile?.variant_id?.includes('b1ad8f72') ? "border-primary bg-primary/5" : "border-border"
+              )}>
+                <CardHeader className="p-4 pb-2">
+                  <div className="font-bold text-lg">Ad Scale</div>
+                  <div className="text-2xl font-black">$399<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
+                  30 Video Credits / Month
+                </CardContent>
+                <CardFooter className="p-4 pt-0">
+                  <a href={`${process.env.NEXT_PUBLIC_LS_SCALE_URL}?checkout[email]=${user.email}`} className="w-full">
+                    <Button variant={profile?.variant_id?.includes('b1ad8f72') ? "outline" : "default"} className="w-full h-9 text-xs">
+                      {profile?.variant_id?.includes('b1ad8f72') ? "Current Plan" : "Upgrade"}
+                    </Button>
+                  </a>
+                </CardFooter>
+              </Card>
+            </div>
+
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">
+                All plans include recurring monthly credits. Unused credits carry over for as long as your subscription is active. 
+                Manage your subscription via the email receipt from Lemon Squeezy.
+              </p>
             </div>
           </div>
         </CardFooter>

@@ -43,8 +43,7 @@ export async function proxy(request: NextRequest) {
     const isDashboard = path.startsWith('/studio') || 
                         path.startsWith('/gallery') || 
                         path.startsWith('/settings') || 
-                        path.startsWith('/admin') ||
-                        path.startsWith('/affiliate')
+                        path.startsWith('/admin')
     
     const isAuth = path.startsWith('/login') || path.startsWith('/signup')
 

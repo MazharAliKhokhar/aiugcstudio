@@ -20,34 +20,19 @@ export async function POST(req: NextRequest) {
 
     const requiredCredits = getCreditCost(duration)
 
-    // 1. Check and deduct credits using a secure RPC or explicit update
-    // Note: In production you should use a Postgres function (RPC) to atomically check and deduct.
-    // Since we only have standard tables, we'll do:
-    // UPDATE profiles SET credits = credits - N WHERE id = user.id AND credits >= N RETURNING *
-    const { data: updatedProfile, error: dedutError } = await supabase
-      .from('profiles')
-      .update({ credits: supabase.rpc('decrement_credits', { amount: requiredCredits }) }) // We don't have this RPC, so we fallback:
-      /*
-       Because we didn't add an RPC in our initial schema, we have to do it via select then update.
-       This is subject to race conditions but acceptable for MVP. 
-      */
-      .select('credits')
-      .eq('id', user.id)
-      .single()
+    // 1. Atomically check and deduct credits via Postgres RPC
+    const { data: newBalance, error: deductError } = await supabase.rpc('deduct_credits', {
+      p_user_id: user.id,
+      p_amount: requiredCredits
+    })
 
-    // Let's do the simpler read-then-write approach for MVP since RPC isn't deployed yet.
-    const { data: currentProfile } = await supabase.from('profiles').select('credits').eq('id', user.id).single()
-    if (!currentProfile || currentProfile.credits < requiredCredits) {
-      return NextResponse.json({ error: 'Insufficient credits' }, { status: 402 })
+    if (deductError) {
+      console.error('Credit deduction RPC error:', deductError)
+      return NextResponse.json({ error: 'Failed to deduct credits' }, { status: 500 })
     }
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ credits: currentProfile.credits - requiredCredits })
-      .eq('id', user.id)
-
-    if (updateError) {
-      return NextResponse.json({ error: 'Failed to deduct credits' }, { status: 500 })
+    if (newBalance === -1) {
+      return NextResponse.json({ error: 'Insufficient credits' }, { status: 402 })
     }
 
     // 2. Insert pending video row
@@ -64,8 +49,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (videoError || !videoData) {
-      // Revert credits (best effort)
-      await supabase.from('profiles').update({ credits: currentProfile.credits }).eq('id', user.id)
+      // Revert credits atomically
+      await supabase.rpc('increment_credits', { p_user_id: user.id, p_amount: requiredCredits })
       return NextResponse.json({ error: 'Failed to create video record' }, { status: 500 })
     }
 
