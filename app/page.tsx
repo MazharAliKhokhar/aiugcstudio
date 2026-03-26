@@ -25,7 +25,7 @@ export default function LandingPage() {
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <span className="font-black text-xl tracking-tight uppercase italic">ViralUGC</span>
+          <span className="font-black text-xl tracking-tight uppercase italic text-white">ViralUGC</span>
         </div>
         <nav className="flex items-center gap-6">
           <Link href="/login" className="text-sm font-semibold text-white/70 hover:text-white transition-colors">Log In</Link>
@@ -44,10 +44,10 @@ export default function LandingPage() {
           <div className="absolute inset-0 z-[-1]">
              <img 
                src="/hero-bg.png" 
-               className="w-full h-full object-cover opacity-40 scale-105" 
+               className="w-full h-full object-cover opacity-20 scale-105" 
                alt="Background"
              />
-             <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-transparent to-[#070708]" />
+             <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/40 to-[#070708]" />
           </div>
           
           <motion.div 
@@ -62,13 +62,13 @@ export default function LandingPage() {
               THE FUTURE OF UGC IS HERE · POWERED BY KLING 2.1
             </div>
 
-            <h1 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.9] uppercase">
+            <h1 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.9] uppercase text-white">
               GENERATE <span className="text-primary italic">VIRAL</span> <br className="hidden md:block"/>
-              <span className="bg-gradient-to-r from-white to-white/40 bg-clip-text text-transparent italic">AD VARIATIONS</span> <br className="hidden md:block"/>
+              <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic">AD VARIATIONS</span> <br className="hidden md:block"/>
               IN SECONDS
             </h1>
 
-            <p className="text-lg md:text-2xl text-white/60 max-w-3xl mx-auto leading-relaxed font-medium">
+            <p className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed font-medium">
               Scale your dropshipping store or agency with hyper-realistic AI actors. 
               No shipping, no actors, no waiting. Just paste your URL and win.
             </p>
@@ -85,11 +85,11 @@ export default function LandingPage() {
                     <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="User" />
                   </div>
                 ))}
-                <div className="w-12 h-12 rounded-full border-2 border-[#070708] bg-primary flex items-center justify-center text-[10px] font-black italic">
+                <div className="w-12 h-12 rounded-full border-2 border-[#070708] bg-primary flex items-center justify-center text-[10px] font-black italic text-white">
                   +2.4k
                 </div>
               </div>
-              <p className="text-sm font-bold text-white/40 tracking-widest uppercase md:ml-4">Used by top 1% brands</p>
+              <p className="text-sm font-bold text-white/70 tracking-widest uppercase md:ml-4">Used by top 1% brands</p>
             </div>
           </motion.div>
 
@@ -100,13 +100,13 @@ export default function LandingPage() {
             transition={{ delay: 0.5, duration: 1 }}
             className="mt-20 max-w-5xl mx-auto"
           >
-            <p className="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase mb-8">Powering the fastest growing stores on</p>
+            <p className="text-[10px] font-black tracking-[0.3em] text-white/40 uppercase mb-8">Powering the fastest growing stores on</p>
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-30 grayscale contrast-125">
-              <span className="text-2xl font-black italic">Shopify</span>
-              <span className="text-2xl font-black italic">Amazon</span>
-              <span className="text-2xl font-black italic">TikTok</span>
-              <span className="text-2xl font-black italic">Etsy</span>
-              <span className="text-2xl font-black italic">Woo</span>
+              <span className="text-2xl font-black italic text-white/60">Shopify</span>
+              <span className="text-2xl font-black italic text-white/60">Amazon</span>
+              <span className="text-2xl font-black italic text-white/60">TikTok</span>
+              <span className="text-2xl font-black italic text-white/60">Etsy</span>
+              <span className="text-2xl font-black italic text-white/60">Woo</span>
             </div>
           </motion.div>
 
@@ -144,22 +144,22 @@ export default function LandingPage() {
 
               <div className="space-y-10">
                 <div className="space-y-4">
-                  <h2 className="text-4xl md:text-6xl font-black italic uppercase italic tracking-tighter">Broadcast Quality.</h2>
-                  <p className="text-lg md:text-xl text-white/50 font-medium">
+                  <h2 className="text-4xl md:text-6xl font-black italic uppercase italic tracking-tighter text-white">Broadcast Quality.</h2>
+                  <p className="text-lg md:text-xl text-white/80 font-medium">
                     Our Kling 2.1 implementation produces video so real, experienced ad buyers can't distinguish it from human creators.
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-6">
-                   <div className="p-6 rounded-3xl bg-white/5 border border-white/5 backdrop-blur-md">
+                   <div className="p-6 rounded-3xl bg-white/10 border border-white/10 backdrop-blur-md">
                       <Zap className="w-8 h-8 text-primary mb-4" />
-                      <h4 className="font-bold mb-1">Instant</h4>
-                      <p className="text-xs text-white/40">From URL to MP4 in 60s.</p>
+                      <h4 className="font-bold mb-1 text-white">Instant</h4>
+                      <p className="text-xs text-white/60">From URL to MP4 in 60s.</p>
                    </div>
-                   <div className="p-6 rounded-3xl bg-white/5 border border-white/5 backdrop-blur-md">
+                   <div className="p-6 rounded-3xl bg-white/10 border border-white/10 backdrop-blur-md">
                       <Smartphone className="w-8 h-8 text-blue-500 mb-4" />
-                      <h4 className="font-bold mb-1">TikTok native</h4>
-                      <p className="text-xs text-white/40">9:16 aspect ratio by default.</p>
+                      <h4 className="font-bold mb-1 text-white">TikTok native</h4>
+                      <p className="text-xs text-white/60">9:16 aspect ratio by default.</p>
                    </div>
                 </div>
               </div>
@@ -173,9 +173,9 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12">
               {/* Old Way */}
-              <div className="space-y-8 opacity-50 grayscale hover:grayscale-0 hover:opacity-80 transition-all duration-500 p-8 border border-white/5 rounded-[40px]">
-                <div className="inline-block px-4 py-1.5 rounded-full bg-red-500/10 text-red-500 text-xs font-black uppercase italic italic tracking-widest">The Slow Way</div>
-                <h3 className="text-3xl font-black uppercase italic italic tracking-tight">Manual UGC</h3>
+              <div className="space-y-8 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-8 border border-white/10 rounded-[40px] bg-white/5">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-red-500/10 text-red-400 text-xs font-black uppercase italic italic tracking-widest">The Slow Way</div>
+                <h3 className="text-3xl font-black uppercase italic italic tracking-tight text-white">Manual UGC</h3>
                 <ul className="space-y-4">
                   {[
                     "Waiting 14+ days for shipping",
@@ -183,7 +183,7 @@ export default function LandingPage() {
                     "Paying $150-$500 per single video",
                     "Bad lighting, retakes, and headaches"
                   ].map(item => (
-                    <li key={item} className="flex items-center gap-3 text-white/50 line-through decoration-red-500/50">
+                    <li key={item} className="flex items-center gap-3 text-white/70 line-through decoration-red-500/50">
                       <XCircle className="w-5 h-5 text-red-500 shrink-0" /> {item}
                     </li>
                   ))}
@@ -191,8 +191,8 @@ export default function LandingPage() {
               </div>
 
               {/* New Way */}
-              <div className="space-y-8 p-10 border-2 border-primary bg-primary/5 rounded-[40px] relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="space-y-8 p-10 border-2 border-primary bg-primary/10 rounded-[40px] relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="inline-block px-4 py-1.5 rounded-full bg-primary text-white text-xs font-black uppercase italic italic tracking-widest">The ViralUGC Way</div>
                 <h3 className="text-4xl font-black uppercase italic italic tracking-tight italic text-primary">AI Infrastructure</h3>
                 <ul className="space-y-6">
@@ -202,7 +202,7 @@ export default function LandingPage() {
                     "Hyper-realistic AI actors (Kling 2.1)",
                     "Scale to 7-figures with high-volume testing"
                   ].map(item => (
-                    <li key={item} className="flex items-center gap-4 text-xl font-bold tracking-tight">
+                    <li key={item} className="flex items-center gap-4 text-xl font-bold tracking-tight text-white">
                       <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                          <Check className="w-4 h-4 text-white" />
                       </div>
@@ -220,22 +220,22 @@ export default function LandingPage() {
            <div className="max-w-6xl mx-auto space-y-24">
               <div className="flex flex-col md:flex-row items-end justify-between gap-8">
                  <div className="space-y-4 max-w-xl">
-                    <h2 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter">Everything to <br/> Scale Vertically.</h2>
+                    <h2 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter text-white">Everything to <br/> Scale Vertically.</h2>
                  </div>
-                 <div className="text-white/40 text-lg font-medium leading-tight max-w-md md:text-right">
+                 <div className="text-white/70 text-lg font-medium leading-tight max-w-md md:text-right">
                     We built the pipeline we always wanted. No fluff, just high-converting asset generation.
                  </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-20">
                  {/* Feature 1 */}
-                 <div className="md:col-span-2 md:row-span-2 p-10 rounded-[40px] bg-white/5 border border-white/5 backdrop-blur-3xl flex flex-col justify-between group hover:bg-white/[0.07] transition-all">
+                 <div className="md:col-span-2 md:row-span-2 p-10 rounded-[40px] bg-white/10 border border-white/10 backdrop-blur-3xl flex flex-col justify-between group hover:bg-white/[0.15] transition-all">
                     <div className="space-y-6">
                        <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center">
                           <Rocket className="w-8 h-8 text-primary" />
                        </div>
-                       <h3 className="text-3xl font-black uppercase italic italic tracking-tight">One-Click Multi-Variations</h3>
-                       <p className="text-white/50 text-xl font-medium">Don't just test one ad. Test ten. Select different hooks, avatars, and scripts for the same product link and generate the entire campaign in minutes.</p>
+                       <h3 className="text-3xl font-black uppercase italic italic tracking-tight text-white">One-Click Multi-Variations</h3>
+                       <p className="text-white/80 text-xl font-medium">Don't just test one ad. Test ten. Select different hooks, avatars, and scripts for the same product link and generate the entire campaign in minutes.</p>
                     </div>
                     <div className="mt-12 h-1 bg-white/10 rounded-full overflow-hidden">
                        <motion.div initial={{ width: 0 }} whileInView={{ width: "70%" }} className="h-full bg-primary" />
@@ -243,27 +243,27 @@ export default function LandingPage() {
                  </div>
 
                  {/* Feature 2 */}
-                 <div className="md:col-span-2 p-10 rounded-[40px] bg-white/5 border border-white/5 backdrop-blur-md hover:bg-white/[0.07] transition-all">
+                 <div className="md:col-span-2 p-10 rounded-[40px] bg-white/10 border border-white/10 backdrop-blur-md hover:bg-white/[0.15] transition-all">
                     <div className="flex gap-6 items-start">
                        <div className="shrink-0 w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                           <Heart className="w-6 h-6 text-blue-500" />
                        </div>
                        <div className="space-y-2">
-                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight">Emotional AI Scripting</h4>
-                          <p className="text-white/40 text-sm">Our LLM is trained on the top 10,000 viral TikTok ads to write scripts that actually stop the scroll.</p>
+                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight text-white">Emotional AI Scripting</h4>
+                          <p className="text-white/70 text-sm">Our LLM is trained on the top 10,000 viral TikTok ads to write scripts that actually stop the scroll.</p>
                        </div>
                     </div>
                  </div>
 
                  {/* Feature 3 */}
-                 <div className="md:col-span-2 p-10 rounded-[40px] bg-white/5 border border-white/5 backdrop-blur-md hover:bg-white/[0.07] transition-all">
+                 <div className="md:col-span-2 p-10 rounded-[40px] bg-white/10 border border-white/10 backdrop-blur-md hover:bg-white/[0.15] transition-all">
                     <div className="flex gap-6 items-start">
                        <div className="shrink-0 w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
                           <CheckCircle2 className="w-6 h-6 text-green-500" />
                        </div>
                        <div className="space-y-2">
-                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight">Refund Protection</h4>
-                          <p className="text-white/40 text-sm">Atomic database logic ensures if a generation fails, your credits are returned instantly. Zero risk.</p>
+                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight text-white">Refund Protection</h4>
+                          <p className="text-white/70 text-sm">Atomic database logic ensures if a generation fails, your credits are returned instantly. Zero risk.</p>
                        </div>
                     </div>
                  </div>
@@ -276,8 +276,8 @@ export default function LandingPage() {
            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-primary/5 blur-[120px] rounded-full" />
            <div className="max-w-6xl mx-auto">
               <div className="text-center mb-24">
-                 <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-4">Three Steps To Total Scale.</h2>
-                 <p className="text-white/40 font-bold tracking-widest uppercase">The fastest pipeline in the industry. Period.</p>
+                 <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-4 text-white">Three Steps To Total Scale.</h2>
+                 <p className="text-white/70 font-bold tracking-widest uppercase">The fastest pipeline in the industry. Period.</p>
               </div>
 
               <div className="grid md:grid-cols-3 gap-12 relative">
@@ -298,8 +298,8 @@ export default function LandingPage() {
                        <div className="w-20 h-20 rounded-full bg-[#070708] border border-white/10 flex items-center justify-center text-primary text-2xl font-black shadow-2xl">
                           {item.step}
                        </div>
-                       <h4 className="text-2xl font-black uppercase italic tracking-tight">{item.title}</h4>
-                       <p className="text-white/50 text-sm font-medium leading-relaxed px-6">{item.desc}</p>
+                       <h4 className="text-2xl font-black uppercase italic tracking-tight text-white">{item.title}</h4>
+                       <p className="text-white/80 text-sm font-medium leading-relaxed px-6">{item.desc}</p>
                     </motion.div>
                  ))}
               </div>
@@ -312,8 +312,8 @@ export default function LandingPage() {
               <div className="grid md:grid-cols-2 gap-20 items-center">
                  <div className="space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-[0.2em]">Wall of Success</div>
-                    <h2 className="text-5xl md:text-7xl font-[1000] tracking-tighter uppercase italic leading-[0.9]">Loved by <br/> the top 1%.</h2>
-                    <p className="text-white/40 text-xl font-medium">Over 2,400 dropshippers and 80+ marketing agencies use ViralUGC to power their daily creative testing.</p>
+                    <h2 className="text-5xl md:text-7xl font-[1000] tracking-tighter uppercase italic leading-[0.9] text-white">Loved by <br/> the top 1%.</h2>
+                    <p className="text-white/80 text-xl font-medium">Over 2,400 dropshippers and 80+ marketing agencies use ViralUGC to power their daily creative testing.</p>
                  </div>
 
                  <div className="grid gap-6">
@@ -326,15 +326,15 @@ export default function LandingPage() {
                          initial={{ opacity: 0, x: 50 }}
                          whileInView={{ opacity: 1, x: 0 }}
                          transition={{ delay: i * 0.2 }}
-                         className="p-8 rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-md space-y-4"
+                         className="p-8 rounded-[32px] bg-white/10 border border-white/10 backdrop-blur-md space-y-4"
                        >
                           <div className="flex gap-1">
                              {[1,2,3,4,5].map(s => <Sparkles key={s} className="w-3 h-3 text-primary fill-primary" />)}
                           </div>
-                          <p className="text-lg font-bold tracking-tight italic text-white/80">"{t.text}"</p>
+                          <p className="text-lg font-bold tracking-tight italic text-white">"{t.text}"</p>
                           <div>
                              <p className="font-black uppercase italic tracking-tight text-white mb-0.5">{t.name}</p>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-primary">{t.role}</p>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-primary font-bold">{t.role}</p>
                           </div>
                        </motion.div>
                     ))}
@@ -347,8 +347,8 @@ export default function LandingPage() {
         <section id="pricing" className="py-32 px-4 relative">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-24">
-              <h2 className="text-6xl md:text-8xl font-[1000] tracking-tighter leading-none mb-6">PICK YOUR <br/><span className="text-primary italic">WEAPON.</span></h2>
-              <p className="text-xl text-white/40 font-bold tracking-widest uppercase">Prices reflect the early access discount. Scale now.</p>
+              <h2 className="text-6xl md:text-8xl font-[1000] tracking-tighter leading-none mb-6 text-white">PICK YOUR <br/><span className="text-primary italic">WEAPON.</span></h2>
+              <p className="text-xl text-white/70 font-bold tracking-widest uppercase">Prices reflect the early access discount. Scale now.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -400,18 +400,18 @@ export default function LandingPage() {
                        </div>
                     )}
                     <div className="mb-10 space-y-2">
-                       <h3 className="text-2xl font-black uppercase italic italic tracking-tight">{plan.name}</h3>
+                       <h3 className="text-2xl font-black uppercase italic italic tracking-tight text-white">{plan.name}</h3>
                        <div className="flex items-baseline gap-1">
-                          <span className="text-5xl font-black">{plan.price}</span>
-                          <span className="text-white/30 font-bold uppercase tracking-widest text-xs">/ month</span>
+                          <span className="text-5xl font-black text-white">{plan.price}</span>
+                          <span className="text-white/60 font-bold uppercase tracking-widest text-xs">/ month</span>
                        </div>
                     </div>
 
                     <ul className="space-y-5 mb-12 flex-1">
                       {plan.features.map(f => (
-                        <li key={f} className="flex items-center gap-3 font-bold text-sm tracking-tight text-white/70">
-                          <Check className={cn("w-5 h-5", plan.popular ? "text-primary" : "text-white/40")} /> {f}
-                        </li>
+                        <li key={f} className="flex items-center gap-3 font-bold text-sm tracking-tight text-white/90">
+                           <Check className={cn("w-5 h-5", plan.popular ? "text-primary" : "text-white/60")} /> {f}
+                         </li>
                       ))}
                     </ul>
 
@@ -455,4 +455,3 @@ export default function LandingPage() {
     </div>
   )
 }
-

@@ -12,7 +12,7 @@ export default function AuthLayout({
           className="w-full h-full object-cover opacity-20" 
           alt="Background" 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-transparent to-[#070708]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/40 to-[#070708]" />
       </div>
 
       {/* Decorative Glows */}
