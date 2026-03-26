@@ -6,11 +6,22 @@ import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Footer } from '@/components/shared/Footer'
 import { cn } from '@/lib/utils'
+import { useEffect } from 'react'
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll()
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95])
+
+  useEffect(() => {
+    // Force scroll to top on refresh
+    window.scrollTo(0, 0)
+    
+    // Initialize Lemon Squeezy
+    if (window.createLemonSqueezy) {
+      window.createLemonSqueezy()
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#070708] text-foreground flex flex-col overflow-x-hidden selection:bg-primary/30">
@@ -415,7 +426,10 @@ export default function LandingPage() {
                       ))}
                     </ul>
 
-                    <Link href={plan.link || "/signup"}>
+                    <Link 
+                      href={plan.link || "/signup"}
+                      className={cn(plan.link && "lemonsqueezy-button")}
+                    >
                       <Button className={cn(
                         "w-full h-14 rounded-2xl text-lg font-black uppercase tracking-tighter transition-all",
                         plan.popular ? "bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20" : "bg-white/5 hover:bg-white/10 text-white border border-white/10"

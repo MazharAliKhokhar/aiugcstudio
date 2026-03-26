@@ -82,8 +82,11 @@ export default async function SettingsPage() {
                   4 Video Credits / Month
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <a href={`${process.env.NEXT_PUBLIC_LS_STARTER_URL}?checkout[email]=${user.email}`} className="w-full">
-                    <Button variant={profile?.variant_id?.includes('03189911') ? "outline" : "default"} className="w-full h-9 text-xs">
+                  <a 
+                    href={`${process.env.NEXT_PUBLIC_LS_STARTER_URL}?checkout[email]=${user.email}`} 
+                    className={cn("w-full", !profile?.variant_id?.includes('03189911') && "lemonsqueezy-button")}
+                  >
+                    <Button variant={profile?.variant_id?.includes('03189911') ? "outline" : "default"} className="w-full h-9 text-xs" disabled={profile?.variant_id?.includes('03189911')}>
                       {profile?.variant_id?.includes('03189911') ? "Current Plan" : "Upgrade"}
                     </Button>
                   </a>
@@ -104,8 +107,11 @@ export default async function SettingsPage() {
                   10 Video Credits / Month
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <a href={`${process.env.NEXT_PUBLIC_LS_GROWTH_URL}?checkout[email]=${user.email}`} className="w-full">
-                    <Button variant={profile?.variant_id?.includes('6ffe83cf') ? "outline" : "default"} className="w-full h-9 text-xs">
+                  <a 
+                    href={`${process.env.NEXT_PUBLIC_LS_GROWTH_URL}?checkout[email]=${user.email}`} 
+                    className={cn("w-full", !profile?.variant_id?.includes('6ffe83cf') && "lemonsqueezy-button")}
+                  >
+                    <Button variant={profile?.variant_id?.includes('6ffe83cf') ? "outline" : "default"} className="w-full h-9 text-xs" disabled={profile?.variant_id?.includes('6ffe83cf')}>
                       {profile?.variant_id?.includes('6ffe83cf') ? "Current Plan" : "Upgrade"}
                     </Button>
                   </a>
@@ -125,8 +131,11 @@ export default async function SettingsPage() {
                   30 Video Credits / Month
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <a href={`${process.env.NEXT_PUBLIC_LS_SCALE_URL}?checkout[email]=${user.email}`} className="w-full">
-                    <Button variant={profile?.variant_id?.includes('b1ad8f72') ? "outline" : "default"} className="w-full h-9 text-xs">
+                  <a 
+                    href={`${process.env.NEXT_PUBLIC_LS_SCALE_URL}?checkout[email]=${user.email}`} 
+                    className={cn("w-full", !profile?.variant_id?.includes('b1ad8f72') && "lemonsqueezy-button")}
+                  >
+                    <Button variant={profile?.variant_id?.includes('b1ad8f72') ? "outline" : "default"} className="w-full h-9 text-xs" disabled={profile?.variant_id?.includes('b1ad8f72')}>
                       {profile?.variant_id?.includes('b1ad8f72') ? "Current Plan" : "Upgrade"}
                     </Button>
                   </a>
