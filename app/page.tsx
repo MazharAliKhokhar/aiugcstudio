@@ -55,7 +55,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 z-[-1]">
              <img 
                src="/hero-bg.png" 
-               className="w-full h-full object-cover opacity-20 scale-105" 
+               className="w-full h-full object-cover opacity-30 scale-105" 
                alt="Background"
              />
              <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/40 to-[#070708]" />
@@ -68,7 +68,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="max-w-6xl mx-auto text-center space-y-8"
           >
-            <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 backdrop-blur-md px-4 py-2 text-xs md:text-sm font-bold text-primary shadow-2xl mb-4">
+            <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2 text-xs md:text-sm font-bold text-white shadow-2xl mb-4">
               <span className="flex h-2 w-2 rounded-full bg-primary mr-3 animate-pulse" />
               THE FUTURE OF UGC IS HERE · POWERED BY KLING 2.1
             </div>
@@ -111,13 +111,13 @@ export default function LandingPage() {
             transition={{ delay: 0.5, duration: 1 }}
             className="mt-20 max-w-5xl mx-auto"
           >
-            <p className="text-[10px] font-black tracking-[0.3em] text-white/40 uppercase mb-8">Powering the fastest growing stores on</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-30 grayscale contrast-125">
-              <span className="text-2xl font-black italic text-white/60">Shopify</span>
-              <span className="text-2xl font-black italic text-white/60">Amazon</span>
-              <span className="text-2xl font-black italic text-white/60">TikTok</span>
-              <span className="text-2xl font-black italic text-white/60">Etsy</span>
-              <span className="text-2xl font-black italic text-white/60">Woo</span>
+            <p className="text-[10px] font-black tracking-[0.3em] text-white/70 uppercase mb-8">Powering the fastest growing stores on</p>
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-70 grayscale contrast-125">
+              <span className="text-2xl font-black italic text-white/80">Shopify</span>
+              <span className="text-2xl font-black italic text-white/80">Amazon</span>
+              <span className="text-2xl font-black italic text-white/80">TikTok</span>
+              <span className="text-2xl font-black italic text-white/80">Etsy</span>
+              <span className="text-2xl font-black italic text-white/80">Woo</span>
             </div>
           </motion.div>
 
@@ -205,7 +205,7 @@ export default function LandingPage() {
               <div className="space-y-8 p-10 border-2 border-primary bg-primary/10 rounded-[40px] relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="inline-block px-4 py-1.5 rounded-full bg-primary text-white text-xs font-black uppercase italic italic tracking-widest">The ViralUGC Way</div>
-                <h3 className="text-4xl font-black uppercase italic italic tracking-tight italic text-primary">AI Infrastructure</h3>
+                <h3 className="text-4xl font-black uppercase italic italic tracking-tight italic text-white">AI Infrastructure</h3>
                 <ul className="space-y-6">
                   {[
                     "Generate dozens of variations instantly",
