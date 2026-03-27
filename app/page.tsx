@@ -120,9 +120,10 @@ export default function LandingPage() {
               <span className="text-2xl font-black italic text-foreground">Woo</span>
             </div>
           </motion.div>
-          
-          {/* BRAND HOOK & MASCOT */}
-          <section className="mt-40 mb-20 px-4">
+        </section>
+
+        {/* BRAND HOOK & MASCOT */}
+        <section className="mt-20 mb-20 px-4">
              <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-20">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                    <motion.div
