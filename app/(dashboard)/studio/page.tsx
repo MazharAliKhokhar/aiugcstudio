@@ -12,7 +12,8 @@ import { StepProductUrl } from '@/components/studio/StepProductUrl'
 import { StepGoal } from '@/components/studio/StepGoal'
 import { StepScriptPreview } from '@/components/studio/StepScriptPreview'
 import { StepGenerate } from '@/components/studio/StepGenerate'
-import { Loader2, CheckCircle2, Copy } from 'lucide-react'
+import { Loader2, CheckCircle2, Copy, Sparkles } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 // Steps: 1: URL, 2: Goal, 3: Script, 4: Generate, 5: Generating/Completed
 type Step = 1 | 2 | 3 | 4 | 5
@@ -188,23 +189,28 @@ export default function StudioPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Generation Studio</h1>
-        <p className="text-muted-foreground mt-2">Turn any URL into a high-converting video ad.</p>
-        
-        <div className="mt-8">
-          <Progress value={(step / (videoStatus === 'completed' ? 5 : 4)) * 100} className="h-2" />
-          <div className="flex justify-between text-xs text-muted-foreground mt-2 font-medium px-1">
-            <span>Product</span>
-            <span>Goal</span>
-            <span>Script</span>
-            <span>Generate</span>
+    <div className="max-w-4xl mx-auto py-12 px-4 md:px-0">
+      <div className="mb-12 space-y-2">
+        <h1 className="text-4xl font-[1000] tracking-tighter uppercase italic text-white flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20">
+            <Sparkles className="w-6 h-6 text-primary" />
           </div>
+          Generation Studio
+        </h1>
+        <p className="text-white/50 font-medium tracking-tight">Turn any product URL into a high-converting cinematic video ad.</p>
+        
+        <div className="mt-12 space-y-3">
+          <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/40 px-1">
+            <span className={cn(step >= 1 && "text-primary")}>Product</span>
+            <span className={cn(step >= 2 && "text-primary")}>Objective</span>
+            <span className={cn(step >= 3 && "text-primary")}>Scripting</span>
+            <span className={cn(step >= 4 && "text-primary")}>Render</span>
+          </div>
+          <Progress value={(step / (videoStatus === 'completed' ? 5 : 4)) * 100} className="h-1.5 bg-white/5" />
         </div>
       </div>
 
-      <Card className="shadow-lg border-primary/10 overflow-hidden relative min-h-[500px] md:min-h-[450px]">
+      <Card className="bg-white/[0.03] backdrop-blur-2xl border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden relative min-h-[550px] md:min-h-[500px] rounded-[32px]">
         <AnimatePresence mode="wait" custom={1}>
           
           {step === 1 && (

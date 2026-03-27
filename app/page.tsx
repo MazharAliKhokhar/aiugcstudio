@@ -52,13 +52,13 @@ export default function LandingPage() {
         {/* HERO */}
         <section className="relative pt-20 pb-32 md:pt-40 md:pb-48 px-4 overflow-hidden">
           {/* Hero Background Image */}
-          <div className="absolute inset-0 z-[-1]">
+          <div className="absolute inset-0 z-[0]">
              <img 
                src="/hero-bg.png" 
-               className="w-full h-full object-cover opacity-30 scale-105" 
+               className="w-full h-full object-cover opacity-20 scale-105 pointer-events-none" 
                alt="Background"
              />
-             <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/40 to-[#070708]" />
+             <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/20 to-[#070708]" />
           </div>
           
           <motion.div 
@@ -66,7 +66,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="max-w-6xl mx-auto text-center space-y-8"
+            className="max-w-6xl mx-auto text-center space-y-8 relative z-10"
           >
             <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-4 py-2 text-xs md:text-sm font-bold text-white shadow-2xl mb-4">
               <span className="flex h-2 w-2 rounded-full bg-primary mr-3 animate-pulse" />
@@ -179,14 +179,14 @@ export default function LandingPage() {
         </section>
 
         {/* COMPARISON */}
-        <section className="py-32 px-4 bg-muted/5 relative">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <section className="py-32 px-4 bg-white/[0.02] relative">
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12">
               {/* Old Way */}
-              <div className="space-y-8 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-8 border border-white/10 rounded-[40px] bg-white/5">
-                <div className="inline-block px-4 py-1.5 rounded-full bg-red-500/10 text-red-400 text-xs font-black uppercase italic italic tracking-widest">The Slow Way</div>
-                <h3 className="text-3xl font-black uppercase italic italic tracking-tight text-white">Manual UGC</h3>
+              <div className="space-y-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-8 border border-white/5 rounded-[40px] bg-white/[0.03] backdrop-blur-sm">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-red-500/10 text-red-500/80 text-[10px] font-black uppercase tracking-widest border border-red-500/10">The Slow Way</div>
+                <h3 className="text-3xl font-black uppercase italic tracking-tight text-white/90">Manual UGC Production</h3>
                 <ul className="space-y-4">
                   {[
                     "Waiting 14+ days for shipping",
@@ -194,18 +194,18 @@ export default function LandingPage() {
                     "Paying $150-$500 per single video",
                     "Bad lighting, retakes, and headaches"
                   ].map(item => (
-                    <li key={item} className="flex items-center gap-3 text-white/70 line-through decoration-red-500/50">
-                      <XCircle className="w-5 h-5 text-red-500 shrink-0" /> {item}
+                    <li key={item} className="flex items-center gap-3 text-white/60 line-through decoration-red-500/30">
+                      <XCircle className="w-5 h-4 text-red-500/50 shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
               </div>
 
               {/* New Way */}
-              <div className="space-y-8 p-10 border-2 border-primary bg-primary/10 rounded-[40px] relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="inline-block px-4 py-1.5 rounded-full bg-primary text-white text-xs font-black uppercase italic italic tracking-widest">The ViralUGC Way</div>
-                <h3 className="text-4xl font-black uppercase italic italic tracking-tight italic text-white">AI Infrastructure</h3>
+              <div className="space-y-8 p-10 border border-primary/30 bg-primary/[0.08] rounded-[40px] relative overflow-hidden group backdrop-blur-md shadow-2xl shadow-primary/5">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="inline-block px-4 py-1.5 rounded-full bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 border border-white/10">The ViralUGC Way</div>
+                <h3 className="text-4xl font-black uppercase italic tracking-tight text-white">AI Infrastructure</h3>
                 <ul className="space-y-6">
                   {[
                     "Generate dozens of variations instantly",
@@ -213,9 +213,9 @@ export default function LandingPage() {
                     "Hyper-realistic AI actors (Kling 2.1)",
                     "Scale to 7-figures with high-volume testing"
                   ].map(item => (
-                    <li key={item} className="flex items-center gap-4 text-xl font-bold tracking-tight text-white">
-                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
-                         <Check className="w-4 h-4 text-white" />
+                    <li key={item} className="flex items-center gap-4 text-xl font-bold tracking-tight text-white/90">
+                      <div className="w-6 h-6 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                         <Check className="w-3.5 h-3.5 text-primary" />
                       </div>
                       {item}
                     </li>
@@ -359,7 +359,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-24">
               <h2 className="text-6xl md:text-8xl font-[1000] tracking-tighter leading-none mb-6 text-white">PICK YOUR <br/><span className="text-primary italic">WEAPON.</span></h2>
-              <p className="text-xl text-white/70 font-bold tracking-widest uppercase">Prices reflect the early access discount. Scale now.</p>
+              <p className="text-sm font-black text-white/50 tracking-[0.3em] uppercase">Limited slots available for early access scale. Secure yours.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -400,28 +400,28 @@ export default function LandingPage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                   className={cn(
-                    "p-1 rounded-[40px] relative transition-transform hover:-translate-y-2",
-                    plan.popular ? "bg-gradient-to-br from-primary to-orange-600 scale-105 z-10" : "bg-white/10"
+                    "p-[1px] rounded-[40px] relative transition-all duration-500 hover:-translate-y-2",
+                    plan.popular ? "bg-gradient-to-br from-primary via-orange-500 to-primary/50 scale-105 z-10 shadow-2xl shadow-primary/20" : "bg-white/10 hover:bg-white/20"
                   )}
                 >
-                  <div className="h-full w-full bg-[#0d0d0f] rounded-[39px] p-10 flex flex-col">
+                  <div className="h-full w-full bg-[#0d0d0f]/90 backdrop-blur-2xl rounded-[39px] p-10 flex flex-col">
                     {plan.popular && (
-                       <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black italic flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-xl">
-                          <CheckCircle2 className="w-3 h-3 text-primary" /> MOST CHOSEN
+                       <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black italic flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-2xl border border-primary/20">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> MOST POPULAR
                        </div>
                     )}
                     <div className="mb-10 space-y-2">
-                       <h3 className="text-2xl font-black uppercase italic italic tracking-tight text-white">{plan.name}</h3>
+                       <h3 className="text-2xl font-black uppercase italic tracking-tight text-white/90">{plan.name}</h3>
                        <div className="flex items-baseline gap-1">
                           <span className="text-5xl font-black text-white">{plan.price}</span>
-                          <span className="text-white/60 font-bold uppercase tracking-widest text-xs">/ month</span>
+                          <span className="text-white/40 font-black uppercase tracking-widest text-[10px]">/ month</span>
                        </div>
                     </div>
 
                     <ul className="space-y-5 mb-12 flex-1">
                       {plan.features.map(f => (
-                        <li key={f} className="flex items-center gap-3 font-bold text-sm tracking-tight text-white/90">
-                           <Check className={cn("w-5 h-5", plan.popular ? "text-primary" : "text-white/60")} /> {f}
+                        <li key={f} className="flex items-center gap-3 font-bold text-sm tracking-tight text-white/70">
+                           <Check className={cn("w-4 h-4", plan.popular ? "text-primary" : "text-white/30")} /> {f}
                          </li>
                       ))}
                     </ul>
@@ -431,8 +431,8 @@ export default function LandingPage() {
                       className={cn(plan.link && "lemonsqueezy-button")}
                     >
                       <Button className={cn(
-                        "w-full h-14 rounded-2xl text-lg font-black uppercase tracking-tighter transition-all",
-                        plan.popular ? "bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20" : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                        "w-full h-14 rounded-2xl text-lg font-black uppercase tracking-tighter transition-all duration-300",
+                        plan.popular ? "bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 border-0" : "bg-white/[0.03] hover:bg-white/[0.08] text-white border border-white/10"
                       )}>
                         Choose Plan
                       </Button>

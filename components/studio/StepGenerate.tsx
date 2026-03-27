@@ -25,40 +25,46 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
   const hasEnoughCredits = creditsAvailable >= cost
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      <DurationToggle duration={duration} setDuration={setDuration} />
+      <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
+        <DurationToggle duration={duration} setDuration={setDuration} />
+      </div>
 
       {!hasEnoughCredits && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-400 rounded-2xl">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            You don't have enough credits for a {duration}s video. You have {creditsAvailable} credits, but need {cost}. Please top up on the Settings page.
+          <AlertDescription className="font-medium">
+            Insufficient credits for a {duration}s video. You have {creditsAvailable} credits, but need {cost}. 
           </AlertDescription>
         </Alert>
       )}
 
-      <div className="flex gap-4 pt-4 border-t">
-        <Button variant="outline" onClick={onBack} className="w-32 h-14" disabled={isGenerating}>
+      <div className="flex gap-4 pt-6">
+        <Button 
+          variant="outline" 
+          onClick={onBack} 
+          className="w-32 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold" 
+          disabled={isGenerating}
+        >
           <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
         
         <Button 
           onClick={onGenerate} 
-          className="flex-1 h-14 text-lg font-bold shadow-lg shadow-primary/25 relative overflow-hidden group"
+          className="flex-1 h-14 text-lg font-[1000] uppercase tracking-tighter rounded-2xl bg-gradient-to-r from-primary to-orange-600 hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-primary/30 transition-all group overflow-hidden"
           disabled={isGenerating || !hasEnoughCredits}
         >
           {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Initializing Generator...
-            </>
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Initializing Ad Generation...</span>
+            </div>
           ) : (
-            <>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              <Sparkles className="mr-2 h-5 w-5" />
-              Generate Video Ad — Pay {cost} Credit{cost > 1 ? 's' : ''}
-            </>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-white animate-pulse" />
+              <span>Submit & Render — {cost} Credit{cost > 1 ? 's' : ''}</span>
+            </div>
           )}
         </Button>
       </div>
