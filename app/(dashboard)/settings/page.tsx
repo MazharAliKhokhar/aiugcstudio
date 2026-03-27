@@ -76,10 +76,10 @@ export default async function SettingsPage() {
               )}>
                 <CardHeader className="p-4 pb-2">
                   <div className="font-bold text-lg">Starter</div>
-                  <div className="text-2xl font-black">$69<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                  <div className="text-2xl font-black">$99<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
-                  4 Video Credits / Month
+                  20 Video Credits / Month
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
                   <a 
@@ -100,11 +100,11 @@ export default async function SettingsPage() {
               )}>
                 <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold rounded-bl-lg">POPULAR</div>
                 <CardHeader className="p-4 pb-2">
-                  <div className="font-bold text-lg">Growth Pro</div>
-                  <div className="text-2xl font-black">$149<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                  <div className="font-bold text-lg">Pro</div>
+                  <div className="text-2xl font-black">$299<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
-                  10 Video Credits / Month
+                  100 Video Credits / Month
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
                   <a 
@@ -124,11 +124,11 @@ export default async function SettingsPage() {
                 profile?.variant_id?.includes('b1ad8f72') ? "border-primary bg-primary/5" : "border-border"
               )}>
                 <CardHeader className="p-4 pb-2">
-                  <div className="font-bold text-lg">Ad Scale</div>
-                  <div className="text-2xl font-black">$399<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
+                  <div className="font-bold text-lg">Scale</div>
+                  <div className="text-2xl font-black">$799<span className="text-xs font-normal text-muted-foreground">/mo</span></div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
-                  30 Video Credits / Month
+                  300 Video Credits / Month
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
                   <a 

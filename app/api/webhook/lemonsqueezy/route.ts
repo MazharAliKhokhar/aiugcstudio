@@ -8,8 +8,8 @@ import { verifyWebhookSignature, LSWebhookBody } from '@/lib/lemonsqueezy'
 const VARIANT_TO_CREDITS: Record<string | number, number> = {
   // Plan names as fallback
   'Starter': 20,
-  'Growth Pro': 60,
-  'Ad Scale': 200,
+  'Pro': 100,
+  'Scale': 300,
   // Numeric variant IDs (preferred)
   // '555123': 4, 
   // '555124': 10,

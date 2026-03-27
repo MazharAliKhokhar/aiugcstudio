@@ -70,7 +70,7 @@ export default function LandingPage() {
           >
             <div className="inline-flex items-center rounded-full border border-black/5 bg-white backdrop-blur-md px-4 py-2 text-xs md:text-sm font-bold text-foreground shadow-sm mb-4">
               <span className="flex h-2 w-2 rounded-full bg-primary mr-3 animate-pulse" />
-              THE FUTURE OF UGC IS HERE · POWERED BY KLING 2.1
+              THE FUTURE OF UGC IS HERE · POWERED BY KLING 3.0
             </div>
 
             <h1 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.9] uppercase text-foreground">
@@ -216,7 +216,7 @@ export default function LandingPage() {
                 <div className="space-y-4">
                   <h2 className="text-4xl md:text-6xl font-black italic uppercase italic tracking-tighter text-foreground">Broadcast Quality.</h2>
                   <p className="text-lg md:text-xl text-foreground/70 font-medium">
-                    Our Kling 2.1 implementation produces video so real, experienced ad buyers can't distinguish it from human creators.
+                    Our Kling 3.0 implementation produces video so real, experienced ad buyers can't distinguish it from human creators.
                   </p>
                 </div>
                 
@@ -269,7 +269,7 @@ export default function LandingPage() {
                   {[
                     "Generate dozens of variations instantly",
                     "Zero shipping, zero physical constraints",
-                    "Hyper-realistic AI actors (Kling 2.1)",
+                    "Hyper-realistic AI actors (Kling 3.0)",
                     "Scale to 7-figures with high-volume testing"
                   ].map(item => (
                     <li key={item} className="flex items-center gap-4 text-xl font-bold tracking-tight text-foreground/90">
@@ -426,30 +426,30 @@ export default function LandingPage() {
               {[
                 { 
                   name: "Starter", 
-                  price: "$69", 
+                  price: "$99", 
                   units: "20", 
                   popular: false, 
                   color: "white", 
                   link: process.env.NEXT_PUBLIC_LS_STARTER_URL,
-                  features: ["20 Video Units / Mo", "Standard Rendering", "Commercial License", "Public Library Access", "1 Unit = 15s Ad"]
+                  features: ["20 Video Units / Mo", "Viral hook AI", "Commercial License", "Standard Rendering", "1 Unit = 15s Ad"]
                 },
                 { 
-                  name: "Growth Pro", 
-                  price: "$149", 
-                  units: "60", 
+                  name: "Pro", 
+                  price: "$299", 
+                  units: "100", 
                   popular: true, 
                   color: "primary", 
                   link: process.env.NEXT_PUBLIC_LS_GROWTH_URL,
-                  features: ["60 Video Units / Mo", "Priority Rendering", "Commercial License", "Private Gallery", "Priority Hooks AI", "1 Unit = 15s Ad"]
+                  features: ["100 Video Units / Mo", "Priority Rendering", "Private Gallery", "Priority AI Hooks", "Commercial License", "1 Unit = 15s Ad"]
                 },
                 { 
-                  name: "Ad Scale", 
-                  price: "$399", 
-                  units: "200", 
+                  name: "Scale", 
+                  price: "$799", 
+                  units: "300", 
                   popular: false, 
                   color: "white", 
                   link: process.env.NEXT_PUBLIC_LS_SCALE_URL,
-                  features: ["200 Video Units / Mo", "Express Rendering", "Commercial License", "Dedicated Support", "Full API Access", "1 Unit = 15s Ad"]
+                  features: ["300 Video Units / Mo", "Express Rendering", "Dedicated Support", "Full API Access", "Commercial License", "1 Unit = 15s Ad"]
                 }
               ].map((plan, i) => (
                 <motion.div 
