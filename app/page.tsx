@@ -464,8 +464,8 @@ export default function LandingPage() {
                     plan.popular ? "bg-gradient-to-br from-primary via-blue-500 to-primary/50 scale-105 z-10 shadow-2xl shadow-primary/10" : "bg-black/5 hover:bg-black/10"
                   )}
                 >
-                  <div className="h-full w-full bg-card rounded-[39px] p-10 flex flex-col relative overflow-hidden group/card shadow-xl shadow-black/5">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700" />
+                  <div className="h-full w-full bg-card rounded-[39px] p-10 flex flex-col relative group/card shadow-xl shadow-black/5">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 rounded-[39px] overflow-hidden" />
                     {plan.popular && (
                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black italic flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-2xl border border-white/20">
                           <CheckCircle2 className="w-3.5 h-3.5 text-white" /> MOST POPULAR
