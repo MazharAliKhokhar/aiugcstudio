@@ -108,11 +108,12 @@ export default function LandingPage() {
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="mt-20 max-w-5xl mx-auto"
+            viewport={{ once: true }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="mt-20 max-w-5xl mx-auto relative z-10"
           >
-            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/70 uppercase mb-8 text-center">Powering the fastest growing stores on</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-50 contrast-75 brightness-0">
+            <p className="text-xs font-black tracking-[0.3em] text-foreground/80 uppercase mb-8 text-center">Powering the fastest growing stores on</p>
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-60 contrast-75 brightness-0">
               <span className="text-2xl font-black italic text-foreground">Shopify</span>
               <span className="text-2xl font-black italic text-foreground">Amazon</span>
               <span className="text-2xl font-black italic text-foreground">TikTok</span>
