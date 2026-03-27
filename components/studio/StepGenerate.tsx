@@ -27,15 +27,15 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
+      <div className="bg-white border border-black/5 rounded-3xl p-6 shadow-sm">
         <DurationToggle duration={duration} setDuration={setDuration} />
       </div>
 
       {!hasEnoughCredits && (
-        <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-400 rounded-2xl">
+        <Alert variant="destructive" className="bg-red-500/5 border-red-500/10 text-red-600 rounded-2xl">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="font-medium">
-            Insufficient credits for a {duration}s video. You have {creditsAvailable} credits, but need {cost}. 
+            Insufficient units for a {duration}s video. You have {creditsAvailable} units, but need {cost}. 
           </AlertDescription>
         </Alert>
       )}
@@ -44,7 +44,7 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
         <Button 
           variant="outline" 
           onClick={onBack} 
-          className="w-32 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold" 
+          className="w-32 h-14 rounded-2xl border-black/5 bg-white hover:bg-black/5 text-foreground font-bold shadow-sm" 
           disabled={isGenerating}
         >
           <ArrowLeft className="mr-2 w-4 h-4" /> Back
@@ -52,7 +52,7 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
         
         <Button 
           onClick={onGenerate} 
-          className="flex-1 h-14 text-lg font-[1000] uppercase tracking-tighter rounded-2xl bg-gradient-to-r from-primary to-orange-600 hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-primary/30 transition-all group overflow-hidden"
+          className="flex-1 h-14 text-lg font-[1000] uppercase tracking-tighter rounded-2xl bg-gradient-to-r from-primary to-blue-600 hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-primary/20 transition-all group overflow-hidden text-white"
           disabled={isGenerating || !hasEnoughCredits}
         >
           {isGenerating ? (

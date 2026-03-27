@@ -18,36 +18,36 @@ export function StepProductUrl({ url, setUrl, productName, setProductName, onNex
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-6">
         <div className="space-y-3">
-          <Label htmlFor="product-name" className="text-sm font-black uppercase tracking-widest text-white/70 flex items-center gap-2">
-            <Box className="w-4 h-4 text-primary" /> Product Name <span className="text-white/30 font-normal lowercase">(optional)</span>
+          <Label htmlFor="product-name" className="text-sm font-black uppercase tracking-widest text-foreground/70 flex items-center gap-2">
+            <Box className="w-4 h-4 text-primary" /> Product Name <span className="text-foreground/30 font-normal lowercase">(optional)</span>
           </Label>
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-orange-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <Input
               id="product-name"
               placeholder="e.g. Acme SuperBlender"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
-              className="relative bg-black/40 border-white/10 rounded-xl h-14 pl-4 focus-visible:ring-primary/50 text-base"
+              className="relative bg-white border-black/10 rounded-xl h-14 pl-4 focus-visible:ring-primary/50 text-base text-foreground shadow-sm"
             />
           </div>
         </div>
 
         <div className="space-y-3">
-          <Label htmlFor="product-url" className="text-sm font-black uppercase tracking-widest text-white/70 flex items-center gap-2">
+          <Label htmlFor="product-url" className="text-sm font-black uppercase tracking-widest text-foreground/70 flex items-center gap-2">
             <LinkIcon className="w-4 h-4 text-primary" /> Product Website URL
           </Label>
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-orange-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <Input
               id="product-url"
               placeholder="https://example.com/product"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="relative bg-black/40 border-white/10 rounded-xl h-14 pl-4 focus-visible:ring-primary/50 text-base"
+              className="relative bg-white border-black/10 rounded-xl h-14 pl-4 focus-visible:ring-primary/50 text-base text-foreground shadow-sm"
             />
           </div>
-          <p className="text-xs text-white/40 font-medium">This is the destination link for your video ad.</p>
+          <p className="text-xs text-foreground/40 font-medium">This is the destination link for your video ad.</p>
         </div>
       </div>
 

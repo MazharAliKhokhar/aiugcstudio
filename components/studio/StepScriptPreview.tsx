@@ -20,7 +20,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
       <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="prompt-script" className="text-sm font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+            <Label htmlFor="prompt-script" className="text-sm font-black uppercase tracking-widest text-foreground/50 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" /> Visual Scripting
             </Label>
             <Button 
@@ -35,45 +35,45 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
           </div>
           
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/5 to-blue-500/5 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <Textarea
               id="prompt-script"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe the scenes visually..."
-              className="relative min-h-[160px] bg-black/40 border-white/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide"
+              className="relative min-h-[160px] bg-white border-black/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-foreground shadow-sm"
             />
           </div>
-          <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">
+          <p className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
             Used by Kling 2.1 to generate photorealistic video frames.
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="voice-script" className="text-sm font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+            <Label htmlFor="voice-script" className="text-sm font-black uppercase tracking-widest text-foreground/50 flex items-center gap-2">
               <Mic className="w-4 h-4 text-primary" /> AI Voiceover Copy
             </Label>
           </div>
           
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/5 to-blue-500/5 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <Textarea
               id="voice-script"
               value={voiceScript}
               onChange={(e) => setVoiceScript(e.target.value)}
               placeholder="Type what the AI should say..."
-              className="relative min-h-[100px] bg-black/40 border-white/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40"
+              className="relative min-h-[100px] bg-white border-black/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 text-foreground shadow-sm"
             />
           </div>
-          <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">
+          <p className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
             Generated via ElevenLabs Multilingual v2 engine.
           </p>
         </div>
       </div>
 
       <div className="flex gap-4 pt-6">
-        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold">
+        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-black/5 bg-white hover:bg-black/5 text-foreground font-bold shadow-sm">
           <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
         <Button onClick={onNext} className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all" disabled={!prompt.trim()}>
