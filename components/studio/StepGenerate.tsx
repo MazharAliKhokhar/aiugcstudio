@@ -63,7 +63,7 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
           ) : (
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-white animate-pulse" />
-              <span>Submit & Render — {cost} Credit{cost > 1 ? 's' : ''}</span>
+              <span>Submit & Render — {cost} Unit{cost > 1 ? 's' : ''}</span>
             </div>
           )}
         </Button>

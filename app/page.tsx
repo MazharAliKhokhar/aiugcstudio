@@ -368,29 +368,29 @@ export default function LandingPage() {
                 { 
                   name: "Starter", 
                   price: "$69", 
-                  credits: "4", 
+                  units: "20", 
                   popular: false, 
                   color: "white", 
                   link: process.env.NEXT_PUBLIC_LS_STARTER_URL,
-                  features: ["4 AI Video Ads / Mo", "Standard Rendering", "Commercial License", "Public Library Access"]
+                  features: ["20 Video Units / Mo", "Standard Rendering", "Commercial License", "Public Library Access", "1 Unit = 15s Ad"]
                 },
                 { 
                   name: "Growth Pro", 
                   price: "$149", 
-                  credits: "10", 
+                  units: "60", 
                   popular: true, 
                   color: "primary", 
                   link: process.env.NEXT_PUBLIC_LS_GROWTH_URL,
-                  features: ["10 AI Video Ads / Mo", "Priority Rendering", "Commercial License", "Private Gallery", "Priority Hooks AI"]
+                  features: ["60 Video Units / Mo", "Priority Rendering", "Commercial License", "Private Gallery", "Priority Hooks AI", "1 Unit = 15s Ad"]
                 },
                 { 
                   name: "Ad Scale", 
                   price: "$399", 
-                  credits: "30", 
+                  units: "200", 
                   popular: false, 
                   color: "white", 
                   link: process.env.NEXT_PUBLIC_LS_SCALE_URL,
-                  features: ["30 AI Video Ads / Mo", "Express Rendering", "Commercial License", "Dedicated Support", "Full API Access"]
+                  features: ["200 Video Units / Mo", "Express Rendering", "Commercial License", "Dedicated Support", "Full API Access", "1 Unit = 15s Ad"]
                 }
               ].map((plan, i) => (
                 <motion.div 

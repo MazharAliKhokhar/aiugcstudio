@@ -7,9 +7,9 @@ import { verifyWebhookSignature, LSWebhookBody } from '@/lib/lemonsqueezy'
 // Variant IDs mapping (update these with actual numeric IDs from LS dashboard)
 const VARIANT_TO_CREDITS: Record<string | number, number> = {
   // Plan names as fallback
-  'Starter': 4,
-  'Growth Pro': 10,
-  'Ad Scale': 30,
+  'Starter': 20,
+  'Growth Pro': 60,
+  'Ad Scale': 200,
   // Numeric variant IDs (preferred)
   // '555123': 4, 
   // '555124': 10,

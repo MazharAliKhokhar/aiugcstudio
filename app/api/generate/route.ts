@@ -18,21 +18,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const requiredCredits = getCreditCost(duration)
+    const requiredUnits = getCreditCost(duration)
 
     // 1. Atomically check and deduct credits via Postgres RPC
     const { data: newBalance, error: deductError } = await supabase.rpc('deduct_credits', {
       p_user_id: user.id,
-      p_amount: requiredCredits
+      p_amount: requiredUnits
     })
 
     if (deductError) {
-      console.error('Credit deduction RPC error:', deductError)
-      return NextResponse.json({ error: 'Failed to deduct credits' }, { status: 500 })
+      console.error('Unit deduction RPC error:', deductError)
+      return NextResponse.json({ error: 'Failed to deduct units' }, { status: 500 })
     }
 
     if (newBalance === -1) {
-      return NextResponse.json({ error: 'Insufficient credits' }, { status: 402 })
+      return NextResponse.json({ error: 'Insufficient units' }, { status: 402 })
     }
 
     // 2. Insert pending video row
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (videoError || !videoData) {
-      // Revert credits atomically
-      await supabase.rpc('increment_credits', { p_user_id: user.id, p_amount: requiredCredits })
+      // Revert units atomically
+      await supabase.rpc('increment_credits', { p_user_id: user.id, p_amount: requiredUnits })
       return NextResponse.json({ error: 'Failed to create video record' }, { status: 500 })
     }
 

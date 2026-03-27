@@ -17,9 +17,9 @@ export function DurationToggle({ duration, setDuration }: DurationToggleProps) {
       <RadioGroup
         value={duration.toString()}
         onValueChange={(val) => setDuration(parseInt(val))}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
       >
-        {[15, 30, 60].map((d) => (
+        {[15, 30, 45, 60].map((d) => (
           <div key={d} className="relative group">
             <RadioGroupItem value={d.toString()} id={`duration-${d}`} className="peer sr-only" />
             <Label
