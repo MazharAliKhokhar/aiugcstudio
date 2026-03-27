@@ -24,14 +24,14 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#070708] text-foreground flex flex-col overflow-x-hidden selection:bg-primary/30">
+    <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden selection:bg-primary/30 font-sans">
       {/* GLOWING AMBIENCE */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full opacity-50" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/10 blur-[120px] rounded-full opacity-30" />
       </div>
 
-      <header className="px-6 h-20 flex items-center justify-between border-b border-white/5 bg-[#070708]/70 backdrop-blur-xl sticky top-0 z-50">
+      <header className="px-6 h-20 flex items-center justify-between border-b border-white/5 bg-background/70 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-2.5 group cursor-pointer">
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform">
             <Sparkles className="w-5 h-5 text-white" />
@@ -92,11 +92,11 @@ export default function LandingPage() {
               </Link>
               <div className="flex -space-x-4">
                 {[1,2,3,4].map(i => (
-                  <div key={i} className="w-12 h-12 rounded-full border-2 border-[#070708] bg-white/10 overflow-hidden">
+                  <div key={i} className="w-12 h-12 rounded-full border-2 border-background bg-white/10 overflow-hidden">
                     <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="User" />
                   </div>
                 ))}
-                <div className="w-12 h-12 rounded-full border-2 border-[#070708] bg-primary flex items-center justify-center text-[10px] font-black italic text-white">
+                <div className="w-12 h-12 rounded-full border-2 border-background bg-primary flex items-center justify-center text-[10px] font-black italic text-white">
                   +2.4k
                 </div>
               </div>
@@ -179,13 +179,13 @@ export default function LandingPage() {
         </section>
 
         {/* COMPARISON */}
-        <section className="py-32 px-4 bg-white/[0.02] relative">
+        <section className="py-32 px-4 bg-primary/[0.02] relative">
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12">
               {/* Old Way */}
-              <div className="space-y-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-8 border border-white/5 rounded-[40px] bg-white/[0.03] backdrop-blur-sm">
-                <div className="inline-block px-4 py-1.5 rounded-full bg-red-500/10 text-red-500/80 text-[10px] font-black uppercase tracking-widest border border-red-500/10">The Slow Way</div>
+              <div className="space-y-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-8 border border-white/5 rounded-[40px] bg-background/40 backdrop-blur-sm">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-500/10">The Slow Way</div>
                 <h3 className="text-3xl font-black uppercase italic tracking-tight text-white/90">Manual UGC Production</h3>
                 <ul className="space-y-4">
                   {[
@@ -194,8 +194,8 @@ export default function LandingPage() {
                     "Paying $150-$500 per single video",
                     "Bad lighting, retakes, and headaches"
                   ].map(item => (
-                    <li key={item} className="flex items-center gap-3 text-white/60 line-through decoration-red-500/30">
-                      <XCircle className="w-5 h-4 text-red-500/50 shrink-0" /> {item}
+                    <li key={item} className="flex items-center gap-3 text-white/50 line-through decoration-red-500/30">
+                      <XCircle className="w-5 h-4 text-red-500/40 shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
@@ -404,7 +404,8 @@ export default function LandingPage() {
                     plan.popular ? "bg-gradient-to-br from-primary via-orange-500 to-primary/50 scale-105 z-10 shadow-2xl shadow-primary/20" : "bg-white/10 hover:bg-white/20"
                   )}
                 >
-                  <div className="h-full w-full bg-[#0d0d0f]/90 backdrop-blur-2xl rounded-[39px] p-10 flex flex-col">
+                  <div className="h-full w-full bg-card/80 backdrop-blur-2xl rounded-[39px] p-10 flex flex-col relative overflow-hidden group/card">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700" />
                     {plan.popular && (
                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black italic flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-2xl border border-primary/20">
                           <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> MOST POPULAR
@@ -446,18 +447,19 @@ export default function LandingPage() {
 
         {/* CTA */}
         <section className="py-40 px-4">
-           <div className="max-w-4xl mx-auto p-16 md:p-24 rounded-[60px] bg-white text-black text-center relative overflow-hidden">
-              <div className="absolute -top-20 -right-20 w-80 h-80 bg-primary opacity-20 blur-[100px] rounded-full" />
-              <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange-500 opacity-20 blur-[100px] rounded-full" />
+           <div className="max-w-5xl mx-auto p-16 md:p-24 rounded-[60px] bg-primary text-white text-center relative overflow-hidden shadow-2xl shadow-primary/20 group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/20 opacity-50" />
+              <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/20 opacity-20 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
+              <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange-500/30 opacity-20 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
               
-              <h2 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.85] uppercase italic italic mb-10 relative z-10">
-                 STOP LOSING <br className="hidden md:block"/> ON <span className="text-primary underline">UGC.</span>
+              <h2 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.85] uppercase italic mb-10 relative z-10 drop-shadow-2xl">
+                 STOP LOSING <br className="hidden md:block"/> ON <span className="text-black/40 underline decoration-white/30">UGC.</span>
               </h2>
-              <p className="text-xl md:text-2xl font-bold tracking-tight text-black/60 mb-12 relative z-10 max-w-xl mx-auto leading-tight">
+              <p className="text-xl md:text-2xl font-bold tracking-tight text-white/80 mb-12 relative z-10 max-w-xl mx-auto leading-tight">
                  You are one high-converting hook away from scaling to 7-figures. Generate it today.
               </p>
               <Link href="/signup" className="relative z-10 inline-block">
-                <Button size="lg" className="h-20 rounded-[32px] px-16 text-2xl font-black uppercase tracking-tighter bg-black text-white hover:bg-black/90 hover:scale-105 transition-all">
+                <Button size="lg" className="h-20 rounded-[32px] px-16 text-2xl font-black uppercase tracking-tighter bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all shadow-2xl shadow-black/10">
                    Join ViralUGC <ArrowRight className="w-8 h-8 ml-4" />
                 </Button>
               </Link>

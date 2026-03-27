@@ -22,7 +22,8 @@ export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, { error: null })
 
   return (
-    <Card className="w-full max-w-md mx-4 shadow-xl border-primary/20">
+    <Card className="w-full max-w-md mx-4 shadow-2xl border-white/10 bg-card/60 backdrop-blur-3xl rounded-[32px] overflow-hidden relative">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl -translate-y-16 translate-x-16 rounded-full" />
       <CardHeader className="space-y-4 text-center pb-6">
         <Link href="/" className="flex items-center justify-center gap-2 group w-fit mx-auto cursor-pointer">
           <Sparkles className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />

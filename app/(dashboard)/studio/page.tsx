@@ -199,14 +199,17 @@ export default function StudioPage() {
         </h1>
         <p className="text-white/50 font-medium tracking-tight">Turn any product URL into a high-converting cinematic video ad.</p>
         
-        <div className="mt-12 space-y-3">
-          <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/40 px-1">
-            <span className={cn(step >= 1 && "text-primary")}>Product</span>
-            <span className={cn(step >= 2 && "text-primary")}>Objective</span>
-            <span className={cn(step >= 3 && "text-primary")}>Scripting</span>
-            <span className={cn(step >= 4 && "text-primary")}>Render</span>
+        <div className="mt-12 space-y-4">
+          <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/30 px-1">
+            <span className={cn(step >= 1 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Product</span>
+            <span className={cn(step >= 2 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Objective</span>
+            <span className={cn(step >= 3 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Scripting</span>
+            <span className={cn(step >= 4 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Render</span>
           </div>
-          <Progress value={(step / (videoStatus === 'completed' ? 5 : 4)) * 100} className="h-1.5 bg-white/5" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 blur-sm rounded-full" />
+            <Progress value={(step / (videoStatus === 'completed' ? 5 : 4)) * 100} className="h-1.5 bg-white/5 relative z-10" />
+          </div>
         </div>
       </div>
 
@@ -288,8 +291,8 @@ export default function StudioPage() {
                   <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-bold">Video Ready!</h3>
-                  <div className="rounded-xl overflow-hidden border shadow-lg bg-black aspect-[9/16]">
+                  <div className="rounded-[32px] overflow-hidden border border-white/10 shadow-2xl bg-black aspect-[9/16] relative group/vid">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/vid:opacity-100 transition-opacity z-10 pointer-events-none" />
                     <video src={videoUrl} controls autoPlay loop className="w-full h-full object-cover" />
                   </div>
                   <div className="flex gap-4">

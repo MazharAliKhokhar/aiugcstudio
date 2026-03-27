@@ -4,7 +4,7 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#070708] relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden font-sans">
       {/* Background with Hero Image */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -12,7 +12,7 @@ export default function AuthLayout({
           className="w-full h-full object-cover opacity-20" 
           alt="Background" 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/40 to-[#070708]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-black/40 to-background" />
       </div>
 
       {/* Decorative Glows */}
