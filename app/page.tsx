@@ -55,10 +55,10 @@ export default function LandingPage() {
           <div className="absolute inset-0 z-[0]">
              <img 
                src="/hero-bg.png" 
-               className="w-full h-full object-cover opacity-20 scale-105 pointer-events-none" 
+               className="w-full h-full object-cover opacity-10 scale-105 pointer-events-none" 
                alt="Background"
              />
-             <div className="absolute inset-0 bg-gradient-to-b from-[#070708] via-black/20 to-[#070708]" />
+             <div className="absolute inset-0 bg-gradient-to-b from-white via-white/80 to-background" />
           </div>
           
           <motion.div 
@@ -112,12 +112,12 @@ export default function LandingPage() {
             className="mt-20 max-w-5xl mx-auto"
           >
             <p className="text-[10px] font-black tracking-[0.3em] text-foreground/70 uppercase mb-8">Powering the fastest growing stores on</p>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-70 grayscale contrast-125">
-              <span className="text-2xl font-black italic text-foreground/80">Shopify</span>
-              <span className="text-2xl font-black italic text-foreground/80">Amazon</span>
-              <span className="text-2xl font-black italic text-foreground/80">TikTok</span>
-              <span className="text-2xl font-black italic text-foreground/80">Etsy</span>
-              <span className="text-2xl font-black italic text-foreground/80">Woo</span>
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-50 contrast-75 brightness-0">
+              <span className="text-2xl font-black italic text-foreground">Shopify</span>
+              <span className="text-2xl font-black italic text-foreground">Amazon</span>
+              <span className="text-2xl font-black italic text-foreground">TikTok</span>
+              <span className="text-2xl font-black italic text-foreground">Etsy</span>
+              <span className="text-2xl font-black italic text-foreground">Woo</span>
             </div>
           </motion.div>
 
@@ -245,7 +245,7 @@ export default function LandingPage() {
                        <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center">
                           <Rocket className="w-8 h-8 text-primary" />
                        </div>
-                       <h3 className="text-3xl font-black uppercase italic italic tracking-tight text-white">One-Click Multi-Variations</h3>
+                       <h3 className="text-3xl font-black uppercase italic italic tracking-tight text-foreground">One-Click Multi-Variations</h3>
                        <p className="text-foreground/80 text-xl font-medium">Don't just test one ad. Test ten. Select different hooks, avatars, and scripts for the same product link and generate the entire campaign in minutes.</p>
                     </div>
                     <div className="mt-12 h-1 bg-black/5 rounded-full overflow-hidden">
@@ -260,7 +260,7 @@ export default function LandingPage() {
                           <Heart className="w-6 h-6 text-blue-500" />
                        </div>
                        <div className="space-y-2">
-                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight text-white">Emotional AI Scripting</h4>
+                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight text-foreground">Emotional AI Scripting</h4>
                           <p className="text-foreground/70 text-sm">Our LLM is trained on the top 10,000 viral TikTok ads to write scripts that actually stop the scroll.</p>
                        </div>
                     </div>
@@ -273,7 +273,7 @@ export default function LandingPage() {
                           <CheckCircle2 className="w-6 h-6 text-green-500" />
                        </div>
                        <div className="space-y-2">
-                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight text-white">Refund Protection</h4>
+                          <h4 className="text-xl font-bold uppercase italic italic tracking-tight text-foreground">Refund Protection</h4>
                           <p className="text-foreground/70 text-sm">Atomic database logic ensures if a generation fails, your credits are returned instantly. Zero risk.</p>
                        </div>
                     </div>
@@ -309,7 +309,7 @@ export default function LandingPage() {
                        <div className="w-20 h-20 rounded-full bg-[#070708] border border-black/5 flex items-center justify-center text-primary text-2xl font-black shadow-2xl">
                           {item.step}
                        </div>
-                       <h4 className="text-2xl font-black uppercase italic tracking-tight text-white">{item.title}</h4>
+                       <h4 className="text-2xl font-black uppercase italic tracking-tight text-foreground">{item.title}</h4>
                        <p className="text-foreground/80 text-sm font-medium leading-relaxed px-6">{item.desc}</p>
                     </motion.div>
                  ))}
@@ -323,7 +323,7 @@ export default function LandingPage() {
               <div className="grid md:grid-cols-2 gap-20 items-center">
                  <div className="space-y-8">
                     <div className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-[0.2em]">Wall of Success</div>
-                    <h2 className="text-5xl md:text-7xl font-[1000] tracking-tighter uppercase italic leading-[0.9] text-white">Loved by <br/> the top 1%.</h2>
+                    <h2 className="text-5xl md:text-7xl font-[1000] tracking-tighter uppercase italic leading-[0.9] text-foreground">Loved by <br/> the top 1%.</h2>
                     <p className="text-foreground/80 text-xl font-medium">Over 2,400 dropshippers and 80+ marketing agencies use ViralUGC to power their daily creative testing.</p>
                  </div>
 
@@ -342,9 +342,9 @@ export default function LandingPage() {
                           <div className="flex gap-1">
                              {[1,2,3,4,5].map(s => <Sparkles key={s} className="w-3 h-3 text-primary fill-primary" />)}
                           </div>
-                          <p className="text-lg font-bold tracking-tight italic text-white">"{t.text}"</p>
+                          <p className="text-lg font-bold tracking-tight italic text-foreground">"{t.text}"</p>
                           <div>
-                             <p className="font-black uppercase italic tracking-tight text-white mb-0.5">{t.name}</p>
+                             <p className="font-black uppercase italic tracking-tight text-foreground mb-0.5">{t.name}</p>
                              <p className="text-[10px] font-black uppercase tracking-widest text-primary font-bold">{t.role}</p>
                           </div>
                        </motion.div>
@@ -453,9 +453,9 @@ export default function LandingPage() {
               <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange-500/30 opacity-20 blur-[100px] rounded-full group-hover:scale-125 transition-transform duration-1000" />
               
               <h2 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.85] uppercase italic mb-10 relative z-10 drop-shadow-2xl">
-                 STOP LOSING <br className="hidden md:block"/> ON <span className="text-black/40 underline decoration-white/30">UGC.</span>
+                 STOP LOSING <br className="hidden md:block"/> ON <span className="text-white/40 underline decoration-white/30">UGC.</span>
               </h2>
-              <p className="text-xl md:text-2xl font-bold tracking-tight text-foreground/80 mb-12 relative z-10 max-w-xl mx-auto leading-tight">
+              <p className="text-xl md:text-2xl font-bold tracking-tight text-white/80 mb-12 relative z-10 max-w-xl mx-auto leading-tight">
                  You are one high-converting hook away from scaling to 7-figures. Generate it today.
               </p>
               <Link href="/signup" className="relative z-10 inline-block">
