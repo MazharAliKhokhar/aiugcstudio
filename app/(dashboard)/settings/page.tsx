@@ -9,7 +9,7 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await (supabase.from('profiles') as any).select('*').eq('id', user.id).single()
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">

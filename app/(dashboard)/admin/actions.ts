@@ -27,8 +27,7 @@ export async function createManualUser(formData: FormData): Promise<{ success: b
     if (userError) return { success: false, message: userError.message }
 
     // 2. Set credits
-    const { error: profileError } = await adminClient
-      .from('profiles')
+    const { error: profileError } = await (adminClient.from('profiles') as any)
       .update({ credits })
       .eq('id', userData.user.id)
     
@@ -36,8 +35,7 @@ export async function createManualUser(formData: FormData): Promise<{ success: b
 
     // 3. Log the credit addition
     const { data: { user: admin } } = await (await createClient()).auth.getUser()
-    const { error: logError } = await adminClient
-      .from('credit_logs')
+    const { error: logError } = await (adminClient.from('credit_logs') as any)
       .insert({
         user_id: userData.user.id,
         amount: credits,
@@ -59,8 +57,7 @@ async function verifyAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return false
 
-  const { data: profile } = await supabase
-    .from('profiles')
+  const { data: profile } = await (supabase.from('profiles') as any)
     .select('is_admin')
     .eq('id', user.id)
     .single()
@@ -80,13 +77,12 @@ export async function updateUserCredits(formData: FormData): Promise<{ success: 
     const supabase = await createClient()
     
     // Get current credits for delta calculation
-    const { data: profile, error: profileFetchError } = await supabase.from('profiles').select('credits').eq('id', userId).single()
+    const { data: profile, error: profileFetchError } = await (supabase.from('profiles') as any).select('credits').eq('id', userId).single()
     if (profileFetchError) throw profileFetchError
 
     const delta = profile ? credits - profile.credits : 0
 
-    const { error: updateError } = await supabase
-      .from('profiles')
+    const { error: updateError } = await (supabase.from('profiles') as any)
       .update({ credits })
       .eq('id', userId)
 
@@ -94,8 +90,7 @@ export async function updateUserCredits(formData: FormData): Promise<{ success: 
 
     // Log the change
     const { data: { user: admin } } = await supabase.auth.getUser()
-    const { error: logError } = await supabase
-      .from('credit_logs')
+    const { error: logError } = await (supabase.from('credit_logs') as any)
       .insert({
         user_id: userId,
         amount: delta,
@@ -122,8 +117,7 @@ export async function toggleAdminStatus(formData: FormData): Promise<{ success: 
 
   try {
     const supabase = await createClient()
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase.from('profiles') as any)
       .update({ is_admin: !isAdmin }) // Toggle the current state
       .eq('id', userId)
 
@@ -145,8 +139,7 @@ export async function deleteVideo(formData: FormData): Promise<{ success: boolea
 
   try {
     const supabase = await createClient()
-    const { error } = await supabase
-      .from('videos')
+    const { error } = await (supabase.from('videos') as any)
       .delete()
       .eq('id', videoId)
 
@@ -171,18 +164,17 @@ export async function refundVideo(formData: FormData): Promise<{ success: boolea
     const supabase = await createClient()
 
     // 1. Mark video as failed
-    const { error: updateError } = await supabase
-      .from('videos')
+    const { error: updateError } = await (supabase.from('videos') as any)
       .update({ status: 'failed' })
       .eq('id', videoId)
 
     if (updateError) throw updateError
 
     // 2. Add credits back to user atomically
-    const { data: video } = await supabase.from('videos').select('duration').eq('id', videoId).single()
+    const { data: video } = await (supabase.from('videos') as any).select('duration').eq('id', videoId).single()
     const refundAmount = video?.duration === 30 ? 2 : (video?.duration === 60 ? 4 : 1)
 
-    const { error: rpcError } = await supabase.rpc('increment_credits', { 
+    const { error: rpcError } = await (supabase as any).rpc('increment_credits', { 
       p_user_id: userId, 
       p_amount: refundAmount 
     })
@@ -203,8 +195,7 @@ export async function bulkRefundStuckVideos(): Promise<{ success: boolean; messa
     const supabase = await createClient()
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
     
-    const { data: stuckVideos } = await supabase
-      .from('videos')
+    const { data: stuckVideos } = await (supabase.from('videos') as any)
       .select('id, user_id, duration')
       .in('status', ['pending', 'processing'])
       .lt('created_at', fifteenMinutesAgo)
@@ -217,9 +208,9 @@ export async function bulkRefundStuckVideos(): Promise<{ success: boolean; messa
     for (const video of stuckVideos) {
       const refundAmount = video.duration === 30 ? 2 : (video.duration === 60 ? 4 : 1)
       
-      await supabase.from('videos').update({ status: 'failed' }).eq('id', video.id)
+      await (supabase.from('videos') as any).update({ status: 'failed' }).eq('id', video.id)
       
-      await supabase.rpc('increment_credits', { 
+      await (supabase as any).rpc('increment_credits', { 
         p_user_id: video.user_id, 
         p_amount: refundAmount 
       })

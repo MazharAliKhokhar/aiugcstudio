@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   // This will refresh the session if needed
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protected route logic (formerly in proxy.ts)
+  // Protected route logic (formerly in middleware.ts)
   const path = request.nextUrl.pathname
   const isDashboard = path.startsWith('/studio') || 
                       path.startsWith('/gallery') || 

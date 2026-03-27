@@ -47,7 +47,7 @@ export default function StudioPage() {
     const fetchCredits = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data } = await supabase.from('profiles').select('credits').eq('id', user.id).single()
+        const { data } = await (supabase.from('profiles') as any).select('credits').eq('id', user.id).single()
         if (data) setCredits(data.credits)
       }
     }

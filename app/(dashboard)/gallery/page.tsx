@@ -19,8 +19,7 @@ export default function GalleryPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data } = await supabase
-        .from('videos')
+      const { data } = await (supabase.from('videos') as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })

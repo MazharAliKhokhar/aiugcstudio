@@ -14,30 +14,37 @@ export async function POST(req: NextRequest) {
 
     const { url, productName, goal, prompt, duration } = await req.json()
 
-    if (!prompt || !duration) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!prompt || !duration || typeof duration !== 'number') {
+      return NextResponse.json({ error: 'Missing or invalid required fields (prompt, duration)' }, { status: 400 })
+    }
+
+    const VALID_DURATIONS = [15, 30, 45, 60]
+    if (!VALID_DURATIONS.includes(duration)) {
+       return NextResponse.json({ error: `Invalid duration. Must be one of: ${VALID_DURATIONS.join(', ')}` }, { status: 400 })
     }
 
     const requiredUnits = getCreditCost(duration)
 
     // 1. Atomically check and deduct credits via Postgres RPC
-    const { data: newBalance, error: deductError } = await supabase.rpc('deduct_credits', {
+    // deduct_credits returns the remaining balance or -1 if insufficient
+    const { data: newBalance, error: deductError } = await (supabase as any).rpc('deduct_credits', {
       p_user_id: user.id,
       p_amount: requiredUnits
     })
 
     if (deductError) {
-      console.error('Unit deduction RPC error:', deductError)
-      return NextResponse.json({ error: 'Failed to deduct units' }, { status: 500 })
+      console.error('[API/Generate] Unit deduction RPC error:', deductError)
+      return NextResponse.json({ error: 'Failed to process unit deduction. Please try again later.' }, { status: 500 })
     }
 
     if (newBalance === -1) {
-      return NextResponse.json({ error: 'Insufficient units' }, { status: 402 })
+      return NextResponse.json({ 
+        error: `Insufficient units. This generation requires ${requiredUnits} units, but your balance is too low.` 
+      }, { status: 402 })
     }
 
     // 2. Insert pending video row
-    const { data: videoData, error: videoError } = await supabase
-      .from('videos')
+    const { data: videoData, error: videoError } = await (supabase.from('videos') as any)
       .insert({
         user_id: user.id,
         prompt: prompt,
@@ -50,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     if (videoError || !videoData) {
       // Revert units atomically
-      await supabase.rpc('increment_credits', { p_user_id: user.id, p_amount: requiredUnits })
+      await (supabase as any).rpc('increment_credits', { p_user_id: user.id, p_amount: requiredUnits })
       return NextResponse.json({ error: 'Failed to create video record' }, { status: 500 })
     }
 
@@ -72,8 +79,7 @@ export async function POST(req: NextRequest) {
     })
 
     // 4. Update the record with the fal.ai job ID and status
-    await supabase
-      .from('videos')
+    await (supabase.from('videos') as any)
       .update({
         fal_job_id: falResult.request_id,
         status: 'processing'

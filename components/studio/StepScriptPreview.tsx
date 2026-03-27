@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft, ArrowRight, Wand2, Sparkles, Mic } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface StepScriptPreviewProps {
   prompt: string
@@ -44,9 +45,14 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
               className="relative min-h-[160px] bg-white border-black/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-foreground shadow-sm"
             />
           </div>
-          <p className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
-            Used by Kling 2.1 to generate photorealistic video frames.
-          </p>
+          <div className="flex items-center justify-between">
+            <h4 className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
+              Used by Kling 2.1 to generate photorealistic video frames.
+            </h4>
+            <span className={cn("text-[10px] font-bold", prompt.length > 500 ? "text-red-500" : "text-foreground/30")}>
+              {prompt.length}/500
+            </span>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -64,11 +70,17 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
               onChange={(e) => setVoiceScript(e.target.value)}
               placeholder="Type what the AI should say..."
               className="relative min-h-[100px] bg-white border-black/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 text-foreground shadow-sm"
+              maxLength={1000}
             />
           </div>
-          <p className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
-            Generated via ElevenLabs Multilingual v2 engine.
-          </p>
+          <div className="flex items-center justify-between">
+            <h4 className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
+              Generated via ElevenLabs Multilingual v2 engine.
+            </h4>
+            <span className={cn("text-[10px] font-bold", voiceScript.length > 300 ? "text-orange-500" : "text-foreground/30")}>
+              {voiceScript.length}/1000
+            </span>
+          </div>
         </div>
       </div>
 
@@ -76,7 +88,11 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
         <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-black/5 bg-white hover:bg-black/5 text-foreground font-bold shadow-sm">
           <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
-        <Button onClick={onNext} className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all" disabled={!prompt.trim()}>
+        <Button 
+          onClick={onNext} 
+          className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all disabled:opacity-50 disabled:grayscale" 
+          disabled={!prompt.trim() || !voiceScript.trim()}
+        >
           Next: Render Ad <ArrowRight className="ml-3 w-5 h-5" />
         </Button>
       </div>

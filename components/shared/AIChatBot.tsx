@@ -79,13 +79,13 @@ export function AIChatBot() {
       } else if (lowerReq.includes('price') || lowerReq.includes('pricing') || lowerReq.includes('cost')) {
         botResponse = (
           <div className="space-y-2">
-            <p>We operate on a simple Video Credit system! We have 3 tiers:</p>
+            <p>We operate on a simple Unit system! We have 3 professional tiers:</p>
             <ul className="list-disc pl-4 mt-2">
-              <li><strong>Starter:</strong> $69/mo (4 Videos)</li>
-              <li><strong>Growth Pro:</strong> $149/mo (10 Videos)</li>
-              <li><strong>Ad Scale:</strong> $399/mo (30 Videos)</li>
+              <li><strong>Starter:</strong> $99/mo (20 Units)</li>
+              <li><strong>Growth Pro:</strong> $299/mo (100 Units)</li>
+              <li><strong>Ad Scale:</strong> $799/mo (300 Units)</li>
             </ul>
-            <p className="mt-2 text-xs">P.S. It's roughly $1 per high-end generation!</p>
+            <p className="mt-2 text-xs">A 15s ad costs 1 Unit. 60s costs 4 Units. It's the most cost-effective way to scale UGC.</p>
           </div>
         )
       } else if (lowerReq.includes('watermark')) {

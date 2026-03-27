@@ -17,8 +17,7 @@ export default async function DashboardLayout({
   }
 
   // Get Credits
-  const { data: profile } = await supabase
-    .from('profiles')
+  const { data: profile } = await (supabase.from('profiles') as any)
     .select('credits')
     .eq('id', user.id)
     .single()

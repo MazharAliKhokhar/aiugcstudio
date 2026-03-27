@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createAdminClient } from '@/lib/supabase/admin'
 import crypto from 'crypto'
-import { Database } from '@/types/database'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,22 +18,11 @@ export async function POST(req: NextRequest) {
 
     const payload = JSON.parse(rawBody)
 
-    // Using service role to bypass RLS for webhook updates
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!, 
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll() {},
-        },
-      }
-    )
+    // Using admin client to bypass RLS
+    const supabase = createAdminClient()
 
     if (payload.status === 'ERROR') {
-      await supabase
-        .from('videos')
+      await (supabase.from('videos') as any)
         .update({ status: 'failed' })
         .eq('id', videoId)
       return NextResponse.json({ success: true, status: 'failed set' })
@@ -46,8 +33,7 @@ export async function POST(req: NextRequest) {
       const videoUrl = payload.payload.video.url
       
       // Update Supabase video record
-      await supabase
-        .from('videos')
+      await (supabase.from('videos') as any)
         .update({
           video_url: videoUrl,
           status: 'completed'
