@@ -50,7 +50,7 @@ export default function LandingPage() {
 
       <main className="flex-1 relative z-10">
         {/* HERO */}
-        <section className="relative pt-20 pb-32 md:pt-40 md:pb-48 px-4 overflow-hidden">
+        <section className="relative pt-20 pb-16 md:pt-40 md:pb-20 px-4 overflow-hidden">
           {/* Hero Background Image */}
           <div className="absolute inset-0 z-[0]">
              <img 
