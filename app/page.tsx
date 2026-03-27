@@ -217,11 +217,12 @@ export default function LandingPage() {
                  <div className="relative aspect-video rounded-[40px] overflow-hidden border border-white/10 shadow-2xl shadow-primary/20 bg-black">
                     {videoStarted ? (
                        <iframe 
-                          src="https://www.youtube.com/embed/f30qLMYyovg?autoplay=1&rel=0" 
+                          src="https://www.youtube.com/embed/f30qLMYyovg?si=cvI_ySvmwfTrhm6m&autoplay=1" 
                           className="w-full h-full"
                           title="Viral Beauty Ad Sample"
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
                           allowFullScreen
                        ></iframe>
                     ) : (
