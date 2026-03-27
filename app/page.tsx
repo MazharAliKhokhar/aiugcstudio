@@ -179,8 +179,9 @@ export default function LandingPage() {
              </div>
           </section>
 
-          {/* SHOWCASE ASSETS */}
-          <div className="mt-32 max-w-6xl mx-auto relative px-4">
+        {/* SHOWCASE ASSETS */}
+        <section className="relative py-20 overflow-hidden">
+          <div className="max-w-6xl mx-auto relative px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <motion.div
                 initial={{ opacity: 0, rotateY: -20, x: -50 }}
