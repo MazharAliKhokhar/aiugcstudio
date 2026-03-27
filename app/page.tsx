@@ -142,7 +142,7 @@ export default function LandingPage() {
                      viewport={{ once: true }}
                      className="text-4xl md:text-7xl font-[1000] tracking-tighter leading-[0.9] uppercase italic text-slate-900"
                    >
-                     "We don't make ads,<br/> we make ads that <span className="text-primary">sell.</span>"
+                     "We don't just make ads,<br/> we make <span className="text-primary">viral</span> ads."
                    </motion.h2>
                    <motion.p 
                      initial={{ opacity: 0 }}
