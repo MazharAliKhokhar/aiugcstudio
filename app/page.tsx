@@ -6,9 +6,10 @@ import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Footer } from '@/components/shared/Footer'
 import { cn } from '@/lib/utils'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function LandingPage() {
+  const [videoStarted, setVideoStarted] = useState(false)
   const { scrollYProgress } = useScroll()
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95])
@@ -213,45 +214,59 @@ export default function LandingPage() {
                  className="relative max-w-4xl mx-auto group"
               >
                  {/* Video Player UI */}
-                 <div className="relative aspect-video rounded-[40px] overflow-hidden border border-white/10 shadow-2xl shadow-primary/20">
-                    <img 
-                       src="/beauty-sample.png" 
-                       alt="Viral Beauty Ad Sample" 
-                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    
-                    {/* Overlays */}
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                    
-                    <div className="absolute inset-0 flex items-center justify-center">
-                       <motion.div 
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="w-24 h-24 rounded-full bg-white text-black flex items-center justify-center shadow-2xl cursor-pointer group/play"
-                       >
-                          <Play className="w-10 h-10 ml-2 fill-current" />
-                       </motion.div>
-                    </div>
+                 <div className="relative aspect-video rounded-[40px] overflow-hidden border border-white/10 shadow-2xl shadow-primary/20 bg-black">
+                    {videoStarted ? (
+                       <iframe 
+                          src="https://www.youtube.com/embed/f30qLMYyovg?autoplay=1&rel=0" 
+                          className="w-full h-full"
+                          title="Viral Beauty Ad Sample"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                       ></iframe>
+                    ) : (
+                       <>
+                          <img 
+                             src="/beauty-sample.png" 
+                             alt="Viral Beauty Ad Sample" 
+                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          
+                          {/* Overlays */}
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                          
+                          <div className="absolute inset-0 flex items-center justify-center">
+                             <motion.div 
+                                onClick={() => setVideoStarted(true)}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                className="w-24 h-24 rounded-full bg-white text-black flex items-center justify-center shadow-2xl cursor-pointer group/play"
+                             >
+                                <Play className="w-10 h-10 ml-2 fill-current" />
+                             </motion.div>
+                          </div>
 
-                    <div className="absolute bottom-10 left-10 right-10 flex items-center justify-between">
-                       <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                             <Sparkles className="w-6 h-6 text-primary" />
+                          <div className="absolute bottom-10 left-10 right-10 flex items-center justify-between pointer-events-none">
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                                   <Sparkles className="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                   <p className="text-xs font-black uppercase tracking-widest text-primary">Viral Score</p>
+                                   <p className="text-xl font-black italic text-white">9.8/10</p>
+                                </div>
+                             </div>
+                             
+                             <div className="px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-1 text-white">Status</p>
+                                <div className="flex items-center gap-2">
+                                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                   <span className="text-sm font-bold uppercase italic text-white">Ready to Scale</span>
+                                </div>
+                             </div>
                           </div>
-                          <div>
-                             <p className="text-xs font-black uppercase tracking-widest text-primary">Viral Score</p>
-                             <p className="text-xl font-black italic">9.8/10</p>
-                          </div>
-                       </div>
-                       
-                       <div className="px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Status</p>
-                          <div className="flex items-center gap-2">
-                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                             <span className="text-sm font-bold uppercase italic">Ready to Scale</span>
-                          </div>
-                       </div>
-                    </div>
+                       </>
+                    )}
                  </div>
               </motion.div>
               
