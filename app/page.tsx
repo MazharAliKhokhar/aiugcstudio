@@ -138,7 +138,7 @@ export default function LandingPage() {
                      whileInView={{ opacity: 1, y: 0 }}
                      transition={{ delay: 0.2 }}
                      viewport={{ once: true }}
-                     className="text-4xl md:text-7xl font-[1000] tracking-tighter leading-[0.9] uppercase italic text-foreground"
+                     className="text-4xl md:text-7xl font-[1000] tracking-tighter leading-[0.9] uppercase italic text-slate-900"
                    >
                      "We don't make ads,<br/> we make ads that <span className="text-primary">sell.</span>"
                    </motion.h2>
@@ -147,7 +147,7 @@ export default function LandingPage() {
                      whileInView={{ opacity: 1 }}
                      transition={{ delay: 0.4 }}
                      viewport={{ once: true }}
-                     className="text-lg md:text-xl text-foreground/60 max-w-xl font-medium"
+                     className="text-lg md:text-xl text-slate-600 max-w-xl font-medium"
                    >
                      Our proprietary creative engine is overseen by the most viral biological-AI hybrid in the world. 
                      Every script, every hook, and every frame is engineered for conversion, not just aesthetics.
