@@ -86,7 +86,7 @@ export default function LandingPage() {
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
               <Link href="/signup" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full h-16 rounded-2xl px-12 text-xl font-black uppercase tracking-tighter shadow-2xl shadow-primary/40 bg-gradient-to-r from-primary to-orange-600 hover:scale-105 transition-all duration-300 group">
+                <Button size="lg" className="w-full h-16 rounded-2xl px-12 text-xl font-black uppercase tracking-tighter shadow-2xl shadow-primary/40 bg-gradient-to-r from-primary to-blue-600 hover:scale-105 transition-all duration-300 group text-white">
                   Get Started Free <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -111,7 +111,7 @@ export default function LandingPage() {
             transition={{ delay: 0.5, duration: 1 }}
             className="mt-20 max-w-5xl mx-auto"
           >
-            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/70 uppercase mb-8">Powering the fastest growing stores on</p>
+            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/70 uppercase mb-8 text-center">Powering the fastest growing stores on</p>
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-50 contrast-75 brightness-0">
               <span className="text-2xl font-black italic text-foreground">Shopify</span>
               <span className="text-2xl font-black italic text-foreground">Amazon</span>
@@ -231,7 +231,7 @@ export default function LandingPage() {
            <div className="max-w-6xl mx-auto space-y-24">
               <div className="flex flex-col md:flex-row items-end justify-between gap-8">
                  <div className="space-y-4 max-w-xl">
-                    <h2 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter text-white">Everything to <br/> Scale Vertically.</h2>
+                    <h2 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter text-foreground">Everything to <br/> Scale Vertically.</h2>
                  </div>
                  <div className="text-foreground/70 text-lg font-medium leading-tight max-w-md md:text-right">
                     We built the pipeline we always wanted. No fluff, just high-converting asset generation.
@@ -306,7 +306,7 @@ export default function LandingPage() {
                       transition={{ delay: i * 0.2 }}
                       className="relative z-10 flex flex-col items-center text-center space-y-6"
                     >
-                       <div className="w-20 h-20 rounded-full bg-[#070708] border border-black/5 flex items-center justify-center text-primary text-2xl font-black shadow-2xl">
+                       <div className="w-20 h-20 rounded-full bg-white border border-black/5 flex items-center justify-center text-primary text-2xl font-black shadow-xl">
                           {item.step}
                        </div>
                        <h4 className="text-2xl font-black uppercase italic tracking-tight text-foreground">{item.title}</h4>
