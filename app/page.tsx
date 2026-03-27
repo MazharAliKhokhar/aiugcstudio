@@ -231,7 +231,7 @@ export default function LandingPage() {
            <div className="max-w-6xl mx-auto space-y-24">
               <div className="flex flex-col md:flex-row items-end justify-between gap-8">
                  <div className="space-y-4 max-w-xl">
-                    <h2 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter text-foreground">Everything to <br/> Scale Vertically.</h2>
+                    <h2 className="text-5xl md:text-7xl font-black italic uppercase italic tracking-tighter text-slate-900">Everything to <br/> Scale Vertically.</h2>
                  </div>
                  <div className="text-foreground/70 text-lg font-medium leading-tight max-w-md md:text-right">
                     We built the pipeline we always wanted. No fluff, just high-converting asset generation.
