@@ -123,7 +123,7 @@ export default function LandingPage() {
         </section>
 
         {/* BRAND HOOK & MASCOT */}
-        <section className="mt-20 mb-20 px-4">
+        <section className="py-24 px-4 bg-white relative z-20 border-b border-black/5">
              <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-20">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                    <motion.div
@@ -177,10 +177,10 @@ export default function LandingPage() {
                    />
                 </motion.div>
              </div>
-          </section>
+        </section>
 
         {/* SHOWCASE ASSETS */}
-        <section className="relative py-20 overflow-hidden">
+        <section className="relative py-20 overflow-hidden bg-background">
           <div className="max-w-6xl mx-auto relative px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <motion.div
