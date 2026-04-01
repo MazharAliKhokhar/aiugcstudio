@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { fal, VOXTRAL_MODEL_ID } from '@/lib/fal'
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,39 +9,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
     }
 
-    if (!process.env.ELEVENLABS_API_KEY) {
-      console.error('Missing ELEVENLABS_API_KEY')
-      return NextResponse.json({ error: 'TTS is not configured.' }, { status: 500 })
+    if (!process.env.FAL_KEY) {
+      console.error('Missing FAL_KEY')
+      return NextResponse.json({ error: 'AI services are not fully configured.' }, { status: 500 })
     }
 
-    // Adam voice ID is pNInz6obpgDQGcFmaJcg
-    const VOICE_ID = 'pNInz6obpgDQGcFmaJcg' 
-
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'xi-api-key': process.env.ELEVENLABS_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    // Call Fal AI Voxtral-TTS
+    const result: any = await fal.subscribe(VOXTRAL_MODEL_ID, {
+      input: {
         text,
-        model_id: "eleven_monolingual_v1",
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75
-        }
-      })
+        voice: 'am_adam' // Using the Open Source 'Adam' equivalent in Mistral's voice set
+      },
     })
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error('ElevenLabs Error:', errText)
-      return NextResponse.json({ error: 'Failed to generate audio' }, { status: 500 })
+    if (!result.audio?.url) {
+      console.error('Fal AI Error: No audio URL returned', result)
+      return NextResponse.json({ error: 'Failed to generate audio via Voxtral' }, { status: 500 })
     }
 
-    // Return the audio buffer directly so the client can use it
-    const data = await response.arrayBuffer()
+    // Fetch the audio from the generated URL to return as a buffer
+    const audioRes = await fetch(result.audio.url)
+    if (!audioRes.ok) {
+      throw new Error('Failed to fetch generated audio from Fal storage')
+    }
+
+    const data = await audioRes.arrayBuffer()
     return new NextResponse(data, {
       headers: {
         'Content-Type': 'audio/mpeg'

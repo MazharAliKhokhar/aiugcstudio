@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { headers } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { verifyWebhookSignature, LSWebhookBody } from '@/lib/lemonsqueezy'
+import { headers } from 'next/headers'
 
 // Variant IDs mapping (update these with actual numeric IDs from LS dashboard)
 const VARIANT_TO_CREDITS: Record<string | number, number> = {
@@ -20,95 +19,90 @@ export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text()
     const signature = (await headers()).get('x-signature') || ''
-    const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET || ''
-
-    // 1. Verify Signature
-    if (!verifyWebhookSignature(rawBody, signature, secret)) {
-      console.error('LS Webhook Error: Invalid signature')
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+    const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET
+    
+    if (!secret) {
+      console.error('[Webhook/LS] Missing LEMON_SQUEEZY_WEBHOOK_SECRET')
+      return new NextResponse('Internal configuration error', { status: 500 })
     }
 
-    const payload: LSWebhookBody = JSON.parse(rawBody)
+    // 1. Verify Signature with timing-safe comparison
+    if (!verifyWebhookSignature(rawBody, signature, secret)) {
+      console.warn('[Webhook/LS] Invalid signature from:', req.headers.get('x-forwarded-for'))
+      return new NextResponse('Invalid signature', { status:401 })
+    }
+
+    let payload: LSWebhookBody
+    try {
+      payload = JSON.parse(rawBody)
+    } catch (e) {
+      return new NextResponse('Malformed JSON', { status: 400 })
+    }
+
     const eventName = payload.meta.event_name
     const attributes = payload.data.attributes
     const userEmail = attributes.user_email
-    const variantId = attributes.variant_id
+    const variantId = String(attributes.variant_id)
     const variantName = attributes.variant_name
 
-    console.log(`LS Webhook Received: ${eventName} for ${userEmail} (${variantName})`)
+    // Service Role Client for administrative actions
+    const supabase = await createClient() // createClient should use service role in webhooks
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll() {},
-        },
-      }
-    )
+    console.log(`[Webhook/LS] Processing ${eventName} for ${userEmail}`)
 
     // 2. Handle Events
     if (eventName === 'order_created' || eventName === 'subscription_payment_success') {
       const creditsToAdd = VARIANT_TO_CREDITS[variantId] || VARIANT_TO_CREDITS[variantName] || 0
       
       if (creditsToAdd > 0) {
-        // Find user by email (most reliable in LS order_created)
-        const { data: profile, error: findError } = await supabase
-          .from('profiles')
-          .select('id, credits')
+        // Find user by email
+        const { data: profile, error: findError } = await (supabase
+          .from('profiles') as any)
+          .select('id')
           .eq('email', userEmail)
           .single()
 
         if (profile) {
-          // Add credits atomically via RPC
-          await supabase.rpc('increment_credits', { 
+          // Atomically increment credits
+          const { error: rpcError } = await (supabase as any).rpc('increment_credits', { 
             p_user_id: profile.id, 
             p_amount: creditsToAdd 
           })
 
-          // Update LS IDs if this was an initial order
-          await supabase
-            .from('profiles')
+          if (rpcError) throw new Error(`Atomic credit update failed: ${rpcError.message}`)
+
+          // Update LS identifiers
+          await (supabase.from('profiles') as any)
             .update({
                lemon_squeezy_customer_id: String(attributes.customer_id),
-               variant_id: String(variantId)
+               variant_id: variantId
             })
             .eq('id', profile.id)
 
-          console.log(`Added ${creditsToAdd} credits to ${userEmail}`)
+          console.log(`[Webhook/LS] Successfully added ${creditsToAdd} credits to ${userEmail}`)
+        } else {
+          console.error(`[Webhook/LS] User profile not found for email: ${userEmail}`)
         }
       }
     }
 
-    if (eventName === 'subscription_created' || eventName === 'subscription_updated') {
-      const subscriptionId = payload.data.id
+    // Update subscription status and variant
+    if (['subscription_created', 'subscription_updated', 'subscription_cancelled', 'subscription_expired'].includes(eventName)) {
       const status = attributes.status
-      
-      await supabase
-        .from('profiles')
+      await (supabase.from('profiles') as any)
         .update({
-          subscription_id: subscriptionId,
+          subscription_id: String(payload.data.id),
           subscription_status: status,
-          variant_id: String(variantId)
+          variant_id: variantId
         })
         .eq('email', userEmail)
     }
 
-    if (eventName === 'subscription_cancelled' || eventName === 'subscription_expired') {
-      await supabase
-        .from('profiles')
-        .update({
-          subscription_status: attributes.status
-        })
-        .eq('email', userEmail)
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ received: true })
 
   } catch (error: any) {
-    console.error('LS Webhook Error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    // Log detailed error but return generic response to third parties
+    console.error('[Webhook/LS] Execution Error:', error.message)
+    return new NextResponse('Internal server error', { status: 500 })
   }
 }

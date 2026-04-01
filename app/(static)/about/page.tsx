@@ -15,7 +15,7 @@ export default function AboutUs() {
 
         <h2 className="text-foreground mt-8">Our Solution</h2>
         <p>
-          By leveraging the bleeding edge of Generative AI video models (like Kling 2.1), we've built a pipeline that goes from a simple product URL to a broadcast-ready video ad in minutes. No actors. No shipping. Just raw conversion power.
+          By leveraging the bleeding edge of Generative AI video models (like Wan 2.1), we've built a pipeline that goes from a simple product URL to a broadcast-ready video ad in minutes. No actors. No shipping. Just raw conversion power.
         </p>
       </div>
     </div>

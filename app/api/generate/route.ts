@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCreditCost } from '@/lib/credits'
-import { fal, KLING_MODEL_ID } from '@/lib/fal'
+import { fal, WAN_MODEL_ID } from '@/lib/fal'
+import { z } from 'zod'
+
+// 1. Define Input Schema for Guardrails
+const GenerateSchema = z.object({
+  url: z.string().url().max(500),
+  productName: z.string().min(2).max(100),
+  goal: z.enum(['sales', 'awareness', 'retargeting']),
+  prompt: z.string().min(10).max(1000),
+  duration: z.number().refine(val => [15, 30, 45, 60].includes(val), {
+    message: "Invalid duration. Must be 15, 30, 45, or 60."
+  })
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,21 +24,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { url, productName, goal, prompt, duration } = await req.json()
-
-    if (!prompt || !duration || typeof duration !== 'number') {
-      return NextResponse.json({ error: 'Missing or invalid required fields (prompt, duration)' }, { status: 400 })
+    // 2. Validate Input with Zod
+    const body = await req.json()
+    const result = GenerateSchema.safeParse(body)
+    
+    if (!result.success) {
+      return NextResponse.json({ 
+        error: 'Invalid input', 
+        details: result.error.format() 
+      }, { status: 400 })
     }
 
-    const VALID_DURATIONS = [15, 30, 45, 60]
-    if (!VALID_DURATIONS.includes(duration)) {
-       return NextResponse.json({ error: `Invalid duration. Must be one of: ${VALID_DURATIONS.join(', ')}` }, { status: 400 })
+    const { url, productName, goal, prompt, duration } = result.data
+
+    // 3. Rate Limiting Check (Supabase Backed)
+    // Limit to 10 generations per hour for beta security
+    const oneHourAgo = new Promise<string>(resolve => {
+        const d = new Date()
+        d.setHours(d.getHours() - 1)
+        resolve(d.toISOString())
+    })
+    
+    const { count, error: countError } = await (supabase
+      .from('videos') as any)
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gt('created_at', await oneHourAgo)
+
+    if (countError) {
+      console.error('[API/Generate] Rate limit check error:', countError)
+    } else if (count !== null && count >= 10) {
+      return NextResponse.json({ 
+        error: 'Too many requests. You have reached the hourly limit of 10 generations. Please try again in an hour.' 
+      }, { status: 429 })
     }
 
     const requiredUnits = getCreditCost(duration)
 
-    // 1. Atomically check and deduct credits via Postgres RPC
-    // deduct_credits returns the remaining balance or -1 if insufficient
+    // 4. Atomically check and deduct credits via Postgres RPC
     const { data: newBalance, error: deductError } = await (supabase as any).rpc('deduct_credits', {
       p_user_id: user.id,
       p_amount: requiredUnits
@@ -43,14 +78,14 @@ export async function POST(req: NextRequest) {
       }, { status: 402 })
     }
 
-    // 2. Insert pending video row
+    // 5. Insert pending video row
     const { data: videoData, error: videoError } = await (supabase.from('videos') as any)
       .insert({
         user_id: user.id,
         prompt: prompt,
         status: 'pending',
         duration: duration,
-        script: productName ? `Product: ${productName} \nURL: ${url} \nGoal: ${goal}` : null
+        script: `Product: ${productName} \nURL: ${url} \nGoal: ${goal}`
       })
       .select('id')
       .single()
@@ -63,22 +98,18 @@ export async function POST(req: NextRequest) {
 
     const videoId = videoData.id
 
-    // 3. Submit to fal.ai (async) using the videoId to track it
+    // 6. Submit to fal.ai (async) 
     const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/fal?videoId=${videoId}`
 
-    // Map duration integer to string allowed for Kling
-    const klingDuration = duration >= 10 ? '10' : '5'
-
-    const falResult = await fal.queue.submit(KLING_MODEL_ID, {
+    const falResult = await fal.queue.submit(WAN_MODEL_ID, {
       input: {
         prompt,
-        duration: klingDuration,
-        aspect_ratio: '9:16' // Shorts/TikTok format
+        aspect_ratio: '9:16'
       },
       webhookUrl: webhookUrl
     })
 
-    // 4. Update the record with the fal.ai job ID and status
+    // 7. Update the record with the fal.ai job ID
     await (supabase.from('videos') as any)
       .update({
         fal_job_id: falResult.request_id,

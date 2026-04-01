@@ -7,10 +7,17 @@ fal.config({
 
 export { fal }
 
-export const KLING_MODEL_ID = 'fal-ai/kling-video/v1.5/pro/text-to-video'
+export const WAN_MODEL_ID = 'fal-ai/wan/v2.1/t2v-14b'
+export const VOXTRAL_MODEL_ID = 'fal-ai/mistral-voxtral-tts' 
 
-export interface KlingInput {
+export interface WanInput {
   prompt: string
-  duration?: '5' | '10' // Note: Kling v1.5 API supports '5' or '10' string values usually. We'll map UI durations to what the API supports.
-  aspect_ratio?: '16:9' | '9:16' | '1:1'
+  aspect_ratio?: '9:16' | '16:9' | '1:1'
+  resolution?: '720p' | '1080p'
+}
+
+export interface VoxtralInput {
+  text: string
+  voice_reference?: string // URL to 3-10s audio for cloning
+  voice?: string // Pre-set voice ID if not cloning
 }

@@ -71,7 +71,7 @@ export function AIChatBot() {
             <ol className="list-decimal pl-4 space-y-1 mt-2">
               <li>Paste your product URL</li>
               <li>Our AI writes a high-converting script</li>
-              <li>Kling 2.1 generates a photorealistic human avatar</li>
+              <li>Wan 2.1 generates a photorealistic human avatar</li>
               <li>You get a broadcast-ready mp4 in 60s!</li>
             </ol>
           </div>

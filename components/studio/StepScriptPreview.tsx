@@ -13,9 +13,10 @@ interface StepScriptPreviewProps {
   setVoiceScript: (val: string) => void
   onNext: () => void
   onBack: () => void
+  isScripting?: boolean
 }
 
-export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScript, onNext, onBack }: StepScriptPreviewProps) {
+export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScript, onNext, onBack, isScripting }: StepScriptPreviewProps) {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-6">
@@ -47,7 +48,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
           </div>
           <div className="flex items-center justify-between">
             <h4 className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
-              Used by Kling 2.1 to generate photorealistic video frames.
+              Used by Wan 2.1 (T2V) to generate photorealistic video frames.
             </h4>
             <span className={cn("text-[10px] font-bold", prompt.length > 500 ? "text-red-500" : "text-foreground/30")}>
               {prompt.length}/500
@@ -75,7 +76,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
           </div>
           <div className="flex items-center justify-between">
             <h4 className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
-              Generated via ElevenLabs Multilingual v2 engine.
+              Generated via Voxtral (Mistral) high-fidelity engine.
             </h4>
             <span className={cn("text-[10px] font-bold", voiceScript.length > 300 ? "text-orange-500" : "text-foreground/30")}>
               {voiceScript.length}/1000
@@ -91,9 +92,9 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
         <Button 
           onClick={onNext} 
           className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all disabled:opacity-50 disabled:grayscale" 
-          disabled={!prompt.trim() || !voiceScript.trim()}
+          disabled={!prompt.trim() || !voiceScript.trim() || isScripting}
         >
-          Next: Render Ad <ArrowRight className="ml-3 w-5 h-5" />
+          {isScripting ? 'AI Scripting...' : 'Next: Render Ad'} <ArrowRight className="ml-3 w-5 h-5" />
         </Button>
       </div>
     </div>
