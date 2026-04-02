@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,59 +20,97 @@ export default function AdminDashboard({
 }) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const query = searchParams.q || ''
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      try {
+        setLoading(true)
+        setError(null)
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          setError('Not authenticated')
+          setLoading(false)
+          return
+        }
 
-      // Admin check
-      const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-      if (!profile?.is_admin) {
-        window.location.href = '/studio'
-        return
+        // Admin check (Client-side fallback/validation)
+        const { data: profile, error: profileError } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
+        
+        if (profileError || !profile?.is_admin) {
+          setError('Admin privileges required')
+          setLoading(false)
+          return
+        }
+
+        // Stats
+        const [
+          { count: usersCount },
+          { count: videosCount },
+          { count: successfulVideos },
+          { count: failedVideos },
+          { data: allCredits }
+        ] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+          supabase.from('videos').select('*', { count: 'exact', head: true }),
+          supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+          supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'failed'),
+          supabase.from('profiles').select('credits')
+        ])
+        
+        const totalCredits = allCredits?.reduce((acc, p) => acc + (p.credits || 0), 0) || 0
+
+        // Users
+        let usersQuery = supabase.from('profiles').select('*, videos!left(id)').order('created_at', { ascending: false }).limit(50)
+        if (query) usersQuery = usersQuery.ilike('email', `%${query}%`)
+        const { data: rawUsersList, error: usersError } = await usersQuery
+        if (usersError) throw usersError
+        
+        // Videos
+        const { data: videosList, error: videosError } = await supabase.from('videos').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
+        if (videosError) throw videosError
+
+        // Audit
+        const { data: creditLogs, error: auditError } = await supabase.from('credit_logs').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
+        if (auditError) throw auditError
+
+        setData({
+          user,
+          usersCount,
+          videosCount,
+          successRate: videosCount ? Math.round((successfulVideos || 0) / videosCount * 100) : 0,
+          failedVideos,
+          totalCredits,
+          usersList: rawUsersList?.map((u: any) => ({ ...u, videoCount: u.videos?.length || 0 })),
+          videosList,
+          creditLogs,
+          recentSignups: rawUsersList?.slice(0, 5)
+        })
+      } catch (err: any) {
+        console.error('Fetch error:', err)
+        setError(err.message || 'Failed to load system data')
+      } finally {
+        setLoading(false)
       }
-
-      // Stats
-      const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
-      const { count: videosCount } = await supabase.from('videos').select('*', { count: 'exact', head: true })
-      const { count: successfulVideos } = await supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'completed')
-      const { count: failedVideos } = await supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'failed')
-      
-      const { data: allCredits } = await supabase.from('profiles').select('credits')
-      const totalCredits = allCredits?.reduce((acc, p) => acc + (p.credits || 0), 0) || 0
-
-      // Users
-      let usersQuery = supabase.from('profiles').select('*, videos!left(id)').order('created_at', { ascending: false }).limit(50)
-      if (query) usersQuery = usersQuery.ilike('email', `%${query}%`)
-      const { data: rawUsersList } = await usersQuery
-      
-      // Videos
-      const { data: videosList } = await supabase.from('videos').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
-
-      // Audit
-      const { data: creditLogs } = await supabase.from('credit_logs').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
-
-      setData({
-        user,
-        usersCount,
-        videosCount,
-        successRate: videosCount ? Math.round((successfulVideos || 0) / videosCount * 100) : 0,
-        failedVideos,
-        totalCredits,
-        usersList: rawUsersList?.map((u: any) => ({ ...u, videoCount: u.videos?.length || 0 })),
-        videosList,
-        creditLogs,
-        recentSignups: rawUsersList?.slice(0, 5)
-      })
-      setLoading(false)
     }
     fetchData()
   }, [query])
 
-  if (loading || !data) return <div className="h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>
+  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-950"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>
+
+  if (error || !data) return (
+    <div className="h-[calc(100vh-100px)] flex flex-col items-center justify-center space-y-4">
+      <AlertCircle className="w-12 h-12 text-red-500" />
+      <div className="text-center">
+        <h3 className="text-xl font-bold">System Access Interrupted</h3>
+        <p className="text-muted-foreground">{error || 'Unable to communicate with the mothership'}</p>
+      </div>
+      <Button onClick={() => window.location.reload()} variant="outline">Retry Command</Button>
+    </div>
+  )
 
   const handleAction = async (action: any, formData: FormData) => {
     const res = await action(formData)
@@ -105,52 +145,52 @@ export default function AdminDashboard({
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted p-1 rounded-xl h-auto flex-wrap w-full justify-start border overflow-x-auto gap-1">
-          <TabsTrigger value="overview" className="flex-1 md:flex-none px-4 py-2 rounded-lg data-[state=active]:bg-background">Insights</TabsTrigger>
-          <TabsTrigger value="users" className="flex-1 md:flex-none px-4 py-2 rounded-lg data-[state=active]:bg-background">Operators</TabsTrigger>
-          <TabsTrigger value="videos" className="flex-1 md:flex-none px-4 py-2 rounded-lg data-[state=active]:bg-background">Moderation</TabsTrigger>
-          <TabsTrigger value="audit" className="flex-1 md:flex-none px-4 py-2 rounded-lg data-[state=active]:bg-background">Audit</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 rounded-xl h-auto flex-wrap w-full justify-start border border-slate-800 overflow-x-auto gap-1">
+          <TabsTrigger value="overview" className="flex-1 md:flex-none px-4 py-2 rounded-lg">Insights</TabsTrigger>
+          <TabsTrigger value="users" className="flex-1 md:flex-none px-4 py-2 rounded-lg">Operators</TabsTrigger>
+          <TabsTrigger value="videos" className="flex-1 md:flex-none px-4 py-2 rounded-lg">Moderation</TabsTrigger>
+          <TabsTrigger value="audit" className="flex-1 md:flex-none px-4 py-2 rounded-lg">Audit</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <Card className="border-primary/20 bg-primary/5">
+            <Card className="border-primary/20 bg-slate-900/50 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium text-blue-400">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.usersCount || 0}</div>
+                <div className="text-2xl font-bold tracking-tighter">{data.usersCount || 0}</div>
               </CardContent>
             </Card>
             
-            <Card className="border-orange-500/20 bg-orange-500/5">
+            <Card className="border-orange-500/20 bg-slate-900/50 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Gen Success</CardTitle>
+                <CardTitle className="text-sm font-medium text-orange-400">Gen Success</CardTitle>
                 <TrendingUp className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.successRate}%</div>
+                <div className="text-2xl font-bold tracking-tighter">{data.successRate}%</div>
               </CardContent>
             </Card>
 
-            <Card className="border-green-500/20 bg-green-500/5">
+            <Card className="border-green-500/20 bg-slate-900/50 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Credit Velocity</CardTitle>
+                <CardTitle className="text-sm font-medium text-emerald-400">Credit Velocity</CardTitle>
                 <Battery className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.totalCredits}</div>
+                <div className="text-2xl font-bold tracking-tighter">{data.totalCredits}</div>
               </CardContent>
             </Card>
 
-            <Card className="hidden sm:block border-zinc-500/20">
+            <Card className="hidden sm:block border-zinc-500/20 bg-slate-900/50 shadow-lg">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Health</CardTitle>
+                <CardTitle className="text-sm font-medium text-zinc-400">Health</CardTitle>
                 <Database className="h-4 w-4 text-zinc-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-500">Online</div>
+                <div className="text-2xl font-bold text-emerald-500 tracking-tighter">Online</div>
               </CardContent>
             </Card>
           </div>
