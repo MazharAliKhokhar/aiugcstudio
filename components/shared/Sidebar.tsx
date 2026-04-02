@@ -9,21 +9,17 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
-export const Sidebar = () => {
-  const pathname = usePathname()
-  const supabase = createClient()
-  const [isAdmin, setIsAdmin] = useState(false)
+interface SidebarProps {
+  userProfile: {
+    name: string;
+    email: string;
+    is_admin: boolean;
+  }
+}
 
-  useEffect(() => {
-    async function checkAdmin() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-        if (data?.is_admin) setIsAdmin(true)
-      }
-    }
-    checkAdmin()
-  }, [supabase])
+export const Sidebar = ({ userProfile }: SidebarProps) => {
+  const pathname = usePathname()
+  const isAdmin = userProfile.is_admin
 
   const routes = [
     {
@@ -81,7 +77,11 @@ export const Sidebar = () => {
         </div>
       </div>
       
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-4 space-y-4">
+        <div className="px-3 py-2 bg-white/5 rounded-xl border border-white/10">
+          <p className="text-sm font-bold text-white truncate">{userProfile.name}</p>
+          <p className="text-xs text-zinc-500 truncate">{userProfile.email}</p>
+        </div>
         <form action={signout}>
           <Button variant="ghost" type="submit" className="w-full justify-start text-zinc-400 hover:text-white hover:bg-white/10">
             Log out
