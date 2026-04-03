@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { videoUrl, voiceScript, videoId } = await req.json()
+    const { videoUrl, voiceScript } = await req.json()
 
     if (!videoUrl || !voiceScript) {
       return NextResponse.json({ error: 'Missing videoUrl or voiceScript' }, { status: 400 })

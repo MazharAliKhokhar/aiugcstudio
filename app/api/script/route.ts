@@ -73,7 +73,7 @@ Do not include any other text in your response, ONLY the JSON object.`
     try {
       const result = JSON.parse(content)
       return NextResponse.json(result)
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse DeepSeek response as JSON:', content)
       return NextResponse.json({ 
         error: 'AI generated invalid format', 

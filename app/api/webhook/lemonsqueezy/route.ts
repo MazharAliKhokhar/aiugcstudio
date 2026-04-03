@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     let payload: LSWebhookBody
     try {
       payload = JSON.parse(rawBody)
-    } catch (e) {
+    } catch {
       return new NextResponse('Malformed JSON', { status: 400 })
     }
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       
       if (creditsToAdd > 0) {
         // Find user by email
-        const { data: profile, error: findError } = await (supabase
+        const { data: profile } = await (supabase
           .from('profiles') as any)
           .select('id')
           .eq('email', userEmail)

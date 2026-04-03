@@ -1,0 +1,165 @@
+D:\AIUGC\viralugc\app\(auth)\actions.ts
+  Unexpected any. Specify a different type. line: 22
+  Unexpected any. Specify a different type. line: 56
+  Unexpected any. Specify a different type. line: 104
+D:\AIUGC\viralugc\app\(auth)\forgot-password\page.tsx
+  Unexpected any. Specify a different type. line: 13
+  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\AIUGC\viralugc\app\(auth)\forgot-password\page.tsx:26:5
+  24 |
+  25 |   useEffect(() => {
+> 26 |     setOrigin(window.location.origin)
+     |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  27 |   }, [])
+  28 |
+  29 |   if (state?.success) { line: 26
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 40
+D:\AIUGC\viralugc\app\(auth)\login\page.tsx
+  Unexpected any. Specify a different type. line: 13
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 65
+D:\AIUGC\viralugc\app\(auth)\reset-password\page.tsx
+  Unexpected any. Specify a different type. line: 12
+D:\AIUGC\viralugc\app\(auth)\signup\page.tsx
+  Unexpected any. Specify a different type. line: 12
+D:\AIUGC\viralugc\app\(dashboard)\admin\actions.ts
+  'redirect' is defined but never used. line: 6
+  Unexpected any. Specify a different type. line: 30
+  Unexpected any. Specify a different type. line: 38
+  Unexpected any. Specify a different type. line: 50
+  Unexpected any. Specify a different type. line: 60
+  Unexpected any. Specify a different type. line: 80
+  Unexpected any. Specify a different type. line: 85
+  Unexpected any. Specify a different type. line: 93
+  Unexpected any. Specify a different type. line: 105
+  Unexpected any. Specify a different type. line: 120
+  Unexpected any. Specify a different type. line: 128
+  Unexpected any. Specify a different type. line: 142
+  Unexpected any. Specify a different type. line: 150
+  Unexpected any. Specify a different type. line: 167
+  Unexpected any. Specify a different type. line: 174
+  Unexpected any. Specify a different type. line: 177
+  Unexpected any. Specify a different type. line: 186
+  Unexpected any. Specify a different type. line: 198
+  Unexpected any. Specify a different type. line: 211
+  Unexpected any. Specify a different type. line: 213
+  Unexpected any. Specify a different type. line: 223
+D:\AIUGC\viralugc\app\(dashboard)\admin\layout.tsx
+  Unexpected any. Specify a different type. line: 18
+D:\AIUGC\viralugc\app\(dashboard)\admin\page.tsx
+  'Video' is defined but never used. line: 8
+  'Mail' is defined but never used. line: 8
+  'RotateCcw' is defined but never used. line: 8
+  'CheckCircle2' is defined but never used. line: 8
+  'Plus' is defined but never used. line: 8
+  'HistoryIcon' is defined but never used. line: 8
+  Unexpected any. Specify a different type. line: 21
+  Unexpected any. Specify a different type. line: 87
+  Unexpected any. Specify a different type. line: 92
+  Unexpected any. Specify a different type. line: 115
+  Unexpected any. Specify a different type. line: 245
+  Unexpected any. Specify a different type. line: 274
+  Unexpected any. Specify a different type. line: 314
+  Unexpected any. Specify a different type. line: 340
+  Unexpected any. Specify a different type. line: 371
+D:\AIUGC\viralugc\app\(dashboard)\gallery\page.tsx
+  Unexpected any. Specify a different type. line: 13
+  Unexpected any. Specify a different type. line: 22
+D:\AIUGC\viralugc\app\(dashboard)\layout.tsx
+  Unexpected any. Specify a different type. line: 20
+D:\AIUGC\viralugc\app\(dashboard)\settings\page.tsx
+  Unexpected any. Specify a different type. line: 12
+D:\AIUGC\viralugc\app\(dashboard)\studio\page.tsx
+  'Database' is defined but never used. line: 6
+  Unexpected any. Specify a different type. line: 55
+  Unexpected any. Specify a different type. line: 89
+  Unexpected any. Specify a different type. line: 171
+  Unexpected any. Specify a different type. line: 209
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 308
+D:\AIUGC\viralugc\app\(static)\about\page.tsx
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 13
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 18
+D:\AIUGC\viralugc\app\(static)\terms\page.tsx
+  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`. line: 18
+  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`. line: 18
+D:\AIUGC\viralugc\app\api\generate\route.ts
+  Unexpected any. Specify a different type. line: 49
+  Unexpected any. Specify a different type. line: 65
+  Unexpected any. Specify a different type. line: 82
+  Unexpected any. Specify a different type. line: 95
+  Unexpected any. Specify a different type. line: 113
+  Unexpected any. Specify a different type. line: 126
+D:\AIUGC\viralugc\app\api\script\route.ts
+  'parseError' is defined but never used. line: 76
+  Unexpected any. Specify a different type. line: 84
+D:\AIUGC\viralugc\app\api\stitch\route.ts
+  'videoId' is assigned a value but never used. line: 20
+  Unexpected any. Specify a different type. line: 45
+  Unexpected any. Specify a different type. line: 90
+D:\AIUGC\viralugc\app\api\tts\route.ts
+  Unexpected any. Specify a different type. line: 18
+  Unexpected any. Specify a different type. line: 43
+D:\AIUGC\viralugc\app\api\webhook\fal\route.ts
+  'crypto' is defined but never used. line: 3
+  Unexpected any. Specify a different type. line: 25
+  Unexpected any. Specify a different type. line: 36
+  Unexpected any. Specify a different type. line: 49
+D:\AIUGC\viralugc\app\api\webhook\lemonsqueezy\route.ts
+  'e' is defined but never used. line: 38
+  'findError' is assigned a value but never used. line: 59
+  Unexpected any. Specify a different type. line: 60
+  Unexpected any. Specify a different type. line: 67
+  Unexpected any. Specify a different type. line: 75
+  Unexpected any. Specify a different type. line: 92
+  Unexpected any. Specify a different type. line: 103
+D:\AIUGC\viralugc\app\auth\confirm\route.ts
+  'next' is never reassigned. Use 'const' instead. line: 11
+  Unexpected any. Specify a different type. line: 15
+  Unexpected any. Specify a different type. line: 18
+D:\AIUGC\viralugc\components\landing\AssetShowcase.tsx
+  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element line: 19
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 44
+D:\AIUGC\viralugc\components\landing\FeaturesGrid.tsx
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 27
+D:\AIUGC\viralugc\components\landing\MascotSection.tsx
+  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`. line: 25
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 25
+  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`. line: 25
+  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element line: 54
+D:\AIUGC\viralugc\components\landing\SampleVideoSection.tsx
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 31
+  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element line: 56
+D:\AIUGC\viralugc\components\landing\TestimonialsSection.tsx
+  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`. line: 32
+  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`. line: 32
+D:\AIUGC\viralugc\components\shared\AIChatBot.tsx
+  'Bot' is defined but never used. line: 5
+  'User' is defined but never used. line: 5
+  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\AIUGC\viralugc\components\shared\AIChatBot.tsx:57:36
+  55 |
+  56 |     // Add user message
+> 57 |     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text }
+     |                                    ^^^^^^^^^^ Cannot call impure function
+  58 |     setMessages(prev => [...prev, userMsg])
+  59 |     setInputValue('')
+  60 |     setIsTyping(true) line: 57
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 70
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 88
+D:\AIUGC\viralugc\components\shared\Footer.tsx
+  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`. line: 18
+D:\AIUGC\viralugc\lib\actors.ts
+  Unexpected any. Specify a different type. line: 27
+  Unexpected any. Specify a different type. line: 28
+D:\AIUGC\viralugc\lib\stitcher.ts
+  Unexpected any. Specify a different type. line: 44
+  Unexpected any. Specify a different type. line: 56

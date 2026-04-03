@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 export async function createManualUser(formData: FormData): Promise<{ success: boolean; message: string }> {
   if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
