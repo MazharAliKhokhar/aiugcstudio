@@ -29,10 +29,24 @@ export async function POST(req: NextRequest) {
     const audioPath = path.join(tempDir, 'input_audio.mp3')
     const outputPath = path.join(tempDir, 'output.mp4')
 
-    // 2. Download Video and Generate TTS Audio concurrently
+    // 2. Private Jarvis Service (Smart Control)
     const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    const jarvisInstanceId = process.env.JARVISLABS_INSTANCE_ID
+
     if (!jarvisApiUrl) {
-      throw new Error('JARVIS_API_URL is missing in environment variables')
+      throw new Error('NEXT_PUBLIC_JARVIS_API_URL is missing')
+    }
+
+    // Smart Boot Logic: Only if instance ID is provided
+    if (jarvisInstanceId) {
+      try {
+        const { jarvis } = await import('@/lib/jarvis')
+        console.log('[API/Stitch] Checking Jarvis Instance status...')
+        await jarvis.waitForReady(jarvisInstanceId)
+        console.log('[API/Stitch] Jarvis GPU is ready for action!')
+      } catch (error: any) {
+        console.error('[API/Stitch] Smart Control failed:', error.message)
+      }
     }
 
     console.log('[API/Stitch] Requesting video from:', videoUrl)

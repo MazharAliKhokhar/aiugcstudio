@@ -147,7 +147,7 @@ export default function StudioPage() {
     if (videoStatus === 'completed' && videoUrl && !videoUrl.startsWith('blob:') && !isStitching) {
       const processPostGeneration = async () => {
         setIsStitching(true)
-        const toastId = toast.loading('Perfecting your ad (AI Voice + Stitching)...')
+        const toastId = toast.loading('Warming up Private GPU & Rendering...')
         
         try {
           const stitchRes = await fetch('/api/stitch', {
@@ -187,6 +187,7 @@ export default function StudioPage() {
     setIsGenerating(true)
     
     try {
+      toast.info('Connecting to Private GPU Server...', { duration: 5000 })
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -383,11 +384,11 @@ export default function StudioPage() {
                       <h3 className="text-2xl font-bold">
                         {isStitching ? 'Mastering Final Video' : 'Generating Cinematic UGC'}
                       </h3>
-                      <p className="text-muted-foreground">
+                      <p className="text-muted-foreground italic font-medium tracking-tight">
                         {isStitching 
-                          ? 'Combining AI voiceover with your video...' 
+                          ? 'Finalizing your ad (AI Voice + Stitching)...' 
                           : videoStatus === 'pending' 
-                            ? 'Waiting for fal.ai queue...' 
+                            ? 'Warming up Private GPU Server (60-90s)...' 
                             : 'Rendering with Open Source Wan 2.1. This takes a few minutes.'}
                       </p>
                     </div>

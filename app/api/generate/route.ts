@@ -124,10 +124,28 @@ export async function POST(req: NextRequest) {
 
     const videoId = videoData.id
 
-    // 6. Submit to Private Jarvis API (Synchronous Inference)
+    // 6. Private Jarvis Service (Smart Control)
     const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    const jarvisInstanceId = process.env.JARVISLABS_INSTANCE_ID
+
     if (!jarvisApiUrl) {
-      throw new Error('JARVIS_API_URL is missing in environment variables')
+      throw new Error('NEXT_PUBLIC_JARVIS_API_URL is missing')
+    }
+
+    // Smart Boot Logic: Only if instance ID is provided
+    if (jarvisInstanceId) {
+      try {
+        const { jarvis } = await import('@/lib/jarvis')
+        console.log('[API/Generate] Checking Jarvis Instance status...')
+        
+        // Wait up to 2 minutes for the instance to be Running & Heartbeat 200 OK
+        // This will automatically RESUME it if it's paused.
+        await jarvis.waitForReady(jarvisInstanceId)
+        console.log('[API/Generate] Jarvis GPU is ready for action!')
+      } catch (error: any) {
+        console.error('[API/Generate] Smart Control failed:', error.message)
+        // We continue anyway in case the URL is reachable despite API failure
+      }
     }
 
     console.log('[API/Generate] Sending prompt to Jarvis:', prompt)
