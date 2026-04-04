@@ -120,5 +120,42 @@
   }
   html {
     @apply font-sans;
+    scrollbar-gutter: stable;
+  }
+
+  /* Custom Scrollbar Styles */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.55 0.25 260 / 20%) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.55 0.25 260 / 20%);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.55 0.25 260 / 40%);
+  }
+
+  .dark {
+    scrollbar-color: oklch(0.65 0.25 285 / 20%) transparent;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: oklch(0.65 0.25 285 / 20%);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.65 0.25 285 / 40%);
   }
 }

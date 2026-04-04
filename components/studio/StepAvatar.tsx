@@ -63,15 +63,15 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
           />
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-h-[calc(100vh-450px)] overflow-y-auto pr-3 custom-scrollbar">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 pr-1">
           {filteredActors.map((actor) => (
             <div 
               key={actor.id}
               onClick={() => setSelectedActor(actor.id)}
               className={cn(
-                "group relative aspect-square rounded-[32px] overflow-hidden border-4 cursor-pointer transition-all duration-300",
+                "group relative aspect-square rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-300",
                 selectedActor === actor.id 
-                  ? "border-primary scale-95 shadow-2xl shadow-primary/30" 
+                  ? "border-primary scale-95 shadow-lg shadow-primary/20" 
                   : "border-transparent hover:border-slate-200"
               )}
             >
@@ -79,12 +79,15 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
                 src={actor.thumbnail} 
                 alt={actor.name} 
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 bg-slate-100"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${actor.name}&background=6366f1&color=fff&bold=true`
+                }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-widest text-white italic drop-shadow-md">{actor.name}</span>
-                {selectedActor === actor.id && <CheckCircle2 className="w-6 h-6 text-primary fill-white p-[1px] rounded-full shadow-lg" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white italic drop-shadow-md">{actor.name}</span>
+                {selectedActor === actor.id && <CheckCircle2 className="w-5 h-5 text-primary fill-white p-[1px] rounded-full shadow-lg" />}
               </div>
             </div>
           ))}
@@ -94,7 +97,7 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
         </div>
       </div>
 
-      <div className="flex gap-6 pt-10 mt-auto">
+      <div className="sticky bottom-0 -mx-6 md:-mx-12 -mb-6 md:-mb-12 mt-10 p-6 md:p-12 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-6 z-20">
         <Button variant="outline" onClick={onBack} className="w-40 h-16 rounded-3xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
           <ArrowLeft className="mr-3 w-5 h-5" /> Back
         </Button>

@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { ArrowLeft, ArrowRight, Target, Users, Megaphone } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface StepGoalProps {
   goal: string
@@ -24,26 +25,29 @@ export function StepGoal({ goal, setGoal, onNext, onBack }: StepGoalProps) {
       <div className="space-y-6">
         <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">Choose your ad objective</Label>
         
-        <RadioGroup value={goal} onValueChange={setGoal} className="grid grid-cols-1 gap-6">
+        <RadioGroup value={goal} onValueChange={setGoal} className="grid grid-cols-1 gap-4">
           {GOALS.map((g) => (
             <div key={g.id} className="relative group/item">
               <RadioGroupItem value={g.id} id={`goal-${g.id}`} className="peer sr-only" />
               <Label
                 htmlFor={`goal-${g.id}`}
-                className="flex items-center gap-8 rounded-[40px] border-4 border-slate-100 bg-white p-10 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1"
+                className="flex items-center gap-6 rounded-3xl border-4 border-slate-100 bg-white p-6 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-0.5"
               >
-                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 blur-[80px] rounded-full translate-x-24 -translate-y-24 peer-data-[state=checked]:bg-primary/10 transition-colors" />
-                <div className="bg-primary/10 p-5 rounded-2xl border border-primary/20 shrink-0">
-                  <g.icon className="w-8 h-8 text-primary" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[40px] rounded-full translate-x-16 -translate-y-16 peer-data-[state=checked]:bg-primary/20 transition-colors" />
+                <div className="bg-primary/10 p-4 rounded-xl border border-primary/20 shrink-0">
+                  <g.icon className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <div className="text-2xl md:text-3xl font-[1000] uppercase italic tracking-tighter text-slate-900 mb-1.5 peer-data-[state=checked]:text-primary transition-colors">{g.label}</div>
-                  <div className="text-sm md:text-base text-slate-500 font-bold leading-relaxed max-w-2xl peer-data-[state=checked]:text-slate-700 transition-colors">{g.desc}</div>
+                  <div className="text-xl md:text-2xl font-black uppercase italic tracking-tighter text-slate-900 mb-1 peer-data-[state=checked]:text-primary transition-colors">{g.label}</div>
+                  <div className="text-sm md:text-base text-slate-500 font-bold leading-tight max-w-xl peer-data-[state=checked]:text-slate-700 transition-colors">{g.desc}</div>
                 </div>
-                <div className="ml-auto opacity-0 peer-data-[state=checked]:opacity-100 transition-opacity">
-                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                     <div className="w-3 h-3 rounded-full bg-white" />
-                   </div>
+                <div className="ml-auto flex items-center justify-center">
+                  <div className={cn(
+                    "w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center",
+                    goal === g.id ? "border-primary bg-primary" : "border-slate-200 bg-transparent"
+                  )}>
+                    {goal === g.id && <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />}
+                  </div>
                 </div>
               </Label>
             </div>
