@@ -51,21 +51,16 @@ export default function StudioPage() {
     // Fetch initial credits
     const fetchCredits = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data, error } = await (supabase.from('profiles') as any).select('credits').eq('id', user.id).single()
-          if (error) {
-            console.error('[StudioPage] Profile fetch error:', error)
-            // If it's a "no rows" error, it might be a sync delay - we could retry or just stay at 0
-          }
-          if (data) setCredits(data.credits)
-        }
+        const res = await fetch('/api/user/credits')
+        if (!res.ok) throw new Error('Failed to fetch credits')
+        const data = await res.json()
+        if (data.credits !== undefined) setCredits(data.credits)
       } catch (err) {
         console.error('[StudioPage] Unexpected error fetching credits:', err)
       }
     }
     fetchCredits()
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     // Generate an initial prompt when reaching step 4 (Script)
