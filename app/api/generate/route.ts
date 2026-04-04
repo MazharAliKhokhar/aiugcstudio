@@ -129,20 +129,28 @@ export async function POST(req: NextRequest) {
 
     // 6. Check GPU Readiness (Warming up check)
     if (jarvisId) {
-      const { jarvis } = await import('@/lib/jarvis')
-      const status = await jarvis.getStatus(jarvisId)
-      
-      const isHealthy = await jarvis.heartbeat(jarvisUrl)
+      try {
+        const { jarvis } = await import('@/lib/jarvis')
+        const status = await jarvis.getStatus(jarvisId)
+        const isHealthy = await jarvis.heartbeat(jarvisUrl)
 
-      if (status.status !== 'Running' || !isHealthy) {
-        console.log('[Generate] GPU is booting/warming up — asking client to retry')
-        if (status.status === 'Paused') {
-          await jarvis.resume(jarvisId).catch(() => {})
+        if (status.status !== 'Running' || !isHealthy) {
+          console.log('[Generate] GPU is booting/warming up — asking client to retry')
+          if (status.status === 'Paused') {
+            await jarvis.resume(jarvisId).catch((re) => {
+              console.error('[Generate] Resume failed:', re.message)
+            })
+          }
+          return NextResponse.json({ 
+            status: 'booting', 
+            message: 'GPU is warming up (60-90s). Please stay on this page.' 
+          }, { status: 202 })
         }
+      } catch (err: any) {
+        console.error('[Generate] GPU Status Check Error:', err.message)
         return NextResponse.json({ 
-          status: 'booting', 
-          message: 'GPU is warming up (60-90s). Please stay on this page.' 
-        }, { status: 202 })
+          error: `GPU Connection Error: ${err.message}. Check your JARVISLABS_API_KEY and JARVISLABS_INSTANCE_ID.`
+        }, { status: 500 })
       }
     }
 
