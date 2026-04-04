@@ -1,13 +1,11 @@
 /**
  * lib/jarvis.ts
  * Manages the Jarvislabs.ai GPU instance lifecycle.
- * Handles resume, pause, status polling, and heartbeat checks.
- * Used by the generate and stitch APIs to enable smart "pay-only-when-rendering" billing.
  */
 
 const JARVIS_API_BASE = 'https://api.jarvislabs.ai/v1'
-const POLL_INTERVAL_MS = 10_000 // 10 seconds between status checks
-const HEARTBEAT_TIMEOUT_MS = 3_000
+const POLL_INTERVAL_MS = 10_000
+const HEARTBEAT_TIMEOUT_MS = 5_000
 
 export interface JarvisInstance {
   instance_id: number
@@ -16,22 +14,35 @@ export interface JarvisInstance {
   ip: string
 }
 
-/** Read and validate the Jarvislabs API key from environment */
 function getApiKey(): string {
-  const key = process.env.JARVISLABS_API_KEY
+  const key = process.env.JARVISLABS_API_KEY?.trim()
   if (!key) throw new Error('JARVISLABS_API_KEY is not configured')
   return key
 }
 
-/** Build standard Jarvislabs auth headers */
 function authHeaders() {
   return { 'X-API-KEY': getApiKey(), 'Content-Type': 'application/json' }
 }
 
-/** Generic Jarvislabs instance action: resume | pause */
+/** Basic retry wrapper for fetches */
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(10000) })
+      if (res.ok || i === retries - 1) return res
+      console.warn(`[Jarvis] Fetch retry ${i + 1}/${retries} for ${url} - Status: ${res.status}`)
+    } catch (err: any) {
+      if (i === retries - 1) throw err
+      console.warn(`[Jarvis] Fetch failed, retrying (${i + 1}/${retries})...`, err.message)
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)))
+    }
+  }
+  throw new Error('Fetch failed after retries')
+}
+
 async function instanceAction(instanceId: string | number, action: 'resume' | 'pause') {
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${JARVIS_API_BASE}/instances/${instanceId}?action=${action}`,
       { method: 'PUT', headers: authHeaders() }
     )
@@ -41,82 +52,43 @@ async function instanceAction(instanceId: string | number, action: 'resume' | 'p
     }
     return res.json()
   } catch (err: any) {
-    if (err.message === 'fetch failed') {
-      throw new Error(`Instance ${action} failed: Network error reaching Jarvis API. Check your internet or API endpoint.`)
-    }
-    throw err
+    console.error(`[Jarvis] Instance ${action} error:`, err.message)
+    throw new Error(`Network failure during ${action}: ${err.message}. Check your API Key and Link.`)
   }
 }
 
 export const jarvis = {
-  /** Resume a paused Jarvislabs instance */
   resume: (id: string | number) => instanceAction(id, 'resume'),
-
-  /** Pause a running Jarvislabs instance to stop billing */
   pause: (id: string | number) => instanceAction(id, 'pause'),
 
-  /**
-   * Quick heartbeat check to see if the FastAPI server is responding.
-   */
   async heartbeat(url: string): Promise<boolean> {
+    if (!url) return false
     try {
       const res = await fetch(`${url}/health`, {
         signal: AbortSignal.timeout(HEARTBEAT_TIMEOUT_MS)
       })
       return res.ok
-    } catch {
+    } catch (err: any) {
+      console.log(`[Jarvis] Heartbeat failed for ${url}:`, err.message)
       return false
     }
   },
 
-  /** Fetch instance metadata from the Jarvislabs API */
   async getStatus(instanceId: string | number): Promise<JarvisInstance> {
-    const res = await fetch(`${JARVIS_API_BASE}/instances`, { headers: authHeaders() })
-    if (!res.ok) throw new Error(`Failed to fetch Jarvis instances: ${res.statusText}`)
-    const instances: JarvisInstance[] = await res.json()
-    const target = instances.find(i => i.instance_id.toString() === instanceId.toString())
-    if (!target) throw new Error(`Instance ${instanceId} not found in account`)
-    return target
-  },
-
-  /**
-   * Waits until the instance is Running AND its FastAPI server is responding.
-   * Automatically sends a resume command if the instance is found to be Paused.
-   * @param instanceId - The Jarvislabs instance ID
-   * @param maxAttempts - Max polling attempts (default 20 = ~3.5 minutes)
-   */
-  async waitForReady(instanceId: string | number, maxAttempts = 20): Promise<string> {
-    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
-    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
-
-    for (let i = 0; i < maxAttempts; i++) {
-      const instance = await this.getStatus(instanceId)
-
-      if (instance.status === 'Running') {
-        // Confirm the FastAPI server is actually responding
-        try {
-          const hb = await fetch(`${jarvisUrl}/health`, {
-            signal: AbortSignal.timeout(HEARTBEAT_TIMEOUT_MS)
-          })
-          if (hb.ok) {
-            console.log(`[Jarvis] GPU ready after ${i + 1} attempt(s).`)
-            return jarvisUrl
-          }
-        } catch {
-          // Server booting — wait and retry
-        }
-      } else if (instance.status === 'Paused') {
-        if (i === 0) {
-          // Only send resume once on first detection of paused state
-          console.log('[Jarvis] Instance is Paused. Resuming...')
-          await this.resume(instanceId)
-        }
+    try {
+      const res = await fetchWithRetry(`${JARVIS_API_BASE}/instances`, { headers: authHeaders() })
+      if (!res.ok) {
+        const errText = await res.text()
+        throw new Error(`Failed to fetch Jarvis instances: ${res.status} ${errText}`)
       }
-
-      console.log(`[Jarvis] Waiting (${i + 1}/${maxAttempts}) — status: ${instance.status}`)
-      await new Promise(r => setTimeout(r, POLL_INTERVAL_MS))
+      const instances: JarvisInstance[] = await res.json()
+      const target = instances.find(i => i.instance_id.toString() === instanceId.toString())
+      if (!target) throw new Error(`Instance ${instanceId} not found in account. Verify your Instance ID.`)
+      return target
+    } catch (err: any) {
+      console.error('[Jarvis] getStatus failed:', err.message)
+      if (err.cause) console.error('[Jarvis] Cause:', err.cause)
+      throw new Error(`Connection to Jarvislabs failed: ${err.message}`)
     }
-
-    throw new Error('Jarvis GPU failed to become ready within the timeout period.')
   }
 }
