@@ -65,13 +65,15 @@ export async function getAdminStats(query: string = '') {
     { count: videosCount },
     { count: successfulVideos },
     { count: failedVideos },
-    { data: allCredits }
+    { data: allCredits },
+    { count: weeklyUsersCount }
   ] = await Promise.all([
     adminClient.from('profiles').select('*', { count: 'exact', head: true }),
     adminClient.from('videos').select('*', { count: 'exact', head: true }),
     adminClient.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
     adminClient.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'failed'),
-    adminClient.from('profiles').select('credits')
+    adminClient.from('profiles').select('credits'),
+    adminClient.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
   ])
   
   const totalCredits = allCredits?.reduce((acc: any, p: any) => acc + (p.credits || 0), 0) || 0
@@ -96,6 +98,7 @@ export async function getAdminStats(query: string = '') {
     successRate: videosCount ? Math.round((successfulVideos || 0) / videosCount * 100) : 0,
     failedVideos,
     totalCredits,
+    weeklyUsersCount: weeklyUsersCount || 0,
     usersList: rawUsersList?.map((u: any) => ({ ...u, videoCount: u.videos?.length || 0 })),
     videosList,
     creditLogs,
@@ -261,4 +264,91 @@ export async function bulkRefundStuckVideos(): Promise<{ success: boolean; messa
   } catch (err: any) {
     return { success: false, message: err.message || 'An unexpected error occurred' }
   }
+}
+
+export async function updateVideoDetails(formData: FormData): Promise<{ success: boolean; message: string }> {
+  if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
+  
+  const videoId = formData.get('videoId') as string
+  const status = formData.get('status') as any
+  const videoUrl = formData.get('videoUrl') as string
+  const duration = parseInt(formData.get('duration') as string, 10)
+
+  if (!videoId) return { success: false, message: 'Video ID is required' }
+
+  try {
+    const supabase = createAdminClient()
+    const { error } = await (supabase.from('videos') as any)
+      .update({ 
+        ...(status && { status }),
+        ...(videoUrl && { video_url: videoUrl }),
+        ...(duration && { duration })
+      })
+      .eq('id', videoId)
+
+    if (error) throw error
+
+    revalidatePath('/admin')
+    return { success: true, message: 'Video details updated!' }
+  } catch (err: any) {
+    return { success: false, message: err.message || 'An unexpected error occurred' }
+  }
+}
+
+export async function updateUserProfile(formData: FormData): Promise<{ success: boolean; message: string }> {
+  if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
+  
+  const userId = formData.get('userId') as string
+  const fullName = formData.get('fullName') as string
+  const credits = formData.get('credits') ? parseInt(formData.get('credits') as string, 10) : undefined
+
+  if (!userId) return { success: false, message: 'User ID is required' }
+
+  try {
+    const supabase = createAdminClient()
+    const { error } = await (supabase.from('profiles') as any)
+      .update({ 
+        ...(fullName !== undefined && { full_name: fullName }),
+        ...(credits !== undefined && { credits })
+      })
+      .eq('id', userId)
+
+    if (error) throw error
+
+    revalidatePath('/admin')
+    return { success: true, message: 'Profile updated!' }
+  } catch (err: any) {
+    return { success: false, message: err.message || 'An unexpected error occurred' }
+  }
+}
+
+export async function deleteUser(formData: FormData): Promise<{ success: boolean; message: string }> {
+  if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
+  
+  const userId = formData.get('userId') as string
+
+  if (!userId) return { success: false, message: 'User ID is required' }
+
+  try {
+    const adminClient = createAdminClient()
+    
+    // Auth deletion requires admin.deleteUser
+    const { error: authError } = await adminClient.auth.admin.deleteUser(userId)
+    if (authError) throw authError
+
+    // Profile deletion should cascade (if set in DB), but we can be explicit
+    await (adminClient.from('profiles') as any).delete().eq('id', userId)
+
+    revalidatePath('/admin')
+    return { success: true, message: 'User and all associated data deleted.' }
+  } catch (err: any) {
+    return { success: false, message: err.message || 'An unexpected error occurred' }
+  }
+}
+
+export async function syncDatabase(): Promise<{ success: boolean; message: string }> {
+  if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
+  
+  revalidatePath('/admin')
+  return { success: true, message: 'Database state synchronized!' }
 }
