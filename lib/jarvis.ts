@@ -48,6 +48,20 @@ export const jarvis = {
   /** Pause a running Jarvislabs instance to stop billing */
   pause: (id: string | number) => instanceAction(id, 'pause'),
 
+  /**
+   * Quick heartbeat check to see if the FastAPI server is responding.
+   */
+  async heartbeat(url: string): Promise<boolean> {
+    try {
+      const res = await fetch(`${url}/health`, {
+        signal: AbortSignal.timeout(HEARTBEAT_TIMEOUT_MS)
+      })
+      return res.ok
+    } catch {
+      return false
+    }
+  },
+
   /** Fetch instance metadata from the Jarvislabs API */
   async getStatus(instanceId: string | number): Promise<JarvisInstance> {
     const res = await fetch(`${JARVIS_API_BASE}/instances`, { headers: authHeaders() })

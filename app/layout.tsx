@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
-        <Toaster />
+        <Toaster position="top-center" />
         <AIChatBot />
         <Script src="https://app.lemonsqueezy.com/js/lemon.js" strategy="afterInteractive" />
       </body>

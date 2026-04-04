@@ -41,9 +41,8 @@ function toAbsoluteUrl(path: string, base: string): string {
 
 // ─── Helper: Insert video row with admin fallback ─────────────────────────────
 
-async function insertVideoRow(supabase: any, payload: object) {
-  const { data, error } = await supabase
-    .from('videos')
+async function insertVideoRow(supabase: any, payload: any) {
+  const { data, error } = await (supabase.from('videos') as any)
     .insert(payload)
     .select('id')
     .single()
@@ -53,8 +52,7 @@ async function insertVideoRow(supabase: any, payload: object) {
   // Admin fallback — bypasses RLS if standard insert fails
   console.warn('[Generate] Standard insert failed, using admin fallback:', error?.message)
   const admin = createAdminClient()
-  const { data: adminData, error: adminError } = await admin
-    .from('videos')
+  const { data: adminData, error: adminError } = await (admin.from('videos') as any)
     .insert(payload)
     .select('id')
     .single()
@@ -84,8 +82,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Rate Limiting — max 10 generations per user per hour
     const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString()
-    const { count } = await supabase
-      .from('videos')
+    const { count } = await (supabase.from('videos') as any)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .gt('created_at', oneHourAgo)
@@ -126,22 +123,31 @@ export async function POST(req: NextRequest) {
     const videoData = await insertVideoRow(supabase, videoPayload)
     const videoId = videoData.id
 
-    // 6. Boot Jarvislabs GPU if paused (Smart Control)
     const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
     const jarvisId  = process.env.JARVISLABS_INSTANCE_ID
     if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
 
+    // 6. Check GPU Readiness (Warming up check)
     if (jarvisId) {
-      try {
-        const { jarvis } = await import('@/lib/jarvis')
-        await jarvis.waitForReady(jarvisId)
-      } catch (e: any) {
-        // Non-fatal: proceed anyway — the URL may already be reachable
-        console.warn('[Generate] GPU boot check failed (will attempt request anyway):', e.message)
+      const { jarvis } = await import('@/lib/jarvis')
+      const status = await jarvis.getStatus(jarvisId)
+      
+      const isHealthy = await jarvis.heartbeat(jarvisUrl)
+
+      if (status.status !== 'Running' || !isHealthy) {
+        console.log('[Generate] GPU is booting/warming up — asking client to retry')
+        if (status.status === 'Paused') {
+          await jarvis.resume(jarvisId).catch(() => {})
+        }
+        return NextResponse.json({ 
+          status: 'booting', 
+          message: 'GPU is warming up (60-90s). Please stay on this page.' 
+        }, { status: 202 })
       }
     }
 
     // 7. Send generation request to Wan 2.1 on Jarvislabs
+    console.log('[Generate] GPU is healthy. Triggering generation...')
     const genResponse = await fetch(`${jarvisUrl}/generate`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -157,7 +163,7 @@ export async function POST(req: NextRequest) {
     const fullVideoUrl = toAbsoluteUrl(video_url, jarvisUrl)
 
     // 8. Mark video as completed
-    await supabase.from('videos')
+    await (supabase.from('videos') as any)
       .update({ video_url: fullVideoUrl, status: 'completed' })
       .eq('id', videoId)
 

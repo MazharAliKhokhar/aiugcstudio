@@ -187,32 +187,40 @@ export default function StudioPage() {
     setIsGenerating(true)
     
     try {
-      toast.info('Connecting to Private GPU Server...', { duration: 5000 })
+      // 1. Initial attempt
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url,
-          productName,
-          goal,
-          prompt,
-          duration
-        })
+        body: JSON.stringify({ url, productName, goal, prompt, duration })
       })
 
       const data = await res.json()
       
+      // 2. Handle GPU Warming Up (Booting)
+      if (res.status === 202 && data.status === 'booting') {
+        toast.info('GPU is waking up. Retrying in 10s...', { duration: 8000 })
+        // Recursive retry after 10s
+        setTimeout(handleGenerate, 10000)
+        return
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Failed to start generation')
       }
 
+      // 3. Success -> Start tracking status
       setVideoId(data.videoId)
       setVideoStatus('pending')
       setStep(6)
       
     } catch (err: any) {
-      toast.error(err.message)
-      setIsGenerating(false)
+      console.error('[Studio/Generate] Error:', err)
+      toast.error(err.message === 'Failed to fetch' ? 'Connection lost. Retrying...' : err.message)
+      if (err.message === 'Failed to fetch') {
+         setTimeout(handleGenerate, 5000)
+      } else {
+         setIsGenerating(false)
+      }
     }
   }
 
