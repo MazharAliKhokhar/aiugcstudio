@@ -112,7 +112,7 @@ export async function updateUserCredits(formData: FormData): Promise<{ success: 
   if (!userId || isNaN(credits)) return { success: false, message: 'Invalid data' }
 
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     
     // Get current credits for delta calculation
     const { data: profile, error: profileFetchError } = await (supabase.from('profiles') as any).select('credits').eq('id', userId).single()
@@ -127,7 +127,7 @@ export async function updateUserCredits(formData: FormData): Promise<{ success: 
     if (updateError) throw updateError
 
     // Log the change
-    const { data: { user: admin } } = await supabase.auth.getUser()
+    const { data: { user: admin } } = await (await createClient()).auth.getUser()
     const { error: logError } = await (supabase.from('credit_logs') as any)
       .insert({
         user_id: userId,
@@ -154,7 +154,7 @@ export async function toggleAdminStatus(formData: FormData): Promise<{ success: 
   if (!userId) return { success: false, message: 'User ID is required' }
 
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { error } = await (supabase.from('profiles') as any)
       .update({ is_admin: !isAdmin }) // Toggle the current state
       .eq('id', userId)
@@ -176,7 +176,7 @@ export async function deleteVideo(formData: FormData): Promise<{ success: boolea
   if (!videoId) return { success: false, message: 'Video ID is required' }
 
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { error } = await (supabase.from('videos') as any)
       .delete()
       .eq('id', videoId)
@@ -199,7 +199,7 @@ export async function refundVideo(formData: FormData): Promise<{ success: boolea
   if (!videoId || !userId) return { success: false, message: 'Video ID and User ID are required' }
 
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 1. Mark video as failed
     const { error: updateError } = await (supabase.from('videos') as any)
@@ -230,7 +230,7 @@ export async function bulkRefundStuckVideos(): Promise<{ success: boolean; messa
   if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
   
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
     
     const { data: stuckVideos } = await (supabase.from('videos') as any)
