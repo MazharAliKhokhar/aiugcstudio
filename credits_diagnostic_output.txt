@@ -1,0 +1,4 @@
+
+--- ALL AUTH USERS ---
+Email: saanimazhar@gmail.com (Auth ID: b0c84d99-08d2-48e8-9457-d160e39f6b04) | Profile ID: b0c84d99-08d2-48e8-9457-d160e39f6b04 | Credits: 120 | Admin: true
+Email: mazhar.khokhar71@gmail.com (Auth ID: e4272e7e-9496-4a06-b6a0-2d2b108215bb) | Profile ID: e4272e7e-9496-4a06-b6a0-2d2b108215bb | Credits: 999 | Admin: true

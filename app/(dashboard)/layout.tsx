@@ -3,6 +3,9 @@ import { CreditsDisplay } from '@/components/shared/CreditsDisplay'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -17,10 +20,15 @@ export default async function DashboardLayout({
   }
 
   // Get User Profile
-  const { data: profile } = await (supabase.from('profiles') as any)
+  // We use multiple select to ensure we get the latest data and handle potential RLS/sync delays
+  const { data: profile, error } = await (supabase.from('profiles') as any)
     .select('credits, full_name, email, is_admin')
     .eq('id', user.id)
     .single()
+
+  if (error) {
+    console.error('[DashboardLayout] Profile fetch error:', error)
+  }
 
   const credits = profile?.credits ?? 0
   const userProfile = {

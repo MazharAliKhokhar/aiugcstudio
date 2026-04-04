@@ -67,15 +67,17 @@ export async function updateUserCredits(formData: FormData): Promise<{ success: 
     const supabase = createAdminClient()
 
     const { data: updatedRows, error: updateError } = await (supabase.from('profiles') as any)
-      .update({ credits })
-      .eq('id', userId)
+      .upsert({ id: userId, credits }, { onConflict: 'id' })
       .select('email, credits')
 
     if (updateError) return { success: false, message: `DB Error: ${updateError.message}` }
-    if (!updatedRows || updatedRows.length === 0) return { success: false, message: 'User not found in database' }
+    if (!updatedRows || updatedRows.length === 0) return { success: false, message: 'User not found' }
 
     revalidatePath('/admin')
-    return { success: true, message: `Credits updated to ${credits} for ${updatedRows[0].email}` }
+    revalidatePath('/studio')
+    revalidatePath('/gallery')
+    revalidatePath('/settings')
+    return { success: true, message: `Credits updated to ${credits}` }
   } catch (err: any) {
     return { success: false, message: err.message || 'Unexpected error' }
   }
@@ -102,14 +104,16 @@ export async function updateUserProfile(formData: FormData): Promise<{ success: 
     }
 
     const { data: updatedData, error } = await (supabase.from('profiles') as any)
-      .update(updateData)
-      .eq('id', userId)
+      .upsert({ id: userId, ...updateData }, { onConflict: 'id' })
       .select('email, credits, full_name')
 
     if (error) return { success: false, message: `DB Error: ${error.message} (${error.code})` }
     if (!updatedData || updatedData.length === 0) return { success: false, message: 'No profile found with that ID' }
 
     revalidatePath('/admin')
+    revalidatePath('/studio')
+    revalidatePath('/gallery')
+    revalidatePath('/settings')
     return { success: true, message: `Saved! ${updatedData[0].email} now has ${updatedData[0].credits} credits` }
   } catch (err: any) {
     return { success: false, message: err.message || 'Unexpected error' }
@@ -160,12 +164,14 @@ export async function createManualUser(formData: FormData): Promise<{ success: b
     if (userError) return { success: false, message: userError.message }
 
     const { error: profileError } = await (adminClient.from('profiles') as any)
-      .update({ credits })
-      .eq('id', userData.user.id)
+      .upsert({ id: userData.user.id, credits, email }, { onConflict: 'id' })
     
     if (profileError) throw profileError
 
     revalidatePath('/admin')
+    revalidatePath('/studio')
+    revalidatePath('/gallery')
+    revalidatePath('/settings')
     return { success: true, message: `User ${email} created with ${credits} credits!` }
   } catch (err: any) {
     return { success: false, message: err.message || 'Unexpected error' }
