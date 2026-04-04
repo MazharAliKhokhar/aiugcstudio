@@ -315,14 +315,22 @@ export async function updateUserProfile(formData: FormData): Promise<{ success: 
     if (fullName !== undefined) updateData.full_name = fullName
     if (credits !== undefined && !isNaN(credits)) updateData.credits = credits
 
-    const { error } = await (supabase.from('profiles') as any)
+    const { data: updatedData, error } = await (supabase.from('profiles') as any)
       .update(updateData)
       .eq('id', userId)
+      .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('Admin Update Error:', error)
+      return { success: false, message: `DB Error: ${error.message} (${error.code})` }
+    }
+
+    if (!updatedData || updatedData.length === 0) {
+      return { success: false, message: 'No profile found with that ID to update.' }
+    }
 
     revalidatePath('/admin')
-    return { success: true, message: 'Profile updated!' }
+    return { success: true, message: `Success! Updated ${updatedData[0].email}` }
   } catch (err: any) {
     return { success: false, message: err.message || 'An unexpected error occurred' }
   }
