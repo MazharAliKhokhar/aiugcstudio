@@ -30,15 +30,15 @@ export function StepGoal({ goal, setGoal, onNext, onBack }: StepGoalProps) {
               <RadioGroupItem value={g.id} id={`goal-${g.id}`} className="peer sr-only" />
               <Label
                 htmlFor={`goal-${g.id}`}
-                className="flex items-center gap-8 rounded-[32px] border-2 border-slate-100 bg-white p-8 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/[0.02] cursor-pointer transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1"
+                className="flex items-center gap-8 rounded-[40px] border-4 border-slate-100 bg-white p-10 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1"
               >
                 <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 blur-[80px] rounded-full translate-x-24 -translate-y-24 peer-data-[state=checked]:bg-primary/10 transition-colors" />
                 <div className="bg-primary/10 p-5 rounded-2xl border border-primary/20 shrink-0">
                   <g.icon className="w-8 h-8 text-primary" />
                 </div>
                 <div>
-                  <div className="text-2xl font-black uppercase italic tracking-tight text-slate-900 mb-1.5">{g.label}</div>
-                  <div className="text-sm text-slate-500 font-semibold leading-relaxed max-w-md">{g.desc}</div>
+                  <div className="text-2xl md:text-3xl font-[1000] uppercase italic tracking-tighter text-slate-900 mb-1.5 peer-data-[state=checked]:text-primary transition-colors">{g.label}</div>
+                  <div className="text-sm md:text-base text-slate-500 font-bold leading-relaxed max-w-2xl peer-data-[state=checked]:text-slate-700 transition-colors">{g.desc}</div>
                 </div>
                 <div className="ml-auto opacity-0 peer-data-[state=checked]:opacity-100 transition-opacity">
                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
