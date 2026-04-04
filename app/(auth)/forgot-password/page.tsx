@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Sparkles, ArrowLeft, MailCheck } from 'lucide-react'
-import { useEffect, useState } from 'react'
 
 const resetAction = async (prevState: any, formData: FormData) => {
   const result = await requestPasswordReset(formData)
@@ -20,11 +19,6 @@ const resetAction = async (prevState: any, formData: FormData) => {
 
 export default function ForgotPasswordPage() {
   const [state, formAction, isPending] = useActionState(resetAction, { error: null, success: false })
-  const [origin, setOrigin] = useState('')
-
-  useEffect(() => {
-    setOrigin(window.location.origin)
-  }, [])
 
   if (state?.success) {
     return (
@@ -66,7 +60,6 @@ export default function ForgotPasswordPage() {
       </CardHeader>
       
       <form action={formAction}>
-        <input type="hidden" name="origin" value={origin} />
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

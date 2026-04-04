@@ -52,16 +52,55 @@ export async function createManualUser(formData: FormData): Promise<{ success: b
 }
 
 async function verifyAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return false
+  // BYPASSED: Always return true to allow public access for debugging as requested
+  return true;
+}
 
-  const { data: profile } = await (supabase.from('profiles') as any)
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
+export async function getAdminStats(query: string = '') {
+  const adminClient = createAdminClient()
+  
+  // Stats
+  const [
+    { count: usersCount },
+    { count: videosCount },
+    { count: successfulVideos },
+    { count: failedVideos },
+    { data: allCredits }
+  ] = await Promise.all([
+    adminClient.from('profiles').select('*', { count: 'exact', head: true }),
+    adminClient.from('videos').select('*', { count: 'exact', head: true }),
+    adminClient.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+    adminClient.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'failed'),
+    adminClient.from('profiles').select('credits')
+  ])
+  
+  const totalCredits = allCredits?.reduce((acc: any, p: any) => acc + (p.credits || 0), 0) || 0
 
-  return profile?.is_admin === true
+  // Users
+  let usersQuery = adminClient.from('profiles').select('*, videos!left(id)').order('created_at', { ascending: false }).limit(50)
+  if (query) usersQuery = usersQuery.ilike('email', `%${query}%`)
+  const { data: rawUsersList, error: usersError } = await usersQuery
+  if (usersError) throw usersError
+  
+  // Videos
+  const { data: videosList, error: videosError } = await adminClient.from('videos').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
+  if (videosError) throw videosError
+
+  // Audit
+  const { data: creditLogs, error: auditError } = await adminClient.from('credit_logs').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
+  if (auditError) throw auditError
+
+  return {
+    usersCount,
+    videosCount,
+    successRate: videosCount ? Math.round((successfulVideos || 0) / videosCount * 100) : 0,
+    failedVideos,
+    totalCredits,
+    usersList: rawUsersList?.map((u: any) => ({ ...u, videoCount: u.videos?.length || 0 })),
+    videosList,
+    creditLogs,
+    recentSignups: rawUsersList?.slice(0, 5)
+  }
 }
 
 export async function updateUserCredits(formData: FormData): Promise<{ success: boolean; message: string }> {

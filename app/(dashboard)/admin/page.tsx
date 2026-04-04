@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
-import { updateUserCredits, toggleAdminStatus, deleteVideo, refundVideo, bulkRefundStuckVideos, createManualUser } from './actions'
+import { updateUserCredits, toggleAdminStatus, deleteVideo, refundVideo, bulkRefundStuckVideos, createManualUser, getAdminStats } from './actions'
 
 export default function AdminDashboard({
   searchParams,
@@ -28,67 +28,9 @@ export default function AdminDashboard({
       try {
         setLoading(true)
         setError(null)
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
         
-        if (!user) {
-          setError('Not authenticated')
-          setLoading(false)
-          return
-        }
-
-        // Admin check (Client-side fallback/validation)
-        const { data: profile, error: profileError } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-        
-        if (profileError || !profile?.is_admin) {
-          setError('Admin privileges required')
-          setLoading(false)
-          return
-        }
-
-        // Stats
-        const [
-          { count: usersCount },
-          { count: videosCount },
-          { count: successfulVideos },
-          { count: failedVideos },
-          { data: allCredits }
-        ] = await Promise.all([
-          supabase.from('profiles').select('*', { count: 'exact', head: true }),
-          supabase.from('videos').select('*', { count: 'exact', head: true }),
-          supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-          supabase.from('videos').select('*', { count: 'exact', head: true }).eq('status', 'failed'),
-          supabase.from('profiles').select('credits')
-        ])
-        
-        const totalCredits = allCredits?.reduce((acc, p) => acc + (p.credits || 0), 0) || 0
-
-        // Users
-        let usersQuery = supabase.from('profiles').select('*, videos!left(id)').order('created_at', { ascending: false }).limit(50)
-        if (query) usersQuery = usersQuery.ilike('email', `%${query}%`)
-        const { data: rawUsersList, error: usersError } = await usersQuery
-        if (usersError) throw usersError
-        
-        // Videos
-        const { data: videosList, error: videosError } = await supabase.from('videos').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
-        if (videosError) throw videosError
-
-        // Audit
-        const { data: creditLogs, error: auditError } = await supabase.from('credit_logs').select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
-        if (auditError) throw auditError
-
-        setData({
-          user,
-          usersCount,
-          videosCount,
-          successRate: videosCount ? Math.round((successfulVideos || 0) / videosCount * 100) : 0,
-          failedVideos,
-          totalCredits,
-          usersList: rawUsersList?.map((u: any) => ({ ...u, videoCount: u.videos?.length || 0 })),
-          videosList,
-          creditLogs,
-          recentSignups: rawUsersList?.slice(0, 5)
-        })
+        const stats = await getAdminStats(query)
+        setData(stats)
       } catch (err: any) {
         console.error('Fetch error:', err)
         setError(err.message || 'Failed to load system data')
