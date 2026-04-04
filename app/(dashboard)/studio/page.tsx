@@ -351,56 +351,58 @@ export default function StudioPage() {
             )}
 
             {step === 6 && (
-              <motion.div key="step-6" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="absolute inset-0 p-6 md:p-8 flex flex-col items-center justify-center text-center">
+              <motion.div key="step-6" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="absolute inset-0 p-8 md:p-16 flex flex-col items-center justify-center text-center">
                 
                 {videoStatus === 'completed' && videoUrl && !isStitching ? (
-                  <div className="space-y-6 w-full max-w-md animate-in zoom-in duration-500">
-                    <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle2 className="w-8 h-8" />
+                  <div className="space-y-10 w-full max-w-2xl animate-in zoom-in duration-700">
+                    <div className="w-24 h-24 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-green-500/10">
+                      <CheckCircle2 className="w-12 h-12" />
                     </div>
-                    <div className="rounded-[32px] overflow-hidden border border-white/10 shadow-2xl bg-black aspect-[9/16] relative group/vid">
+                    <div className="rounded-[48px] overflow-hidden border-8 border-slate-50 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] bg-black aspect-[9/16] relative group/vid max-h-[70vh] mx-auto">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/vid:opacity-100 transition-opacity z-10 pointer-events-none" />
                       <video src={videoUrl} controls autoPlay loop className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex gap-6 max-w-md mx-auto">
                       <a href={videoUrl} download="viralugc-ad.mp4" className="flex-1">
-                        <Button className="w-full">Download Ad</Button>
+                        <Button className="w-full h-16 rounded-3xl text-xl font-black uppercase tracking-tighter shadow-2xl shadow-primary/20 border-0">Download Final Ad</Button>
                       </a>
                       <Button 
                         variant="secondary" 
                         size="icon" 
-                        className="shrink-0" 
+                        className="w-16 h-16 rounded-3xl shrink-0 bg-slate-100 hover:bg-slate-200 border-0" 
                         title="Copy Prompt"
                         onClick={() => {
                           navigator.clipboard.writeText(prompt) 
                           toast.success('Prompt copied to clipboard!')
                         }}
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-6 h-6 text-slate-600" />
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-6 animate-in fade-in">
-                    <div className="relative w-24 h-24 mx-auto text-primary">
+                  <div className="space-y-10 animate-in fade-in w-full max-w-2xl">
+                    <div className="relative w-32 h-32 mx-auto text-primary">
                       <Loader2 className="w-full h-full animate-spin" />
-                      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold animate-pulse">
-                        {isStitching ? 'MUX' : videoStatus === 'pending' ? 'INIT' : 'GPU'}
+                      <div className="absolute inset-0 flex items-center justify-center text-sm font-black uppercase tracking-tighter animate-pulse text-slate-900">
+                        {isStitching ? 'MUX' : videoStatus === 'pending' ? 'BOOT' : 'GPU'}
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-bold">
-                        {isStitching ? 'Mastering Final Video' : 'Generating Cinematic UGC'}
+                    <div className="space-y-4">
+                      <h3 className="text-4xl md:text-5xl font-[1000] uppercase italic tracking-tighter text-slate-900">
+                        {isStitching ? 'Mastering Final Ad' : 'Rendering Cinematic UGC'}
                       </h3>
-                      <p className="text-muted-foreground italic font-medium tracking-tight">
+                      <p className="text-slate-500 text-xl font-bold italic tracking-tight">
                         {isStitching 
-                          ? 'Finalizing your ad (AI Voice + Stitching)...' 
+                          ? 'Synchronizing AI Voiceover and Visuals...' 
                           : videoStatus === 'pending' 
-                            ? 'Warming up Private GPU Server (60-90s)...' 
-                            : 'Rendering with Open Source Wan 2.1. This takes a few minutes.'}
+                            ? 'Warming up Private GPU Cluster (60-90s)...' 
+                            : 'Synthesizing pixels with Wan 2.1. Almost ready.'}
                       </p>
                     </div>
-                    <Progress value={isStitching ? 90 : videoStatus === 'pending' ? 10 : 60} className="w-64 mx-auto h-2 animate-pulse" />
+                    <div className="relative px-12">
+                      <Progress value={isStitching ? 95 : videoStatus === 'pending' ? 15 : 65} className="h-4 bg-slate-100 rounded-full" />
+                    </div>
                   </div>
                 )}
 

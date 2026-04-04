@@ -22,35 +22,35 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
       <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="prompt-script" className="text-sm font-black uppercase tracking-widest text-foreground/50 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" /> Visual Scripting
+            <Label htmlFor="prompt-script" className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" /> Visual Prompt Scripting
             </Label>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="h-8 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 border border-primary/20 rounded-full px-3" 
-              onClick={() => setPrompt(prompt + ' Make it more energetic and high-contrast.')}
+              className="h-10 text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/10 border border-primary/20 rounded-2xl px-4" 
+              onClick={() => setPrompt(prompt + ' Make it more cinematic, 4k, bright colors.')}
             >
-              <Wand2 className="w-3 h-3 mr-1.5" />
-              Optimize Prompt
+              <Wand2 className="w-4 h-4 mr-2" />
+              AI Tune Prompt
             </Button>
           </div>
           
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/5 to-blue-500/5 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+          <div className="relative group/input">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-[28px] blur-xl opacity-0 group-focus-within/input:opacity-100 transition-opacity" />
             <Textarea
               id="prompt-script"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the scenes visually..."
-              className="relative min-h-[160px] bg-white border-black/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-foreground shadow-sm"
+              placeholder="Describe the scenes visually for the video model..."
+              className="relative min-h-[220px] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-slate-900 shadow-sm font-medium"
             />
           </div>
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
-              Used by Wan 2.1 (T2V) to generate photorealistic video frames.
+            <h4 className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+              Used by Wan 2.1 to generate photorealistic video frames.
             </h4>
-            <span className={cn("text-[10px] font-bold", prompt.length > 500 ? "text-red-500" : "text-foreground/30")}>
+            <span className={cn("text-xs font-black", prompt.length > 450 ? "text-red-500" : "text-slate-300")}>
               {prompt.length}/500
             </span>
           </div>
@@ -58,43 +58,43 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="voice-script" className="text-sm font-black uppercase tracking-widest text-foreground/50 flex items-center gap-2">
-              <Mic className="w-4 h-4 text-primary" /> AI Voiceover Copy
+            <Label htmlFor="voice-script" className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Mic className="w-5 h-5 text-primary" /> AI Voiceover Copy
             </Label>
           </div>
           
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/5 to-blue-500/5 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+          <div className="relative group/input">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-[28px] blur-xl opacity-0 group-focus-within/input:opacity-100 transition-opacity" />
             <Textarea
               id="voice-script"
               value={voiceScript}
               onChange={(e) => setVoiceScript(e.target.value)}
-              placeholder="Type what the AI should say..."
-              className="relative min-h-[100px] bg-white border-black/10 rounded-2xl p-5 text-base leading-relaxed resize-none focus-visible:ring-primary/40 text-foreground shadow-sm"
+              placeholder="What should the AI actor say? Use high-converting sales copy principles."
+              className="relative min-h-[140px] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 text-slate-900 shadow-sm font-medium"
               maxLength={1000}
             />
           </div>
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] text-foreground/30 font-medium uppercase tracking-wider">
-              Generated via Voxtral (Mistral) high-fidelity engine.
+            <h4 className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+              Powered by ElevenLabs high-fidelity engine.
             </h4>
-            <span className={cn("text-[10px] font-bold", voiceScript.length > 300 ? "text-orange-500" : "text-foreground/30")}>
+            <span className={cn("text-xs font-black", voiceScript.length > 500 ? "text-orange-500" : "text-slate-300")}>
               {voiceScript.length}/1000
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex gap-4 pt-6">
-        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-black/5 bg-white hover:bg-black/5 text-foreground font-bold shadow-sm">
-          <ArrowLeft className="mr-2 w-4 h-4" /> Back
+      <div className="flex gap-6 pt-10 mt-auto">
+        <Button variant="outline" onClick={onBack} className="w-40 h-16 rounded-3xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
+          <ArrowLeft className="mr-3 w-5 h-5" /> Back
         </Button>
         <Button 
           onClick={onNext} 
-          className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all disabled:opacity-50 disabled:grayscale" 
+          className="flex-1 h-16 text-xl font-black uppercase tracking-tighter rounded-3xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all disabled:opacity-50 disabled:grayscale text-white border-0" 
           disabled={!prompt.trim() || !voiceScript.trim() || isScripting}
         >
-          {isScripting ? 'AI Scripting...' : 'Next: Render Ad'} <ArrowRight className="ml-3 w-5 h-5" />
+          {isScripting ? 'AI Scripting...' : 'Final Step: Render Ad'} <ArrowRight className="ml-4 w-6 h-6" />
         </Button>
       </div>
     </div>
