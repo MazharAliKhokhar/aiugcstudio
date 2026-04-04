@@ -304,17 +304,19 @@ export async function updateUserProfile(formData: FormData): Promise<{ success: 
   
   const userId = formData.get('userId') as string
   const fullName = formData.get('fullName') as string
-  const credits = formData.get('credits') ? parseInt(formData.get('credits') as string, 10) : undefined
+  const creditsStr = formData.get('credits') as string
+  const credits = creditsStr ? parseInt(creditsStr, 10) : undefined
 
   if (!userId) return { success: false, message: 'User ID is required' }
 
   try {
     const supabase = createAdminClient()
+    const updateData: any = {}
+    if (fullName !== undefined) updateData.full_name = fullName
+    if (credits !== undefined && !isNaN(credits)) updateData.credits = credits
+
     const { error } = await (supabase.from('profiles') as any)
-      .update({ 
-        ...(fullName !== undefined && { full_name: fullName }),
-        ...(credits !== undefined && { credits })
-      })
+      .update(updateData)
       .eq('id', userId)
 
     if (error) throw error

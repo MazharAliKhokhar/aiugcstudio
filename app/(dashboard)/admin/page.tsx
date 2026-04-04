@@ -200,32 +200,33 @@ export default function AdminDashboard({
                           <p className="font-bold">{u.email}</p>
                           <p className="text-xs text-muted-foreground">Joined {new Date(u.created_at).toLocaleDateString()}</p>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <form action={(fd) => handleAction(updateUserProfile, fd)} className="flex items-center gap-1">
+                        <td colSpan={3} className="px-6 py-4">
+                          <form action={(fd) => handleAction(updateUserProfile, fd)} className="flex items-center gap-4">
                             <input type="hidden" name="userId" value={u.id} />
-                            <Input name="fullName" defaultValue={u.full_name} className="h-8 w-32 bg-transparent" />
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-500"><Save className="h-4 w-4"/></Button>
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-[10px] uppercase text-muted-foreground">Full Name</Label>
+                              <Input name="fullName" defaultValue={u.full_name} className="h-8 w-40 bg-slate-900 border-slate-800" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-[10px] uppercase text-muted-foreground">Credits</Label>
+                              <Input name="credits" type="number" defaultValue={u.credits} className="h-8 w-24 bg-slate-900 border-slate-800" />
+                            </div>
+                            <Button size="sm" variant="outline" className="mt-5 gap-2">
+                               <Save className="h-4 w-4" /> Save Details
+                            </Button>
                           </form>
                         </td>
-                        <td className="px-6 py-4 text-center font-mono">{u.videoCount}</td>
-                        <td className="px-6 py-4">
-                          <form action={(fd) => handleAction(updateUserCredits, fd)} className="flex items-center gap-2">
-                            <input type="hidden" name="userId" value={u.id} />
-                            <Input name="credits" type="number" defaultValue={u.credits} className="h-8 w-20" />
-                            <Button size="sm" variant="outline">Update</Button>
-                          </form>
-                        </td>
-                        <td className="px-6 py-4 text-right space-x-2">
-                           <div className="flex justify-end gap-2">
+                        <td className="px-6 py-4 text-right">
+                           <div className="flex justify-end items-center gap-4">
                             <form action={(fd) => handleAction(toggleAdminStatus, fd)}>
                                <input type="hidden" name="userId" value={u.id} />
                                <input type="hidden" name="isAdmin" value={u.is_admin ? 'true' : 'false'} />
-                               <Button size="sm" variant={u.is_admin ? 'default' : 'outline'}>{u.is_admin ? 'Revoke' : 'Make Admin'}</Button>
+                               <Button size="sm" variant={u.is_admin ? 'default' : 'outline'}>{u.is_admin ? 'Revoke Admin' : 'Make Admin'}</Button>
                             </form>
                             <Button 
-                              size="sm" 
+                              size="icon" 
                               variant="ghost" 
-                              className="text-red-500"
+                              className="text-red-500 h-8 w-8"
                               onClick={async () => {
                                 if (window.confirm('PERMANENTLY DELETE user account and videos?')) {
                                   const fd = new FormData()
