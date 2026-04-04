@@ -124,29 +124,47 @@ export async function POST(req: NextRequest) {
 
     const videoId = videoData.id
 
-    // 6. Submit to fal.ai (async) 
-    const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/fal?videoId=${videoId}`
+    // 6. Submit to Private Jarvis API (Synchronous Inference)
+    const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    if (!jarvisApiUrl) {
+      throw new Error('JARVIS_API_URL is missing in environment variables')
+    }
 
-    const falResult = await fal.queue.submit(WAN_MODEL_ID, {
-      input: {
-        prompt,
-        aspect_ratio: '9:16'
-      },
-      webhookUrl: webhookUrl
+    console.log('[API/Generate] Sending prompt to Jarvis:', prompt)
+    const response = await fetch(`${jarvisApiUrl}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt })
     })
 
-    // 7. Update the record with the fal.ai job ID
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[API/Generate] Jarvis generation failed:', errorText)
+      throw new Error(`Private GPU Server error: ${errorText || response.statusText}`)
+    }
+
+    const { video_url, status: genStatus } = await response.json()
+    
+    // Construct the absolute URL if it is a relative path
+    const fullVideoUrl = video_url.startsWith('http') 
+      ? video_url 
+      : `${jarvisApiUrl}${video_url.startsWith('/') ? '' : '/'}${video_url}`
+
+    console.log('[API/Generate] Jarvis generation complete:', fullVideoUrl)
+
+    // 7. Update the record to completed status
     await (supabase.from('videos') as any)
       .update({
-        fal_job_id: falResult.request_id,
-        status: 'processing'
+        video_url: fullVideoUrl,
+        status: 'completed'
       })
       .eq('id', videoId)
 
     return NextResponse.json({ 
       success: true, 
       videoId,
-      message: 'Video generation started' 
+      videoUrl: fullVideoUrl,
+      message: 'Video generation complete' 
     })
 
   } catch (error: any) {
