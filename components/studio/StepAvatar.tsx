@@ -63,7 +63,7 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
           />
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-h-[500px] overflow-y-auto pr-3 custom-scrollbar">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-h-[calc(100vh-450px)] overflow-y-auto pr-3 custom-scrollbar">
           {filteredActors.map((actor) => (
             <div 
               key={actor.id}

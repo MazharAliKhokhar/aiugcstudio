@@ -43,7 +43,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe the scenes visually for the video model..."
-              className="relative min-h-[220px] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-slate-900 shadow-sm font-medium"
+              className="relative min-h-[calc(40vh-100px)] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-slate-900 shadow-sm font-medium"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -70,7 +70,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
               value={voiceScript}
               onChange={(e) => setVoiceScript(e.target.value)}
               placeholder="What should the AI actor say? Use high-converting sales copy principles."
-              className="relative min-h-[140px] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 text-slate-900 shadow-sm font-medium"
+              className="relative min-h-[calc(20vh-50px)] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 text-slate-900 shadow-sm font-medium"
               maxLength={1000}
             />
           </div>
