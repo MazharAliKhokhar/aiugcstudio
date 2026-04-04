@@ -28,7 +28,7 @@ function authHeaders() {
 async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(10000) })
+      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(15000) })
       if (res.ok || i === retries - 1) return res
       console.warn(`[Jarvis] Fetch retry ${i + 1}/${retries} for ${url} - Status: ${res.status}`)
     } catch (err: any) {
@@ -53,7 +53,7 @@ async function instanceAction(instanceId: string | number, action: 'resume' | 'p
     return res.json()
   } catch (err: any) {
     console.error(`[Jarvis] Instance ${action} error:`, err.message)
-    throw new Error(`Network failure during ${action}: ${err.message}. Check your API Key and Link.`)
+    throw new Error(`Network failure during ${action}: ${err.message}`)
   }
 }
 
@@ -83,12 +83,42 @@ export const jarvis = {
       }
       const instances: JarvisInstance[] = await res.json()
       const target = instances.find(i => i.instance_id.toString() === instanceId.toString())
-      if (!target) throw new Error(`Instance ${instanceId} not found in account. Verify your Instance ID.`)
+      if (!target) throw new Error(`Instance ${instanceId} not found in account.`)
       return target
     } catch (err: any) {
       console.error('[Jarvis] getStatus failed:', err.message)
-      if (err.cause) console.error('[Jarvis] Cause:', err.cause)
       throw new Error(`Connection to Jarvislabs failed: ${err.message}`)
     }
+  },
+
+  /**
+   * Waits until the instance is Running AND its FastAPI server is responding.
+   * This is used by the stitch API to ensure the GPU is ready before processing.
+   */
+  async waitForReady(instanceId: string | number, maxAttempts = 15): Promise<void> {
+    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
+    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
+
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const isHealthy = await this.heartbeat(jarvisUrl)
+        if (isHealthy) {
+          console.log(`[Jarvis] GPU ready after ${i + 1} attempt(s).`)
+          return
+        }
+
+        const instance = await this.getStatus(instanceId)
+        if (instance.status === 'Paused' && i === 0) {
+          console.log('[Jarvis] Instance is Paused. Resuming...')
+          await this.resume(instanceId)
+        }
+      } catch (err: any) {
+        console.warn(`[Jarvis] Polling attempt ${i + 1} failed:`, err.message)
+      }
+
+      console.log(`[Jarvis] Waiting for GPU (${i + 1}/${maxAttempts})...`)
+      await new Promise(r => setTimeout(r, POLL_INTERVAL_MS))
+    }
+    throw new Error('Jarvis GPU failed to become ready within the timeout period.')
   }
 }
