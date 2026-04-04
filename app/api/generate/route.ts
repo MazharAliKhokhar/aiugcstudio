@@ -1,200 +1,178 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { getCreditCost } from '@/lib/credits'
-import { z } from 'zod'
+/**
+ * app/api/generate/route.ts
+ * Core video generation endpoint.
+ *
+ * Flow:
+ *  1. Authenticate user via Supabase session
+ *  2. Validate & sanitize input (Zod)
+ *  3. Rate-limit: max 10 generations per hour per user
+ *  4. Atomically deduct credits (Postgres RPC — prevents race conditions)
+ *  5. Create a pending video DB record (with admin fallback for RLS edge cases)
+ *  6. Boot the private Jarvislabs GPU if it is paused
+ *  7. Send the prompt to the Wan 2.1 inference server
+ *  8. Save the returned video URL and mark status as 'completed'
+ *  9. Auto-pause the GPU to stop billing immediately
+ */
 
-// 1. Define Input Schema for Guardrails
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getCreditCost } from '@/lib/credits'
+
+// ─── Input Validation Schema ─────────────────────────────────────────────────
+
 const GenerateSchema = z.object({
-  url: z.string().url().max(500),
+  url:         z.string().url('Must be a valid URL').max(500),
   productName: z.string().max(500).optional().or(z.literal('')),
-  goal: z.enum(['sales', 'awareness', 'retargeting']),
-  prompt: z.string().min(10).max(5000),
-  duration: z.number().refine(val => [15, 30, 45, 60].includes(val), {
-    message: "Invalid duration. Must be 15, 30, 45, or 60."
+  goal:        z.enum(['sales', 'awareness', 'retargeting']),
+  prompt:      z.string().min(10, 'Prompt too short').max(5000),
+  duration:    z.number().refine(v => [15, 30, 45, 60].includes(v), {
+    message: 'Duration must be 15, 30, 45, or 60 seconds'
   })
 })
 
+// ─── Helper: Build absolute Jarvis URL from response ─────────────────────────
+
+function toAbsoluteUrl(path: string, base: string): string {
+  if (path.startsWith('http')) return path
+  return `${base}${path.startsWith('/') ? '' : '/'}${path}`
+}
+
+// ─── Helper: Insert video row with admin fallback ─────────────────────────────
+
+async function insertVideoRow(supabase: any, payload: object) {
+  const { data, error } = await supabase
+    .from('videos')
+    .insert(payload)
+    .select('id')
+    .single()
+
+  if (data) return data
+
+  // Admin fallback — bypasses RLS if standard insert fails
+  console.warn('[Generate] Standard insert failed, using admin fallback:', error?.message)
+  const admin = createAdminClient()
+  const { data: adminData, error: adminError } = await admin
+    .from('videos')
+    .insert(payload)
+    .select('id')
+    .single()
+
+  if (!adminData) throw new Error(adminError?.message || 'Failed to create video record')
+  return adminData
+}
+
+// ─── Route Handler ────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
+  const supabase = await createClient()
+
+  // 1. Authentication
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // 2. Validate Input with Zod
+    // 2. Input Validation
     const body = await req.json()
-    const result = GenerateSchema.safeParse(body)
-    
-    if (!result.success) {
-      const errorDetails = result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')
-      return NextResponse.json({ 
-        error: `Invalid input: ${errorDetails}`, 
-        details: result.error.format() 
-      }, { status: 400 })
+    const parsed = GenerateSchema.safeParse(body)
+    if (!parsed.success) {
+      const detail = parsed.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+      return NextResponse.json({ error: `Invalid input: ${detail}` }, { status: 400 })
     }
+    const { url, productName, goal, prompt, duration } = parsed.data
 
-    const { url, productName, goal, prompt, duration } = result.data
-
-    // 3. Rate Limiting Check (Supabase Backed)
-    // Limit to 10 generations per hour for beta security
-    const oneHourAgo = new Promise<string>(resolve => {
-        const d = new Date()
-        d.setHours(d.getHours() - 1)
-        resolve(d.toISOString())
-    })
-    
-    const { count, error: countError } = await (supabase
-      .from('videos') as any)
+    // 3. Rate Limiting — max 10 generations per user per hour
+    const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString()
+    const { count } = await supabase
+      .from('videos')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .gt('created_at', await oneHourAgo)
+      .gt('created_at', oneHourAgo)
 
-    if (countError) {
-      console.error('[API/Generate] Rate limit check error:', countError)
-    } else if (count !== null && count >= 10) {
-      return NextResponse.json({ 
-        error: 'Too many requests. You have reached the hourly limit of 10 generations. Please try again in an hour.' 
-      }, { status: 429 })
+    if (count !== null && count >= 10) {
+      return NextResponse.json(
+        { error: 'Hourly limit reached (10 videos/hr). Please wait before generating more.' },
+        { status: 429 }
+      )
     }
 
+    // 4. Atomic Credit Deduction
     const requiredUnits = getCreditCost(duration)
-
-    // 4. Atomically check and deduct credits via Postgres RPC
     const { data: newBalance, error: deductError } = await (supabase as any).rpc('deduct_credits', {
       p_user_id: user.id,
-      p_amount: requiredUnits
+      p_amount:  requiredUnits
     })
 
     if (deductError) {
-      console.error('[API/Generate] Unit deduction RPC error:', deductError)
-      return NextResponse.json({ error: 'Failed to process unit deduction. Please try again later.' }, { status: 500 })
+      console.error('[Generate] Credit deduction RPC error:', deductError)
+      return NextResponse.json({ error: 'Failed to process credits. Please try again.' }, { status: 500 })
     }
-
     if (newBalance === -1) {
-      return NextResponse.json({ 
-        error: `Insufficient units. This generation requires ${requiredUnits} units, but your balance is too low.` 
-      }, { status: 402 })
+      return NextResponse.json(
+        { error: `Insufficient credits. Need ${requiredUnits} unit(s).` },
+        { status: 402 }
+      )
     }
 
-    // 5. Insert pending video row
-    // We first try the standard client (respects RLS)
-    let { data: videoData, error: videoError } = await (supabase.from('videos') as any)
-      .insert({
-        user_id: user.id,
-        prompt: prompt,
-        status: 'pending',
-        duration: duration,
-        script: `Product: ${productName} \nURL: ${url} \nGoal: ${goal}`
-      })
-      .select('id')
-      .single()
-
-    // FALLBACK: If the standard client fails (likely RLS issue) but we have a valid user,
-    // we use the Admin client to insert the video record for THIS USER ID ONLY.
-    if (videoError || !videoData) {
-      console.warn('[API/Generate] Standard video insert failed, trying admin fallback...', videoError?.message)
-      const { createAdminClient } = await import('@/lib/supabase/admin')
-      const adminClient = createAdminClient()
-      const { data: adminVideoData, error: adminVideoError } = await (adminClient.from('videos') as any)
-        .insert({
-          user_id: user.id,
-          prompt: prompt,
-          status: 'pending',
-          duration: duration,
-          script: `Product: ${productName} \nURL: ${url} \nGoal: ${goal}`
-        })
-        .select('id')
-        .single()
-      
-      if (adminVideoData) {
-        videoData = adminVideoData
-        videoError = null
-        console.log('[API/Generate] Admin insert fallback successful for', user.email)
-      } else {
-        // Ultimate failure - revert credits
-        await (supabase as any).rpc('increment_credits', { p_user_id: user.id, p_amount: requiredUnits })
-        return NextResponse.json({ 
-          error: `Failed to create video record: ${adminVideoError?.message || videoError?.message || 'Database error'}` 
-        }, { status: 500 })
-      }
+    // 5. Create pending video record (standard client + admin fallback)
+    const videoPayload = {
+      user_id:  user.id,
+      prompt,
+      status:   'pending',
+      duration,
+      script:   `Product: ${productName || 'N/A'}\nURL: ${url}\nGoal: ${goal}`
     }
-
+    const videoData = await insertVideoRow(supabase, videoPayload)
     const videoId = videoData.id
 
-    // 6. Private Jarvis Service (Smart Control)
-    const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
-    const jarvisInstanceId = process.env.JARVISLABS_INSTANCE_ID
+    // 6. Boot Jarvislabs GPU if paused (Smart Control)
+    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    const jarvisId  = process.env.JARVISLABS_INSTANCE_ID
+    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
 
-    if (!jarvisApiUrl) {
-      throw new Error('NEXT_PUBLIC_JARVIS_API_URL is missing')
-    }
-
-    // Smart Boot Logic: Only if instance ID is provided
-    if (jarvisInstanceId) {
+    if (jarvisId) {
       try {
         const { jarvis } = await import('@/lib/jarvis')
-        console.log('[API/Generate] Checking Jarvis Instance status...')
-        
-        // Wait up to 2 minutes for the instance to be Running & Heartbeat 200 OK
-        // This will automatically RESUME it if it's paused.
-        await jarvis.waitForReady(jarvisInstanceId)
-        console.log('[API/Generate] Jarvis GPU is ready for action!')
-      } catch (error: any) {
-        console.error('[API/Generate] Smart Control failed:', error.message)
-        // We continue anyway in case the URL is reachable despite API failure
+        await jarvis.waitForReady(jarvisId)
+      } catch (e: any) {
+        // Non-fatal: proceed anyway — the URL may already be reachable
+        console.warn('[Generate] GPU boot check failed (will attempt request anyway):', e.message)
       }
     }
 
-    console.log('[API/Generate] Sending prompt to Jarvis:', prompt)
-    const response = await fetch(`${jarvisApiUrl}/generate`, {
-      method: 'POST',
+    // 7. Send generation request to Wan 2.1 on Jarvislabs
+    const genResponse = await fetch(`${jarvisUrl}/generate`, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt })
+      body:    JSON.stringify({ prompt })
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[API/Generate] Jarvis generation failed:', errorText)
-      throw new Error(`Private GPU Server error: ${errorText || response.statusText}`)
+    if (!genResponse.ok) {
+      const errText = await genResponse.text()
+      throw new Error(`GPU Server error: ${errText || genResponse.statusText}`)
     }
 
-    const { video_url, status: genStatus } = await response.json()
-    
-    // Construct the absolute URL if it is a relative path
-    const fullVideoUrl = video_url.startsWith('http') 
-      ? video_url 
-      : `${jarvisApiUrl}${video_url.startsWith('/') ? '' : '/'}${video_url}`
+    const { video_url } = await genResponse.json()
+    const fullVideoUrl = toAbsoluteUrl(video_url, jarvisUrl)
 
-    console.log('[API/Generate] Jarvis generation complete:', fullVideoUrl)
-
-    // 7. Update the record to completed status
-    await (supabase.from('videos') as any)
-      .update({
-        video_url: fullVideoUrl,
-        status: 'completed'
-      })
+    // 8. Mark video as completed
+    await supabase.from('videos')
+      .update({ video_url: fullVideoUrl, status: 'completed' })
       .eq('id', videoId)
 
-    // 8. AUTO-PAUSE: Immediately pause the Jarvis GPU to stop billing
-    if (jarvisInstanceId) {
+    // 9. Auto-pause GPU immediately to stop billing
+    if (jarvisId) {
       const { jarvis } = await import('@/lib/jarvis')
-      jarvis.pause(jarvisInstanceId).catch((e: any) =>
-        console.warn('[API/Generate] Auto-pause failed (non-critical):', e.message)
+      jarvis.pause(jarvisId).catch((e: any) =>
+        console.warn('[Generate] Auto-pause failed (non-critical):', e.message)
       )
-      console.log('[API/Generate] GPU auto-pause triggered.')
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      videoId,
-      videoUrl: fullVideoUrl,
-      message: 'Video generation complete' 
-    })
+    return NextResponse.json({ success: true, videoId, videoUrl: fullVideoUrl })
 
   } catch (error: any) {
-    console.error('Generation Error:', error)
+    console.error('[Generate] Unhandled error:', error)
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
 }

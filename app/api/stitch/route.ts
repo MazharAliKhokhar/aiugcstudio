@@ -1,128 +1,128 @@
+/**
+ * app/api/stitch/route.ts
+ * Post-processing endpoint: merges the generated video with a Kokoro TTS voiceover.
+ *
+ * Flow:
+ *  1. Authenticate user
+ *  2. Validate inputs
+ *  3. Boot Jarvislabs GPU if paused
+ *  4. Fetch video + generate voiceover concurrently  
+ *  5. Merge with FFmpeg (audio overlay)
+ *  6. Return the final MP4 buffer
+ *  7. Clean up temp files
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import ffmpeg from 'fluent-ffmpeg'
-import axios from 'axios'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
 import { createClient } from '@/lib/supabase/server'
 
+// ─── Helper: Resolve relative Jarvis paths to absolute URLs ──────────────────
+
+function toAbsoluteUrl(p: string, base: string): string {
+  if (p.startsWith('http')) return p
+  return `${base}${p.startsWith('/') ? '' : '/'}${p}`
+}
+
+// ─── Route Handler ────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
   const tempDir = path.join(os.tmpdir(), `stitch-${Date.now()}`)
-  
+
   try {
+    // 1. Authentication
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    // 2. Input Validation
     const { videoUrl, voiceScript } = await req.json()
-
     if (!videoUrl || !voiceScript) {
       return NextResponse.json({ error: 'Missing videoUrl or voiceScript' }, { status: 400 })
     }
-
-    // 1. Setup temp directory
-    await fs.mkdir(tempDir, { recursive: true })
-    const videoPath = path.join(tempDir, 'input_video.mp4')
-    const audioPath = path.join(tempDir, 'input_audio.mp3')
-    const outputPath = path.join(tempDir, 'output.mp4')
-
-    // 2. Private Jarvis Service (Smart Control)
-    const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
-    const jarvisInstanceId = process.env.JARVISLABS_INSTANCE_ID
-
-    if (!jarvisApiUrl) {
-      throw new Error('NEXT_PUBLIC_JARVIS_API_URL is missing')
+    if (typeof voiceScript !== 'string' || voiceScript.length > 5000) {
+      return NextResponse.json({ error: 'voiceScript must be a string under 5000 chars' }, { status: 400 })
     }
 
-    // Smart Boot Logic: Only if instance ID is provided
-    if (jarvisInstanceId) {
+    // 3. Setup temp directory for FFmpeg processing
+    await fs.mkdir(tempDir, { recursive: true })
+    const videoPath  = path.join(tempDir, 'input.mp4')
+    const audioPath  = path.join(tempDir, 'voice.wav')
+    const outputPath = path.join(tempDir, 'output.mp4')
+
+    // 4. Verify Jarvis config
+    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    const jarvisId  = process.env.JARVISLABS_INSTANCE_ID
+    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
+
+    // Boot GPU if paused (non-fatal — proceed anyway if check fails)
+    if (jarvisId) {
       try {
         const { jarvis } = await import('@/lib/jarvis')
-        console.log('[API/Stitch] Checking Jarvis Instance status...')
-        await jarvis.waitForReady(jarvisInstanceId)
-        console.log('[API/Stitch] Jarvis GPU is ready for action!')
-      } catch (error: any) {
-        console.error('[API/Stitch] Smart Control failed:', error.message)
+        await jarvis.waitForReady(jarvisId)
+      } catch (e: any) {
+        console.warn('[Stitch] GPU boot check failed (will attempt anyway):', e.message)
       }
     }
 
-    console.log('[API/Stitch] Requesting video from:', videoUrl)
-    console.log('[API/Stitch] Requesting voiceover from Jarvis...')
-
+    // 5a. Fetch video + generate voice concurrently to save time
     const [videoRes, voiceRes] = await Promise.all([
-      axios.get(videoUrl, { responseType: 'arraybuffer' }),
-      fetch(`${jarvisApiUrl}/voice`, {
-        method: 'POST',
+      fetch(videoUrl),
+      fetch(`${jarvisUrl}/voice`, {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text: voiceScript,
-          voice: 'af_heart' // Best open-source voice
-        })
+        body:    JSON.stringify({ text: voiceScript, voice: 'af_heart' }) // Kokoro voice
       })
     ])
 
-    if (!voiceRes.ok) {
-      const errorText = await voiceRes.text()
-      throw new Error(`Jarvis Voice API failed: ${errorText || voiceRes.statusText}`)
-    }
+    if (!videoRes.ok)  throw new Error(`Failed to fetch video: ${videoRes.statusText}`)
+    if (!voiceRes.ok)  throw new Error(`Jarvis Voice API error: ${await voiceRes.text()}`)
 
     const { audio_url } = await voiceRes.json()
-    const fullAudioUrl = audio_url.startsWith('http') 
-      ? audio_url 
-      : `${jarvisApiUrl}${audio_url.startsWith('/') ? '' : '/'}${audio_url}`
+    const fullAudioUrl = toAbsoluteUrl(audio_url, jarvisUrl)
 
-    const audioRes = await axios.get(fullAudioUrl, { responseType: 'arraybuffer' })
+    const audioRes = await fetch(fullAudioUrl)
+    if (!audioRes.ok) throw new Error(`Failed to download audio from Jarvis: ${audioRes.statusText}`)
 
+    // 5b. Write both files to temp disk
     await Promise.all([
-      fs.writeFile(videoPath, Buffer.from(videoRes.data)),
-      fs.writeFile(audioPath, Buffer.from(audioRes.data))
+      fs.writeFile(videoPath, Buffer.from(await videoRes.arrayBuffer())),
+      fs.writeFile(audioPath, Buffer.from(await audioRes.arrayBuffer()))
     ])
 
-    // 3. Process with FFmpeg
-    await new Promise((resolve, reject) => {
+    // 5c. Merge video + audio with FFmpeg
+    await new Promise<void>((resolve, reject) => {
       ffmpeg(videoPath)
         .input(audioPath)
         .outputOptions([
-          '-c:v copy',       // Copy video codec (fast)
-          '-c:a aac',       // Re-encode audio to AAC
-          '-map 0:v:0',      // Use video from first input
-          '-map 1:a:0',      // Use audio from second input
-          '-shortest'        // Trim to shortest duration
+          '-c:v copy',    // Copy video stream as-is (fast, no re-encode)
+          '-c:a aac',     // Re-encode audio to AAC for broad compatibility
+          '-map 0:v:0',   // Use video from first input
+          '-map 1:a:0',   // Use audio from second input
+          '-shortest'     // Trim to the shorter of the two streams
         ])
-        .on('end', resolve)
-        .on('error', (err) => {
-          console.error('FFmpeg Error:', err)
-          reject(err)
-        })
+        .on('end', () => resolve())
+        .on('error', reject)
         .save(outputPath)
     })
 
-    // 4. Read the output file
+    // 6. Read and return the final stitched video
     const outputBuffer = await fs.readFile(outputPath)
-
-    // Optional: Upload to Supabase Storage in the background or here
-    // ...
-
-    // 5. Return the buffer
     return new NextResponse(outputBuffer, {
       headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Disposition': `attachment; filename="viralugc-ad.mp4"`,
-      },
+        'Content-Type':        'video/mp4',
+        'Content-Disposition': 'attachment; filename="viralugc-ad.mp4"'
+      }
     })
 
   } catch (error: any) {
-    console.error('[API/Stitch] Stitching Error:', error)
-    return NextResponse.json({ error: error.message || 'Failed to stitch video and audio' }, { status: 500 })
+    console.error('[Stitch] Error:', error)
+    return NextResponse.json({ error: error.message || 'Stitching failed' }, { status: 500 })
+
   } finally {
-    // 6. Cleanup
-    try {
-      await fs.rm(tempDir, { recursive: true, force: true })
-    } catch (cleanupError) {
-      console.warn('[API/Stitch] Cleanup Error:', cleanupError)
-    }
+    // 7. Always clean up temp files to avoid disk accumulation
+    fs.rm(tempDir, { recursive: true, force: true }).catch(() => {})
   }
 }
