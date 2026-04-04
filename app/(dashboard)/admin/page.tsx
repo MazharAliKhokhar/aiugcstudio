@@ -74,16 +74,6 @@ export default function AdminDashboard({
           </h2>
           <p className="text-muted-foreground mt-1 text-base md:text-lg">Real-time system insights & operator controls.</p>
         </div>
-        
-        <form action={async () => {
-          const res = await bulkRefundStuckVideos()
-          if (res.success) toast.success(res.message)
-          else toast.error(res.message)
-        }} className="shrink-0">
-          <Button variant="destructive" className="w-full md:w-auto shadow-lg shadow-red-500/20 gap-2 h-12 px-6">
-            <AlertCircle className="w-5 h-5" /> Mass Refund Stuck
-          </Button>
-        </form>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
@@ -96,43 +86,43 @@ export default function AdminDashboard({
 
         <TabsContent value="overview" className="space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <Card className="border-primary/20 bg-slate-900/50 shadow-lg">
+            <Card className="border-blue-500/20 bg-slate-900 shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-blue-400">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-primary" />
+                <Users className="h-4 w-4 text-blue-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tighter">{data.usersCount || 0}</div>
+                <div className="text-3xl font-black text-white tracking-tighter">{data.usersCount || 0}</div>
               </CardContent>
             </Card>
             
-            <Card className="border-orange-500/20 bg-slate-900/50 shadow-lg">
+            <Card className="border-orange-500/20 bg-slate-900 shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-orange-400">Gen Success</CardTitle>
                 <TrendingUp className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tighter">{data.successRate}%</div>
+                <div className="text-3xl font-black text-white tracking-tighter">{data.successRate}%</div>
               </CardContent>
             </Card>
 
-            <Card className="border-green-500/20 bg-slate-900/50 shadow-lg">
+            <Card className="border-green-500/20 bg-slate-900 shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-emerald-400">Credit Velocity</CardTitle>
                 <Battery className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tighter">{data.totalCredits}</div>
+                <div className="text-3xl font-black text-white tracking-tighter">{data.totalCredits}</div>
               </CardContent>
             </Card>
 
-            <Card className="hidden sm:block border-zinc-500/20 bg-slate-900/50 shadow-lg">
+            <Card className="hidden sm:block border-zinc-500/20 bg-slate-900 shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-zinc-400">Health</CardTitle>
                 <Database className="h-4 w-4 text-zinc-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-emerald-500 tracking-tighter">Online</div>
+                <div className="text-3xl font-black text-emerald-500 tracking-tighter">Online</div>
               </CardContent>
             </Card>
           </div>
@@ -240,7 +230,18 @@ export default function AdminDashboard({
 
         <TabsContent value="videos" className="space-y-6">
            <Card className="overflow-hidden">
-             <CardHeader><CardTitle>Video Moderation</CardTitle></CardHeader>
+             <CardHeader className="flex flex-row items-center justify-between">
+               <CardTitle>Video Moderation</CardTitle>
+               <form action={async () => {
+                 const res = await bulkRefundStuckVideos()
+                 if (res.success) toast.success(res.message)
+                 else toast.error(res.message)
+               }}>
+                 <Button variant="destructive" size="sm" className="gap-2">
+                   <AlertCircle className="w-4 h-4" /> Refund Stuck
+                 </Button>
+               </form>
+             </CardHeader>
              <CardContent className="p-0">
                {/* DESKTOP */}
                <div className="hidden md:block">
