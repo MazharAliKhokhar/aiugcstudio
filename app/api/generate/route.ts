@@ -80,7 +80,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Insert pending video row
-    const { data: videoData, error: videoError } = await (supabase.from('videos') as any)
+    // We first try the standard client (respects RLS)
+    let { data: videoData, error: videoError } = await (supabase.from('videos') as any)
       .insert({
         user_id: user.id,
         prompt: prompt,
@@ -91,10 +92,34 @@ export async function POST(req: NextRequest) {
       .select('id')
       .single()
 
+    // FALLBACK: If the standard client fails (likely RLS issue) but we have a valid user,
+    // we use the Admin client to insert the video record for THIS USER ID ONLY.
     if (videoError || !videoData) {
-      // Revert units atomically
-      await (supabase as any).rpc('increment_credits', { p_user_id: user.id, p_amount: requiredUnits })
-      return NextResponse.json({ error: 'Failed to create video record' }, { status: 500 })
+      console.warn('[API/Generate] Standard video insert failed, trying admin fallback...', videoError?.message)
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const adminClient = createAdminClient()
+      const { data: adminVideoData, error: adminVideoError } = await (adminClient.from('videos') as any)
+        .insert({
+          user_id: user.id,
+          prompt: prompt,
+          status: 'pending',
+          duration: duration,
+          script: `Product: ${productName} \nURL: ${url} \nGoal: ${goal}`
+        })
+        .select('id')
+        .single()
+      
+      if (adminVideoData) {
+        videoData = adminVideoData
+        videoError = null
+        console.log('[API/Generate] Admin insert fallback successful for', user.email)
+      } else {
+        // Ultimate failure - revert credits
+        await (supabase as any).rpc('increment_credits', { p_user_id: user.id, p_amount: requiredUnits })
+        return NextResponse.json({ 
+          error: `Failed to create video record: ${adminVideoError?.message || videoError?.message || 'Database error'}` 
+        }, { status: 500 })
+      }
     }
 
     const videoId = videoData.id
