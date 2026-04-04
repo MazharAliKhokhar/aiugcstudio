@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCreditCost } from '@/lib/credits'
-import { fal, WAN_MODEL_ID } from '@/lib/fal'
 import { z } from 'zod'
 
 // 1. Define Input Schema for Guardrails

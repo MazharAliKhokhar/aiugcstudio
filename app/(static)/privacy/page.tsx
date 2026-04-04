@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
         <p>We use the information we collect to operate, maintain, and provide the features of our video generation service. We do not sell your personal data to third parties.</p>
 
         <h2>3. Data Security</h2>
-        <p>We use reasonable organizational and technical security measures to protect your data. Your videos and payment details are handled by robust encrypted third parties (Supabase, PayPal, and fal.ai).</p>
+        <p>We use reasonable organizational and technical security measures to protect your data. Your videos and payment details are handled by robust encrypted third parties (Supabase, Lemon Squeezy, and our private Jarvislabs GPU infrastructure).</p>
 
         <h2>4. Contact Us</h2>
         <p>If you have any questions about this Privacy Policy, please contact us at privacy@viralugc.com.</p>

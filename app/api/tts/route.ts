@@ -1,47 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fal, VOXTRAL_MODEL_ID } from '@/lib/fal'
 
 export async function POST(req: NextRequest) {
   try {
-    const { text } = await req.json()
+    const { text, voice } = await req.json()
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
     }
 
-    if (!process.env.FAL_KEY) {
-      console.error('Missing FAL_KEY')
-      return NextResponse.json({ error: 'AI services are not fully configured.' }, { status: 500 })
+    const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    if (!jarvisApiUrl) {
+      return NextResponse.json({ error: 'Private GPU server not configured.' }, { status: 500 })
     }
 
-    // Call Fal AI Voxtral-TTS
-    const result: any = await fal.subscribe(VOXTRAL_MODEL_ID, {
-      input: {
-        text,
-        voice: 'am_adam' // Using the Open Source 'Adam' equivalent in Mistral's voice set
-      },
+    // Call Private Jarvis Kokoro TTS
+    const response = await fetch(`${jarvisApiUrl}/voice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice: voice || 'af_heart' })
     })
 
-    if (!result.audio?.url) {
-      console.error('Fal AI Error: No audio URL returned', result)
-      return NextResponse.json({ error: 'Failed to generate audio via Voxtral' }, { status: 500 })
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Jarvis Voice API error: ${errorText || response.statusText}`)
     }
 
-    // Fetch the audio from the generated URL to return as a buffer
-    const audioRes = await fetch(result.audio.url)
-    if (!audioRes.ok) {
-      throw new Error('Failed to fetch generated audio from Fal storage')
-    }
+    const { audio_url } = await response.json()
+    const fullAudioUrl = audio_url.startsWith('http')
+      ? audio_url
+      : `${jarvisApiUrl}${audio_url.startsWith('/') ? '' : '/'}${audio_url}`
+
+    // Fetch audio buffer and return it
+    const audioRes = await fetch(fullAudioUrl)
+    if (!audioRes.ok) throw new Error('Failed to fetch generated audio from Jarvis')
 
     const data = await audioRes.arrayBuffer()
     return new NextResponse(data, {
-      headers: {
-        'Content-Type': 'audio/mpeg'
-      }
+      headers: { 'Content-Type': 'audio/wav' }
     })
 
   } catch (err: any) {
-    console.error('TTS Error:', err)
+    console.error('[API/TTS] Error:', err)
     return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 })
   }
 }
