@@ -20,25 +20,30 @@ const GOALS = [
 
 export function StepGoal({ goal, setGoal, onNext, onBack }: StepGoalProps) {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-4">
-        <Label className="text-sm font-black uppercase tracking-widest text-foreground/40 mb-2 block">Choose your ad objective</Label>
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-6">
+        <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4 block">Choose your ad objective</Label>
         
-        <RadioGroup value={goal} onValueChange={setGoal} className="grid grid-cols-1 gap-4">
+        <RadioGroup value={goal} onValueChange={setGoal} className="grid grid-cols-1 gap-6">
           {GOALS.map((g) => (
             <div key={g.id} className="relative group/item">
               <RadioGroupItem value={g.id} id={`goal-${g.id}`} className="peer sr-only" />
               <Label
                 htmlFor={`goal-${g.id}`}
-                className="flex items-center gap-5 rounded-2xl border border-black/5 bg-white p-6 hover:bg-black/5 hover:border-black/10 peer-data-[state=checked]:border-primary/50 peer-data-[state=checked]:bg-primary/[0.05] cursor-pointer transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-md"
+                className="flex items-center gap-8 rounded-[32px] border-2 border-slate-100 bg-white p-8 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/[0.02] cursor-pointer transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-2xl rounded-full translate-x-12 -translate-y-12 peer-data-[state=checked]:bg-primary/10 transition-colors" />
-                <div className="bg-primary/10 p-3 rounded-xl border border-primary/20 shrink-0">
-                  <g.icon className="w-6 h-6 text-primary" />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 blur-[80px] rounded-full translate-x-24 -translate-y-24 peer-data-[state=checked]:bg-primary/10 transition-colors" />
+                <div className="bg-primary/10 p-5 rounded-2xl border border-primary/20 shrink-0">
+                  <g.icon className="w-8 h-8 text-primary" />
                 </div>
                 <div>
-                  <div className="font-black uppercase italic tracking-tight text-foreground mb-0.5">{g.label}</div>
-                  <div className="text-xs text-foreground/50 font-medium leading-relaxed">{g.desc}</div>
+                  <div className="text-2xl font-black uppercase italic tracking-tight text-slate-900 mb-1.5">{g.label}</div>
+                  <div className="text-sm text-slate-500 font-semibold leading-relaxed max-w-md">{g.desc}</div>
+                </div>
+                <div className="ml-auto opacity-0 peer-data-[state=checked]:opacity-100 transition-opacity">
+                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                     <div className="w-3 h-3 rounded-full bg-white" />
+                   </div>
                 </div>
               </Label>
             </div>
@@ -46,12 +51,16 @@ export function StepGoal({ goal, setGoal, onNext, onBack }: StepGoalProps) {
         </RadioGroup>
       </div>
 
-      <div className="flex gap-4 pt-6">
-        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-black/5 bg-white hover:bg-black/5 text-foreground font-bold shadow-sm">
-          <ArrowLeft className="mr-2 w-4 h-4" /> Back
+      <div className="flex gap-6 pt-10">
+        <Button variant="outline" onClick={onBack} className="w-40 h-16 rounded-3xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
+          <ArrowLeft className="mr-3 w-5 h-5" /> Back
         </Button>
-        <Button onClick={onNext} className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all" disabled={!goal}>
-          Continue <ArrowRight className="ml-3 w-5 h-5" />
+        <Button 
+          onClick={onNext} 
+          disabled={!goal}
+          className="flex-1 h-16 text-xl font-black uppercase tracking-tighter rounded-3xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
+        >
+          Confirm Strategy <ArrowRight className="ml-4 w-6 h-6" />
         </Button>
       </div>
     </div>

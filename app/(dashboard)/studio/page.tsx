@@ -242,37 +242,37 @@ export default function StudioPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-6 md:py-12 px-4 md:px-0">
-      <div className="mb-8 md:mb-12 space-y-2">
-        <h1 className="text-3xl md:text-4xl font-[1000] tracking-tighter uppercase italic text-white flex items-center gap-3">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20 shrink-0">
-            <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+    <div className="max-w-7xl mx-auto py-6 md:py-12 px-4 md:px-8">
+      <div className="mb-8 md:mb-12 space-y-4">
+        <h1 className="text-4xl md:text-5xl font-[1000] tracking-tighter uppercase italic text-slate-900 flex items-center gap-4">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shrink-0">
+            <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary" />
           </div>
           <span className="truncate">Generation Studio</span>
         </h1>
-        <p className="text-white/50 text-sm font-medium tracking-tight">Turn any product URL into a high-converting cinematic video ad.</p>
+        <p className="text-slate-500 text-lg font-medium tracking-tight max-w-2xl">Turn any product URL into a high-converting cinematic video ad.</p>
         
-        <div className="mt-8 md:mt-12 space-y-4">
-          <div className="flex justify-between text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-white/30 px-1">
-            <span className={cn(step >= 1 && "text-primary")}>Product</span>
-            <span className={cn(step >= 2 && "text-primary")}>Objective</span>
-            <span className={cn(step >= 3 && "text-primary")}>Avatar</span>
-            <span className={cn(step >= 4 && "text-primary")}>Script</span>
-            <span className={cn(step >= 5 && "text-primary")}>Render</span>
+        <div className="mt-8 md:mt-16 space-y-6">
+          <div className="flex justify-between text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-2">
+            <span className={cn(step >= 1 && "text-primary border-b-2 border-primary pb-1")}>1. Product</span>
+            <span className={cn(step >= 2 && "text-primary border-b-2 border-primary pb-1")}>2. Objective</span>
+            <span className={cn(step >= 3 && "text-primary border-b-2 border-primary pb-1")}>3. Avatar</span>
+            <span className={cn(step >= 4 && "text-primary border-b-2 border-primary pb-1")}>4. Script</span>
+            <span className={cn(step >= 5 && "text-primary border-b-2 border-primary pb-1")}>5. Render</span>
           </div>
           <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-sm rounded-full" />
-            <Progress value={(step / (videoStatus === 'completed' ? 6 : 5)) * 100} className="h-1.5 bg-white/5 relative z-10" />
+            <div className="absolute inset-0 bg-primary/5 blur-md rounded-full" />
+            <Progress value={(step / (videoStatus === 'completed' ? 6 : 5)) * 100} className="h-2 bg-slate-100 relative z-10" />
           </div>
         </div>
       </div>
 
       <ErrorBoundary>
-        <Card className="bg-white/[0.03] backdrop-blur-2xl border-white/[0.08] shadow-2xl shadow-black/40 overflow-hidden relative min-h-[550px] md:min-h-[500px] rounded-[32px]">
+        <Card className="bg-white border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden relative min-h-[650px] md:min-h-[600px] rounded-[40px]">
           <AnimatePresence mode="wait" custom={1}>
             
             {step === 1 && (
-              <motion.div key="step-1" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="absolute inset-0 p-6 md:p-8 overflow-y-auto">
+              <motion.div key="step-1" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="absolute inset-0 p-8 md:p-12 overflow-y-auto">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>1. Product Details</CardTitle>
                   <CardDescription>What are we selling today?</CardDescription>
