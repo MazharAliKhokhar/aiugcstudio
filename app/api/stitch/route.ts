@@ -30,24 +30,37 @@ export async function POST(req: NextRequest) {
     const outputPath = path.join(tempDir, 'output.mp4')
 
     // 2. Download Video and Generate TTS Audio concurrently
-    const { fal, VOXTRAL_MODEL_ID } = await import('@/lib/fal')
-    
-    const [videoRes, ttsResult] = await Promise.all([
+    const jarvisApiUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
+    if (!jarvisApiUrl) {
+      throw new Error('JARVIS_API_URL is missing in environment variables')
+    }
+
+    console.log('[API/Stitch] Requesting video from:', videoUrl)
+    console.log('[API/Stitch] Requesting voiceover from Jarvis...')
+
+    const [videoRes, voiceRes] = await Promise.all([
       axios.get(videoUrl, { responseType: 'arraybuffer' }),
-      fal.subscribe(VOXTRAL_MODEL_ID, {
-        input: {
+      fetch(`${jarvisApiUrl}/voice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
           text: voiceScript,
-          voice: 'am_adam'
-        }
+          voice: 'af_heart' // Best open-source voice
+        })
       })
     ])
 
-    const ttsAudioUrl = (ttsResult as any).audio?.url
-    if (!ttsAudioUrl) {
-      throw new Error('Fal AI Voxtral-TTS failed to return audio URL')
+    if (!voiceRes.ok) {
+      const errorText = await voiceRes.text()
+      throw new Error(`Jarvis Voice API failed: ${errorText || voiceRes.statusText}`)
     }
 
-    const audioRes = await axios.get(ttsAudioUrl, { responseType: 'arraybuffer' })
+    const { audio_url } = await voiceRes.json()
+    const fullAudioUrl = audio_url.startsWith('http') 
+      ? audio_url 
+      : `${jarvisApiUrl}${audio_url.startsWith('/') ? '' : '/'}${audio_url}`
+
+    const audioRes = await axios.get(fullAudioUrl, { responseType: 'arraybuffer' })
 
     await Promise.all([
       fs.writeFile(videoPath, Buffer.from(videoRes.data)),
