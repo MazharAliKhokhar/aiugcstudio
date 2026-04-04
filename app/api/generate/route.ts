@@ -178,6 +178,15 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', videoId)
 
+    // 8. AUTO-PAUSE: Immediately pause the Jarvis GPU to stop billing
+    if (jarvisInstanceId) {
+      const { jarvis } = await import('@/lib/jarvis')
+      jarvis.pause(jarvisInstanceId).catch((e: any) =>
+        console.warn('[API/Generate] Auto-pause failed (non-critical):', e.message)
+      )
+      console.log('[API/Generate] GPU auto-pause triggered.')
+    }
+
     return NextResponse.json({ 
       success: true, 
       videoId,
