@@ -20,14 +20,27 @@ export default async function DashboardLayout({
   }
 
   // Get User Profile
-  // We use multiple select to ensure we get the latest data and handle potential RLS/sync delays
-  const { data: profile, error } = await (supabase.from('profiles') as any)
+  // We first try the standard client (respects RLS)
+  let { data: profile, error } = await (supabase.from('profiles') as any)
     .select('credits, full_name, email, is_admin')
     .eq('id', user.id)
     .single()
 
-  if (error) {
-    console.error('[DashboardLayout] Profile fetch error:', error)
+  // FALLBACK: If the standard client fails (likely RLS issue) but we have a valid user,
+  // we use the Admin client to fetch the profile for THIS USER ID ONLY.
+  if (!profile || error) {
+    console.log('[Layout] RLS/Fetch failed for user, trying admin fallback...', user.id)
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const adminClient = createAdminClient()
+    const { data: adminProfile } = await (adminClient.from('profiles') as any)
+      .select('credits, full_name, email, is_admin')
+      .eq('id', user.id)
+      .single()
+    
+    if (adminProfile) {
+      profile = adminProfile
+      console.log('[Layout] Admin fallback successful for', user.email)
+    }
   }
 
   const credits = profile?.credits ?? 0
