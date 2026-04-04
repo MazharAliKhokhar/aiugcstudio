@@ -234,23 +234,23 @@ export default function StudioPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4 md:px-0">
-      <div className="mb-12 space-y-2">
-        <h1 className="text-4xl font-[1000] tracking-tighter uppercase italic text-white flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20">
-            <Sparkles className="w-6 h-6 text-primary" />
+    <div className="max-w-4xl mx-auto py-6 md:py-12 px-4 md:px-0">
+      <div className="mb-8 md:mb-12 space-y-2">
+        <h1 className="text-3xl md:text-4xl font-[1000] tracking-tighter uppercase italic text-white flex items-center gap-3">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20 shrink-0">
+            <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary" />
           </div>
-          Generation Studio
+          <span className="truncate">Generation Studio</span>
         </h1>
-        <p className="text-white/50 font-medium tracking-tight">Turn any product URL into a high-converting cinematic video ad.</p>
+        <p className="text-white/50 text-sm font-medium tracking-tight">Turn any product URL into a high-converting cinematic video ad.</p>
         
-        <div className="mt-12 space-y-4">
-          <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-white/30 px-1">
-            <span className={cn(step >= 1 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Product</span>
-            <span className={cn(step >= 2 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Objective</span>
-            <span className={cn(step >= 3 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Avatar</span>
-            <span className={cn(step >= 4 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Scripting</span>
-            <span className={cn(step >= 5 && "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]")}>Render</span>
+        <div className="mt-8 md:mt-12 space-y-4">
+          <div className="flex justify-between text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-white/30 px-1">
+            <span className={cn(step >= 1 && "text-primary")}>Product</span>
+            <span className={cn(step >= 2 && "text-primary")}>Objective</span>
+            <span className={cn(step >= 3 && "text-primary")}>Avatar</span>
+            <span className={cn(step >= 4 && "text-primary")}>Script</span>
+            <span className={cn(step >= 5 && "text-primary")}>Render</span>
           </div>
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-sm rounded-full" />

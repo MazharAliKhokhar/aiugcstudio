@@ -35,20 +35,20 @@ export function Hero({ opacity, scale }: HeroProps) {
           THE FUTURE OF UGC IS HERE · POWERED BY WAN 2.1 (OPEN SOURCE)
         </div>
 
-        <h1 className="text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.9] uppercase text-foreground">
+        <h1 className="text-4xl sm:text-5xl md:text-8xl font-[1000] tracking-tighter leading-[0.9] uppercase text-foreground">
           GENERATE <span className="text-primary italic">VIRAL</span> <br className="hidden md:block"/>
           <span className="bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent italic">AD VARIATIONS</span> <br className="hidden md:block"/>
           IN SECONDS
         </h1>
 
-        <p className="text-lg md:text-2xl text-foreground/70 max-w-3xl mx-auto leading-relaxed font-medium">
+        <p className="text-base sm:text-lg md:text-2xl text-foreground/70 max-w-3xl mx-auto leading-relaxed font-medium px-4">
           Scale your dropshipping store or agency with hyper-realistic AI actors. 
           No shipping, no actors, no waiting. Just paste your URL and win.
         </p>
         
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-6 md:pt-10">
           <Link href="/signup" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full h-16 rounded-2xl px-12 text-xl font-black uppercase tracking-tighter shadow-2xl shadow-primary/40 bg-gradient-to-r from-primary to-blue-600 hover:scale-105 transition-all duration-300 group text-white">
+            <Button size="lg" className="w-full h-14 md:h-16 rounded-2xl px-12 text-lg md:text-xl font-black uppercase tracking-tighter shadow-2xl shadow-primary/40 bg-gradient-to-r from-primary to-blue-600 hover:scale-105 transition-all duration-300 group text-white">
               Get Started Free <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>

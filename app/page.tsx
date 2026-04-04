@@ -13,9 +13,10 @@ import { HowItWorks } from '@/components/landing/HowItWorks'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { PricingSection } from '@/components/landing/PricingSection'
 import { CTASection } from '@/components/landing/CTASection'
-import Link from 'next/link'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Menu } from 'lucide-react'
+import Link from 'next/link'
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll()
@@ -41,13 +42,15 @@ export default function LandingPage() {
       </div>
 
       <header className="px-6 h-20 flex items-center justify-between border-b border-black/5 bg-background/70 backdrop-blur-xl sticky top-0 z-50">
-        <div className="flex items-center gap-2.5 group cursor-pointer">
+        <Link href="/" className="flex items-center gap-2.5 group cursor-pointer">
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className="font-black text-xl tracking-tight uppercase italic text-foreground">ViralUGC</span>
-        </div>
-        <nav className="flex items-center gap-6">
+        </Link>
+        
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-6">
           <Link href="/login" className="text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors">Log In</Link>
           <Link href="/signup">
             <Button size="lg" className="rounded-xl px-7 bg-primary text-white hover:bg-primary/90 font-bold border-none shadow-lg shadow-primary/20">
@@ -55,6 +58,31 @@ export default function LandingPage() {
             </Button>
           </Link>
         </nav>
+
+        {/* Mobile Nav */}
+        <div className="md:hidden">
+          <Sheet>
+            <SheetTrigger>
+              <Button variant="ghost" size="icon" className="text-foreground">
+                <Menu className="w-6 h-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-background border-none p-8 flex flex-col gap-8">
+              <div className="flex items-center gap-2.5 mb-4">
+                <Sparkles className="w-6 h-6 text-primary" />
+                <span className="font-black text-xl tracking-tight uppercase italic">ViralUGC</span>
+              </div>
+              <div className="flex flex-col gap-6">
+                <Link href="/login" className="text-lg font-bold text-foreground/70 hover:text-primary transition-colors">Log In</Link>
+                <Link href="/signup">
+                  <Button className="w-full h-14 rounded-xl bg-primary text-white font-black uppercase tracking-tighter">
+                    Sign Up Free
+                  </Button>
+                </Link>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
 
       <main className="flex-1 relative z-10">

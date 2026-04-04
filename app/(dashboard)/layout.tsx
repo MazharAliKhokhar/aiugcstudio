@@ -1,4 +1,5 @@
 import { Sidebar } from '@/components/shared/Sidebar'
+import { MobileSidebar } from '@/components/shared/MobileSidebar'
 import { CreditsDisplay } from '@/components/shared/CreditsDisplay'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -56,10 +57,13 @@ export default async function DashboardLayout({
         <Sidebar userProfile={userProfile} />
       </div>
       <main className="md:pl-64 flex flex-col flex-1 h-full bg-slate-50 dark:bg-slate-950">
-        <header className="h-16 flex items-center justify-end px-8 border-b bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <header className="h-16 flex items-center justify-between md:justify-end px-4 md:px-8 border-b bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
+          <div className="md:hidden">
+            <MobileSidebar userProfile={userProfile} />
+          </div>
           <CreditsDisplay credits={credits} />
         </header>
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </main>
