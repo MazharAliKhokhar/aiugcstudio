@@ -26,6 +26,7 @@ export function StepProductUrl({ url, setUrl, productName, setProductName, onNex
             <Input
               id="product-name"
               placeholder="e.g. Acme SuperBlender"
+              maxLength={500}
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
               className="relative bg-white border-black/10 rounded-xl h-14 pl-4 focus-visible:ring-primary/50 text-base text-foreground shadow-sm"

@@ -7,9 +7,9 @@ import { z } from 'zod'
 // 1. Define Input Schema for Guardrails
 const GenerateSchema = z.object({
   url: z.string().url().max(500),
-  productName: z.string().max(100).optional().or(z.literal('')),
+  productName: z.string().max(500).optional().or(z.literal('')),
   goal: z.enum(['sales', 'awareness', 'retargeting']),
-  prompt: z.string().min(10).max(1000),
+  prompt: z.string().min(10).max(5000),
   duration: z.number().refine(val => [15, 30, 45, 60].includes(val), {
     message: "Invalid duration. Must be 15, 30, 45, or 60."
   })
