@@ -7,7 +7,7 @@ import { z } from 'zod'
 // 1. Define Input Schema for Guardrails
 const GenerateSchema = z.object({
   url: z.string().url().max(500),
-  productName: z.string().min(2).max(100),
+  productName: z.string().max(100).optional().or(z.literal('')),
   goal: z.enum(['sales', 'awareness', 'retargeting']),
   prompt: z.string().min(10).max(1000),
   duration: z.number().refine(val => [15, 30, 45, 60].includes(val), {
@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
     const result = GenerateSchema.safeParse(body)
     
     if (!result.success) {
+      const errorDetails = result.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')
       return NextResponse.json({ 
-        error: 'Invalid input', 
+        error: `Invalid input: ${errorDetails}`, 
         details: result.error.format() 
       }, { status: 400 })
     }
