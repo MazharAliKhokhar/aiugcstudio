@@ -22,7 +22,7 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single()
 
-  const credits = profile?.credits || 0
+  const credits = profile?.credits ?? 0
   const userProfile = {
     name: profile?.full_name || 'User',
     email: profile?.email || user.email || 'user@example.com',

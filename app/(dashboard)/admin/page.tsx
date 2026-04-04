@@ -205,11 +205,11 @@ export default function AdminDashboard({
                             <input type="hidden" name="userId" value={u.id} />
                             <div className="flex flex-col gap-1">
                               <Label className="text-[10px] uppercase text-muted-foreground">Full Name</Label>
-                              <Input name="fullName" defaultValue={u.full_name} className="h-8 w-40 bg-slate-900 border-slate-800" />
+                              <Input name="fullName" defaultValue={u.full_name} className="h-8 w-40" />
                             </div>
                             <div className="flex flex-col gap-1">
                               <Label className="text-[10px] uppercase text-muted-foreground">Credits</Label>
-                              <Input name="credits" type="number" defaultValue={u.credits} className="h-8 w-24 bg-slate-900 border-slate-800" />
+                              <Input name="credits" type="number" defaultValue={u.credits} className="h-8 w-24" />
                             </div>
                             <Button size="sm" variant="outline" className="mt-5 gap-2">
                                <Save className="h-4 w-4" /> Save Details
