@@ -32,17 +32,19 @@ export async function createManualUser(formData: FormData): Promise<{ success: b
     
     if (profileError) throw profileError
 
-    // 3. Log the credit addition
-    const { data: { user: admin } } = await (await createClient()).auth.getUser()
-    const { error: logError } = await (adminClient.from('credit_logs') as any)
-      .insert({
-        user_id: userData.user.id,
-        amount: credits,
-        reason: 'Manual Account Creation',
-        admin_id: admin?.id
-      })
-    
-    if (logError) throw logError
+    // 3. Log the credit addition (Non-blocking)
+    try {
+      const { data: { user: admin } } = await (await createClient()).auth.getUser().catch(() => ({ data: { user: null } }))
+      await (adminClient.from('credit_logs') as any)
+        .insert({
+          user_id: userData.user.id,
+          amount: credits,
+          reason: 'Manual Account Creation',
+          admin_id: admin?.id || null
+        })
+    } catch (logErr) {
+      console.warn('Credit log failed:', logErr)
+    }
 
     revalidatePath('/admin')
     return { success: true, message: 'User created successfully!' }
@@ -129,17 +131,19 @@ export async function updateUserCredits(formData: FormData): Promise<{ success: 
 
     if (updateError) throw updateError
 
-    // Log the change
-    const { data: { user: admin } } = await (await createClient()).auth.getUser()
-    const { error: logError } = await (supabase.from('credit_logs') as any)
-      .insert({
-        user_id: userId,
-        amount: delta,
-        reason: 'Manual Administrative Adjustment',
-        admin_id: admin?.id
-      })
-    
-    if (logError) throw logError
+    // Log the change (Non-blocking)
+    try {
+      const { data: { user: admin } } = await (await createClient()).auth.getUser().catch(() => ({ data: { user: null } }))
+      await (supabase.from('credit_logs') as any)
+        .insert({
+          user_id: userId,
+          amount: delta,
+          reason: 'Manual Administrative Adjustment',
+          admin_id: admin?.id || null
+        })
+    } catch (logErr) {
+      console.warn('Credit log failed:', logErr)
+    }
 
     revalidatePath('/admin')
     return { success: true, message: 'Credits updated!' }
