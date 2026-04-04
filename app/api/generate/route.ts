@@ -125,7 +125,13 @@ export async function POST(req: NextRequest) {
 
     const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
     const jarvisId  = process.env.JARVISLABS_INSTANCE_ID
+    const jarvisKey = process.env.JARVISLABS_API_KEY
     if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
+    if (!jarvisId || !jarvisKey) {
+      return NextResponse.json({ 
+        error: 'Missing Environment Variables. Please add JARVISLABS_API_KEY and JARVISLABS_INSTANCE_ID to your Vercel Project Settings.' 
+      }, { status: 500 })
+    }
 
     // 6. Check GPU Readiness (Warming up check)
     if (jarvisId) {

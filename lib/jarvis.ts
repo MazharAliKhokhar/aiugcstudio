@@ -30,15 +30,22 @@ function authHeaders() {
 
 /** Generic Jarvislabs instance action: resume | pause */
 async function instanceAction(instanceId: string | number, action: 'resume' | 'pause') {
-  const res = await fetch(
-    `${JARVIS_API_BASE}/instances/${instanceId}?action=${action}`,
-    { method: 'PUT', headers: authHeaders() }
-  )
-  if (!res.ok) {
-    const msg = await res.text()
-    throw new Error(`Jarvis ${action} failed: ${msg || res.statusText}`)
+  try {
+    const res = await fetch(
+      `${JARVIS_API_BASE}/instances/${instanceId}?action=${action}`,
+      { method: 'PUT', headers: authHeaders() }
+    )
+    if (!res.ok) {
+      const msg = await res.text()
+      throw new Error(`Jarvis API Error (${res.status}): ${msg || res.statusText}`)
+    }
+    return res.json()
+  } catch (err: any) {
+    if (err.message === 'fetch failed') {
+      throw new Error(`Instance ${action} failed: Network error reaching Jarvis API. Check your internet or API endpoint.`)
+    }
+    throw err
   }
-  return res.json()
 }
 
 export const jarvis = {
