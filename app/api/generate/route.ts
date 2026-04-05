@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         if (status.status !== 'Running') {
           console.log('[Generate] GPU is booting/warming up — asking client to retry')
           if (status.status === 'Paused') {
-            await jarvis.resume(status.instance_id).catch((re) => {
+            await jarvis.resume(status).catch((re) => {
               console.error('[Generate] Resume failed:', re.message)
             })
           }
@@ -203,7 +203,7 @@ export async function POST(req: NextRequest) {
     // We import jarvis again or use the one from above
     const { jarvis: j } = await import('@/lib/jarvis')
     const finalStatus = await j.getStatus(jarvisIdentifier)
-    j.pause(finalStatus.instance_id).catch((e: any) =>
+    j.pause(finalStatus).catch((e: any) =>
       console.warn('[Generate] Auto-pause failed (non-critical):', e.message)
     )
 
