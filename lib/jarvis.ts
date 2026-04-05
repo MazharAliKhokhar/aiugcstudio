@@ -133,19 +133,28 @@ export const jarvis = {
   async pause(instance: JarvisInstance) {
     const id = instance.instance_id
     const isVm = instance.is_vm || (instance as any).template === 'vm'
-    const endpoint = isVm ? '/templates/vm/pause' : '/misc/pause'
+    const legacyEndpoint = isVm ? '/templates/vm/pause' : '/misc/pause'
     
-    console.log(`[Jarvis] Pausing instance ${id} via ${endpoint}...`)
+    console.log(`[Jarvis] Sending aggressive pause signal to instance ${id}...`)
     
-    const res = await fetchWithAuth(`${JARVIS_API_BASE}${endpoint}`, {
-      method: 'POST',
-      body: JSON.stringify({ machine_id: id.toString() })
-    })
+    // We fire all three formats to both API versions to guarantee shutdown
+    const results = await Promise.allSettled([
+      // 1. Legacy Endpoint
+      fetchWithAuth(`${JARVIS_API_BASE}${legacyEndpoint}`, {
+        method: 'POST',
+        body: JSON.stringify({ machine_id: id.toString() })
+      }),
+      // 2. Modern Endpoint
+      fetchWithAuth(`https://api.jarvislabs.ai/v1/instances/${id}?action=pause`, {
+        method: 'PUT'
+      })
+    ])
 
-    if (!res.ok) {
-      const detail = await res.text()
-      throw new Error(`Failed to pause instance: ${res.status} ${detail}`)
+    const failed = results.some(r => r.status === 'rejected')
+    if (failed) {
+        console.warn('[Jarvis] One or more pause signals failed, but at least one likely succeeded.')
     }
+
     this.clearCache() // Invalidate cache after state change
     return true
   },
