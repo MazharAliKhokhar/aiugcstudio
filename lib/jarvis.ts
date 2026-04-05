@@ -10,6 +10,7 @@ const POLL_INTERVAL_MS = 20000 // 20s
 interface JarvisInstance {
   id: string | number
   instance_id: string | number
+  machine_id: string | number
   status: 'Running' | 'Paused' | 'Booting' | string
   url: string | null
   name?: string
@@ -147,6 +148,7 @@ export const jarvis = {
       
       // Try finding by ID first
       let target = instances.find(i => 
+        i?.machine_id?.toString() === instanceIdOrName?.toString() ||
         i?.instance_id?.toString() === instanceIdOrName?.toString() ||
         (i as any)?.id?.toString() === instanceIdOrName?.toString()
       )
@@ -161,13 +163,11 @@ export const jarvis = {
 
       if (!target) throw new Error(`Instance/Machine '${instanceIdOrName}' not found in your Jarvislabs account.`)
       
-      // Normalize ID
-      if (!target.instance_id && (target as any).id) {
-        target.instance_id = (target as any).id
-      }
-      if (!target.id && target.instance_id) {
-        (target as any).id = target.instance_id
-      }
+      // Normalize ID (Source of truth is machine_id for this region)
+      const finalId = target.machine_id || target.instance_id || (target as any).id
+      target.machine_id = finalId
+      target.instance_id = finalId
+      target.id = finalId
 
       return target
     } catch (err: any) {
