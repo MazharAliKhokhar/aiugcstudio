@@ -41,6 +41,19 @@ export async function getAdminStats(query: string = '') {
   // Audit
   const { data: creditLogs } = await (adminClient.from('credit_logs') as any).select('*, profiles(email)').order('created_at', { ascending: false }).limit(50)
 
+  // GPU Status
+  let gpuStatus = 'Unknown'
+  try {
+    const { jarvis } = await import('@/lib/jarvis')
+    const jarvisIdentifier = process.env.JARVISLABS_INSTANCE_NAME || process.env.JARVISLABS_INSTANCE_ID
+    if (jarvisIdentifier) {
+      const instance = await jarvis.getStatus(jarvisIdentifier)
+      gpuStatus = instance.status
+    }
+  } catch (e) {
+    console.error('[Admin] Failed to fetch GPU status:', e)
+  }
+  
   return {
     usersCount: usersCount || 0,
     videosCount: videosCount || 0,
@@ -48,10 +61,26 @@ export async function getAdminStats(query: string = '') {
     failedVideos: failedVideos || 0,
     totalCredits,
     weeklyUsersCount: weeklyUsersCount || 0,
+    gpuStatus,
     usersList: rawUsersList?.map((u: any) => ({ ...u, videoCount: u.videos?.length || 0 })) || [],
     videosList: videosList || [],
     creditLogs: creditLogs || [],
     recentSignups: rawUsersList?.slice(0, 5) || []
+  }
+}
+
+export async function forceStopGpu(): Promise<{ success: boolean; message: string }> {
+  if (!(await verifyAdmin())) return { success: false, message: 'Unauthorized' }
+  try {
+    const { jarvis } = await import('@/lib/jarvis')
+    const jarvisIdentifier = process.env.JARVISLABS_INSTANCE_NAME || process.env.JARVISLABS_INSTANCE_ID
+    if (!jarvisIdentifier) throw new Error('Jarvis configuration missing')
+    
+    await jarvis.safePause(jarvisIdentifier)
+    revalidatePath('/admin')
+    return { success: true, message: 'Shutdown signal sent to GPU.' }
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Failed to stop GPU' }
   }
 }
 
@@ -210,7 +239,8 @@ export async function refundVideo(formData: FormData): Promise<{ success: boolea
     const refundAmount = video?.duration === 30 ? 2 : (video?.duration === 60 ? 4 : 1)
 
     await (supabase.from('videos') as any).update({ status: 'failed' }).eq('id', videoId)
-    await (supabase as any).rpc('increment_credits', { p_user_id: userId, p_amount: refundAmount })
+    // Use increment_credits RPC
+    await (supabase as any).rpc('add_credits', { p_user_id: userId, p_amount: refundAmount })
 
     revalidatePath('/admin')
     return { success: true, message: `Refunded ${refundAmount} credits` }
@@ -239,7 +269,7 @@ export async function bulkRefundStuckVideos(): Promise<{ success: boolean; messa
     for (const video of stuckVideos) {
       const refundAmount = video.duration === 30 ? 2 : (video.duration === 60 ? 4 : 1)
       await (supabase.from('videos') as any).update({ status: 'failed' }).eq('id', video.id)
-      await (supabase as any).rpc('increment_credits', { p_user_id: video.user_id, p_amount: refundAmount })
+      await (supabase as any).rpc('add_credits', { p_user_id: video.user_id, p_amount: refundAmount })
       count++
     }
 

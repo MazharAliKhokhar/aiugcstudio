@@ -11,7 +11,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   updateUserProfile, toggleAdminStatus, deleteVideo, refundVideo,
-  bulkRefundStuckVideos, createManualUser, updateVideoDetails, deleteUser, syncDatabase
+  bulkRefundStuckVideos, createManualUser, updateVideoDetails, deleteUser, syncDatabase, forceStopGpu
 } from './actions'
 
 interface Props {
@@ -73,6 +73,23 @@ export function AdminDashboardClient({ data, error, query }: Props) {
           >
             <RefreshCcw className={`w-4 h-4 ${isPending ? 'animate-spin' : ''}`} /> Sync DB
           </Button>
+
+          <Button
+            variant="destructive"
+            disabled={isPending}
+            onClick={async () => {
+              if (!confirm('Force shutdown JarvisLabs GPU? This will stop all current tasks.')) return
+              startTransition(async () => {
+                const res = await forceStopGpu()
+                if (res.success) toast.success(res.message)
+                else toast.error(res.message)
+                router.refresh()
+              })
+            }}
+            className="gap-2"
+          >
+            <Battery className="w-4 h-4" /> Kill GPU
+          </Button>
         </div>
       </div>
 
@@ -117,6 +134,18 @@ export function AdminDashboardClient({ data, error, query }: Props) {
                 <Plus className="h-4 w-4 text-zinc-500" />
               </CardHeader>
               <CardContent><div className="text-3xl font-black text-emerald-500 tracking-tighter">+{data.weeklyUsersCount}</div></CardContent>
+            </Card>
+
+            <Card className="border-purple-500/20 bg-card shadow-xl">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-purple-400">GPU Lifecycle</CardTitle>
+                <div className={`h-2.5 w-2.5 rounded-full ${data.gpuStatus === 'Running' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-3xl font-black tracking-tighter ${data.gpuStatus === 'Running' ? 'text-green-500' : 'text-zinc-500'}`}>
+                  {data.gpuStatus || 'Unknown'}
+                </div>
+              </CardContent>
             </Card>
           </div>
         </TabsContent>
