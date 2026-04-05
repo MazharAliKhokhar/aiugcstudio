@@ -53,15 +53,23 @@ export async function POST(req: NextRequest) {
     const outputPath = path.join(tempDir, 'output.mp4')
 
     // 4. Verify Jarvis config
-    const jarvisId = process.env.JARVISLABS_INSTANCE_ID
-    if (!jarvisId) throw new Error('JARVISLABS_INSTANCE_ID is not configured')
+    const jarvisId    = process.env.JARVISLABS_INSTANCE_ID?.trim()
+    const jarvisName  = process.env.JARVISLABS_INSTANCE_NAME?.trim()
+    const jarvisKey   = process.env.JARVISLABS_API_KEY?.trim()
+
+    // Use name as primary identifier if available, fallback to ID
+    const jarvisIdentifier = jarvisName || jarvisId
+
+    if (!jarvisIdentifier || !jarvisKey) {
+      throw new Error('Missing JARVISLABS_API_KEY or JARVISLABS_INSTANCE_NAME (or ID)')
+    }
 
     let resolvedJarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL || ''
 
     // Boot GPU if paused and resolve the latest proxy URL
     try {
       const { jarvis } = await import('@/lib/jarvis')
-      resolvedJarvisUrl = await jarvis.waitForReady(jarvisId)
+      resolvedJarvisUrl = await jarvis.waitForReady(jarvisIdentifier)
     } catch (e: any) {
       console.warn('[Stitch] GPU readiness check failed:', e.message)
       if (!resolvedJarvisUrl) throw new Error(`GPU is not ready and no fallback URL is available: ${e.message}`)

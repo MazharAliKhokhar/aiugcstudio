@@ -77,7 +77,7 @@ export const jarvis = {
     }
   },
 
-  async getStatus(instanceId: string | number): Promise<JarvisInstance> {
+  async getStatus(instanceIdOrName: string | number): Promise<JarvisInstance> {
     try {
       const res = await fetchWithRetry(`${JARVIS_API_BASE}/instances`, { headers: authHeaders() })
       if (!res.ok) {
@@ -85,8 +85,19 @@ export const jarvis = {
         throw new Error(`Failed to fetch Jarvis instances: ${res.status} ${errText}`)
       }
       const instances: JarvisInstance[] = await res.json()
-      const target = instances.find(i => i.instance_id.toString() === instanceId.toString())
-      if (!target) throw new Error(`Instance ${instanceId} not found in account.`)
+      
+      // Try finding by ID first
+      let target = instances.find(i => i.instance_id.toString() === instanceIdOrName.toString())
+      
+      // If not found by ID, try finding by Name (case-insensitive)
+      if (!target) {
+        target = instances.find(i => 
+          (i as any).name?.toLowerCase() === instanceIdOrName.toString().toLowerCase() ||
+          (i as any).instance_name?.toLowerCase() === instanceIdOrName.toString().toLowerCase()
+        )
+      }
+
+      if (!target) throw new Error(`Instance/Machine '${instanceIdOrName}' not found in your Jarvislabs account.`)
       return target
     } catch (err: any) {
       console.error('[Jarvis] getStatus failed:', err.message)
@@ -95,15 +106,15 @@ export const jarvis = {
   },
 
   /**
-   * Resolves the current proxy URL for a given instance ID by querying the API.
+   * Resolves the current proxy URL for a given instance ID or name by querying the API.
    * This is more reliable than using a static environment variable.
    */
-  async getResolvedUrl(instanceId: string | number): Promise<string> {
-    const instance = await this.getStatus(instanceId)
+  async getResolvedUrl(instanceIdOrName: string | number): Promise<string> {
+    const instance = await this.getStatus(instanceIdOrName)
     if (!instance.url) {
       // Fallback to env variable if API returns empty URL (rare)
       const fallback = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
-      if (!fallback) throw new Error(`Instance ${instanceId} has no URL and no fallback is configured.`)
+      if (!fallback) throw new Error(`Instance ${instanceIdOrName} has no URL and no fallback is configured.`)
       return fallback
     }
     // Jarvis API returns URLs like "https://XXXX.proxy.jarvislabs.net"
@@ -114,16 +125,17 @@ export const jarvis = {
    * Waits until the instance is Running AND its FastAPI server is responding.
    * Dynamically resolves the URL to handle cases where the proxy ID has changed.
    */
-  async waitForReady(instanceId: string | number, maxAttempts = 20): Promise<string> {
-    console.log(`[Jarvis] Waiting for GPU instance ${instanceId} to be ready...`)
+  async waitForReady(instanceIdOrName: string | number, maxAttempts = 20): Promise<string> {
+    console.log(`[Jarvis] Waiting for GPU instance '${instanceIdOrName}' to be ready...`)
     
     for (let i = 0; i < maxAttempts; i++) {
       try {
-        const instance = await this.getStatus(instanceId)
+        const instance = await this.getStatus(instanceIdOrName)
+        const currentId = instance.instance_id
         
         if (instance.status === 'Paused') {
-          console.log('[Jarvis] Instance is Paused. Resuming...')
-          await this.resume(instanceId)
+          console.log(`[Jarvis] Instance ${currentId} ('${instanceIdOrName}') is Paused. Resuming...`)
+          await this.resume(currentId)
         } else if (instance.status === 'Running') {
           const currentUrl = instance.url || process.env.NEXT_PUBLIC_JARVIS_API_URL
           if (currentUrl) {
@@ -142,6 +154,6 @@ export const jarvis = {
 
       await new Promise(r => setTimeout(r, POLL_INTERVAL_MS))
     }
-    throw new Error('Jarvis GPU failed to become ready within the timeout period.')
+    throw new Error(`Jarvis GPU '${instanceIdOrName}' failed to become ready within the timeout period.`)
   }
 }

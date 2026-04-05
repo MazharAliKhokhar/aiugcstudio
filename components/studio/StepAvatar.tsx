@@ -63,15 +63,15 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
           />
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5 pr-1">
+        <div className="grid grid-cols-4 md:grid-cols-6 gap-1 pr-1">
           {filteredActors.map((actor) => (
             <div 
               key={actor.id}
               onClick={() => setSelectedActor(actor.id)}
               className={cn(
-                "group relative aspect-square rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-300",
+                "group relative aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition-all duration-300",
                 selectedActor === actor.id 
-                  ? "border-primary scale-95 shadow-lg shadow-primary/20" 
+                  ? "border-primary scale-95 shadow-md shadow-primary/10" 
                   : "border-transparent hover:border-slate-200"
               )}
             >
@@ -84,10 +84,10 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
                   (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${actor.name}&background=6366f1&color=fff&bold=true`
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-              <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white italic drop-shadow-md">{actor.name}</span>
-                {selectedActor === actor.id && <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-white p-[1px] rounded-full shadow-lg" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
+              <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between">
+                <span className="text-[8px] font-black uppercase tracking-tight text-white italic drop-shadow-md truncate max-w-[80%]">{actor.name}</span>
+                {selectedActor === actor.id && <CheckCircle2 className="w-2.5 h-2.5 text-primary fill-white p-[0.5px] rounded-full shadow-lg" />}
               </div>
             </div>
           ))}

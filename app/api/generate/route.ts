@@ -123,12 +123,16 @@ export async function POST(req: NextRequest) {
     const videoData = await insertVideoRow(supabase, videoPayload)
     const videoId = videoData.id
 
-    const jarvisId  = process.env.JARVISLABS_INSTANCE_ID?.trim()
-    const jarvisKey = process.env.JARVISLABS_API_KEY?.trim()
+    const jarvisId    = process.env.JARVISLABS_INSTANCE_ID?.trim()
+    const jarvisName  = process.env.JARVISLABS_INSTANCE_NAME?.trim()
+    const jarvisKey   = process.env.JARVISLABS_API_KEY?.trim()
 
-    if (!jarvisId || !jarvisKey) {
+    // Use name as primary identifier if available, fallback to ID
+    const jarvisIdentifier = jarvisName || jarvisId
+
+    if (!jarvisIdentifier || !jarvisKey) {
       return NextResponse.json({ 
-        error: 'Missing Environment Variables. Please add JARVISLABS_API_KEY and JARVISLABS_INSTANCE_ID to your Vercel Project Settings.' 
+        error: 'Missing Environment Variables. Please add JARVISLABS_API_KEY and JARVISLABS_INSTANCE_NAME (or ID) to your Vercel Project Settings.' 
       }, { status: 500 })
     }
 
@@ -139,7 +143,7 @@ export async function POST(req: NextRequest) {
       const { jarvis } = await import('@/lib/jarvis')
       
       // Get the latest status and URL from Jarvis API
-      const status = await jarvis.getStatus(jarvisId)
+      const status = await jarvis.getStatus(jarvisIdentifier)
       if (status.url) resolvedJarvisUrl = status.url.endsWith('/') ? status.url.slice(0, -1) : status.url
 
       // Optimistic check: If the GPU is already responding, skip status polling
@@ -151,7 +155,7 @@ export async function POST(req: NextRequest) {
         if (status.status !== 'Running') {
           console.log('[Generate] GPU is booting/warming up — asking client to retry')
           if (status.status === 'Paused') {
-            await jarvis.resume(jarvisId).catch((re) => {
+            await jarvis.resume(status.instance_id).catch((re) => {
               console.error('[Generate] Resume failed:', re.message)
             })
           }
@@ -196,12 +200,12 @@ export async function POST(req: NextRequest) {
       .eq('id', videoId)
 
     // 9. Auto-pause GPU immediately to stop billing
-    if (jarvisId) {
-      const { jarvis } = await import('@/lib/jarvis')
-      jarvis.pause(jarvisId).catch((e: any) =>
-        console.warn('[Generate] Auto-pause failed (non-critical):', e.message)
-      )
-    }
+    // We import jarvis again or use the one from above
+    const { jarvis: j } = await import('@/lib/jarvis')
+    const finalStatus = await j.getStatus(jarvisIdentifier)
+    j.pause(finalStatus.instance_id).catch((e: any) =>
+      console.warn('[Generate] Auto-pause failed (non-critical):', e.message)
+    )
 
     return NextResponse.json({ success: true, videoId, videoUrl: fullVideoUrl })
 
