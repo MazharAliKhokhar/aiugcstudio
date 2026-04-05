@@ -216,12 +216,11 @@ export const jarvis = {
   /**
    * Performs a single readiness check (no polling).
    * If the instance is Paused, it triggers a resume and returns null.
-   * If the instance is Running, it checks the heartbeat.
-   *   - If healthy, it returns the URL.
-   *   - If not healthy (FastAPI still booting), it returns null.
+   * If the instance is Running, it checks the heartbeat of all possible endpoints.
    */
   async checkReady(instanceIdOrName: string | number): Promise<string | null> {
     const instance = await this.getStatus(instanceIdOrName)
+    const token = await this.getToken(instanceIdOrName)
     
     if (instance.status === 'Paused') {
       console.log(`[Jarvis] Instance ${instance.instance_id} is Paused. Resuming...`)
@@ -230,17 +229,23 @@ export const jarvis = {
     }
 
     if (instance.status === 'Running') {
-      const currentUrl = instance.url || process.env.NEXT_PUBLIC_JARVIS_API_URL
-      if (currentUrl) {
-        const isHealthy = await this.heartbeat(currentUrl)
+      // Try all available endpoints in order
+      const candidates = [
+        ...(instance.endpoints || []),
+        instance.url?.split('/lab')[0] || ''
+      ].filter(Boolean)
+
+      for (const baseUrl of candidates) {
+        const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+        const isHealthy = await this.heartbeat(cleanUrl, token)
         if (isHealthy) {
-          console.log(`[Jarvis] GPU ready at ${currentUrl}`)
-          return currentUrl
+          console.log(`[Jarvis] GPU verified at ${cleanUrl}`)
+          return cleanUrl
         }
       }
     }
 
-    console.log(`[Jarvis] GPU is in '${instance.status}' state but not yet responding.`)
+    console.log(`[Jarvis] GPU is in '${instance.status}' state but API is not yet responding.`)
     return null
   },
 
@@ -268,16 +273,33 @@ export const jarvis = {
 
   /**
    * Verifies if the FastAPI server inside the instance is responding to requests.
+   * Specifically checks for a 200 OK and JSON/Success response to distinguish from Jupyter login pages.
    */
-  async heartbeat(baseUrl: string): Promise<boolean> {
+  async heartbeat(baseUrl: string, token: string | null = null): Promise<boolean> {
     const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Token ${token}`
+    }
+
     try {
       console.log(`[Jarvis] Checking heartbeat at ${cleanUrl}/health...`)
       const res = await fetch(`${cleanUrl}/health`, { 
         method: 'GET',
-        signal: AbortSignal.timeout(5000), // Quick 5s check
+        headers,
+        signal: AbortSignal.timeout(5000), 
       })
-      return res.status === 200
+
+      if (res.status === 200) {
+        const contentType = res.headers.get('content-type') || ''
+        // If it's HTML, we likely hit a Jupyter dashboard login page, not our API
+        if (contentType.includes('text/html')) {
+          console.warn(`[Jarvis] Heartbeat at ${cleanUrl} returned HTML (likely Jupyter), not FastAPI.`)
+          return false
+        }
+        return true
+      }
+      return false
     } catch (e) {
       console.warn(`[Jarvis] Heartbeat failed for ${cleanUrl}:`, e instanceof Error ? e.message : 'Unknown error')
       return false

@@ -77,15 +77,18 @@ export async function POST(req: NextRequest) {
 
     // 6. Fetch Authentication Token
     const token = await jarvis.getToken(jarvisIdentifier)
-    const appendToken = (url: string) => `${url}${url.includes('?') ? '&' : '?'}${token ? `token=${token}` : ''}`
+    const authHeaders: Record<string, string> = token ? { 'Authorization': `Token ${token}` } : {}
 
     // 7. Fetch video + generate voice concurrently
     console.log(`[Stitch] Rendering voice and fetching source video...`)
     const [videoRes, voiceRes] = await Promise.all([
       fetch(videoUrl),
-      fetch(appendToken(`${resolvedJarvisUrl}/voice`), {
+      fetch(`${resolvedJarvisUrl}/voice`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body:    JSON.stringify({ text: voiceScript, voice: 'af_heart' })
       })
     ])
@@ -98,7 +101,7 @@ export async function POST(req: NextRequest) {
 
     const { audio_url } = await voiceRes.json()
     const fullAudioUrl = toAbsoluteUrl(audio_url, resolvedJarvisUrl)
-    const audioRes = await fetch(appendToken(fullAudioUrl))
+    const audioRes = await fetch(fullAudioUrl, { headers: authHeaders })
 
     if (!audioRes.ok) throw new Error(`Failed to download audio: ${audioRes.statusText}`)
 

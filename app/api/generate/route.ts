@@ -159,23 +159,39 @@ export async function POST(req: NextRequest) {
     try {
       // 8. Send generation request to Wan 2.1 on Jarvislabs
       console.log(`[Generate] GPU is healthy at ${resolvedJarvisUrl}. Triggering generation...`)
-      
+      const { jarvis } = await import('@/lib/jarvis')
       const token = await jarvis.getToken(jarvisIdentifier)
-      const apiUrl = `${resolvedJarvisUrl}/generate${token ? `?token=${token}` : ''}`
-      
-      const genResponse = await fetch(apiUrl, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ prompt })
-      })
+      const authHeaders: Record<string, string> = token ? { 'Authorization': `Token ${token}` } : {}
 
-      if (!genResponse.ok) {
-        const errText = await genResponse.text()
-        throw new Error(`GPU Server error: ${errText || genResponse.statusText}`)
-      }
+      const [videoRes, voiceRes] = await Promise.all([
+        fetch(`${resolvedJarvisUrl}/generate`, {
+          method:  'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Token ${token}` } : {})
+          },
+          body:    JSON.stringify({ prompt })
+        }),
+        fetch(`${resolvedJarvisUrl}/voice`, {
+          method:  'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Token ${token}` } : {})
+          },
+          body:    JSON.stringify({ text: prompt, voice: 'af_heart' }) // Use prompt for simple voiceover
+        })
+      ])
 
-      const { video_url } = await genResponse.json()
+      if (!videoRes.ok)  throw new Error(`Failed to fetch video: ${videoRes.statusText}`)
+      if (!voiceRes.ok)  throw new Error(`Jarvis Voice API error: ${await voiceRes.text()}`)
+
+      const { video_url } = await videoRes.json()
       const fullVideoUrl = toAbsoluteUrl(video_url, resolvedJarvisUrl)
+
+      const { audio_url } = await voiceRes.json()
+      const fullAudioUrl = toAbsoluteUrl(audio_url, resolvedJarvisUrl)
+      const audioRes = await fetch(fullAudioUrl, { headers: authHeaders })
+      if (!audioRes.ok) throw new Error(`Failed to download audio from Jarvis: ${audioRes.statusText}`)
 
       // 9. Mark video as completed in DB
       await (supabase.from('videos') as any)
