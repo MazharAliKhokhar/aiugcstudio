@@ -19,9 +19,10 @@ interface StepGenerateProps {
   videoUrl?: string | null
   setVideoUrl?: (val: string | null) => void
   videoStatus?: 'pending'|'processing'|'completed'|'failed'|null
+  progress?: number
 }
 
-export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, onBack, creditsAvailable, voiceScript, videoUrl, setVideoUrl, videoStatus }: StepGenerateProps) {
+export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, onBack, creditsAvailable, voiceScript, videoUrl, setVideoUrl, videoStatus, progress = 0 }: StepGenerateProps) {
   const cost = getCreditCost(duration)
   const hasEnoughCredits = creditsAvailable >= cost
 
@@ -31,6 +32,21 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
       <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 shadow-sm">
         <DurationToggle duration={duration} setDuration={setDuration} />
       </div>
+
+      {isGenerating && progress > 0 && progress < 100 && (
+         <div className="space-y-1.5 px-1 py-1">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+               <span className="text-primary animate-pulse">Rendering Video...</span>
+               <span className="text-slate-400">{progress}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+               <div 
+                  className="h-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-500 rounded-full" 
+                  style={{ width: `${progress}%` }}
+               />
+            </div>
+         </div>
+      )}
 
       {!hasEnoughCredits && (
         <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-600 rounded-lg p-2 shadow-sm">
@@ -59,7 +75,9 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
           {isGenerating ? (
             <div className="flex items-center gap-1.5">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              <span className="text-[10px]">Initializing Render...</span>
+              <span className="text-[10px]">
+                {progress > 0 ? `Generation in progress: ${progress}%` : "Initializing Render..."}
+              </span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5">

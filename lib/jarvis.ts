@@ -302,21 +302,18 @@ export const jarvis = {
     }
 
     if (instance.status === 'Running') {
-      // Use getResolvedUrl which now supports caching
+      const key = instanceIdOrName.toString()
       const baseUrl = await this.getResolvedUrl(instanceIdOrName)
       const token = await this.getToken(instanceIdOrName)
       
-      // Try multiple health paths on the resolved URL
-      for (const path of ['/health', '/']) {
-        const isHealthy = await this.heartbeat(baseUrl, path, token)
-        if (isHealthy) {
-          console.log(`[Jarvis] GPU verified healthy at ${baseUrl}${path === '/' ? '' : path}`)
-          return baseUrl
-        }
-      }
+      console.log(`[Jarvis] Checking heartbeat for Running instance ${instance.instance_id} at ${baseUrl}...`)
       
-      // If the primary resolved URL is not responding, try scanning all candidates once
-      console.log(`[Jarvis] Primary URL ${baseUrl} not responding. Scanning all candidates...`)
+      // 1. Try the primary/cached URL
+      if (await this.heartbeat(baseUrl, '/health', token)) return baseUrl
+      if (await this.heartbeat(baseUrl, '/', token)) return baseUrl
+
+      // 2. If primary fails, scan all possible candidates
+      console.warn(`[Jarvis] Primary URL ${baseUrl} not responding. Scanning all candidates...`)
       const rawCandidates = [
         process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim(),
         ...(instance.endpoints || []),
@@ -326,14 +323,20 @@ export const jarvis = {
       for (const url of rawCandidates) {
         const clean = url.endsWith('/') ? url.slice(0, -1) : url
         const targets = [clean]
+        
+        // Convert notebook URLs to proxy URLs
         if (clean.includes('.notebooks.jarvislabs.net')) {
           targets.push(clean.replace('.notebooks.jarvislabs.net', '.proxy.jarvislabs.net'))
         }
 
         for (const testUrl of targets) {
-          if (testUrl === baseUrl) continue // Already checked
-          if (await this.heartbeat(testUrl, '/health', token)) return testUrl
-          if (await this.heartbeat(testUrl, '/', token)) return testUrl
+          if (testUrl === baseUrl) continue
+          console.log(`[Jarvis] Probing candidate: ${testUrl}`)
+          if (await this.heartbeat(testUrl, '/health', token) || await this.heartbeat(testUrl, '/', token)) {
+            console.log(`[Jarvis] Found working URL: ${testUrl}. Updating cache.`)
+            resolvedUrlCache[key] = { url: testUrl, timestamp: Date.now() }
+            return testUrl
+          }
         }
       }
     }

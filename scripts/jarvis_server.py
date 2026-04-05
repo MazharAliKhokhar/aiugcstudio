@@ -23,10 +23,33 @@ app.mount("/outputs", StaticFiles(directory=OUTPUT_DIR), name="outputs")
 
 class VideoRequest(BaseModel):
     prompt: str
+    video_id: Optional[str] = None
+    supabase_url: Optional[str] = None
+    supabase_key: Optional[str] = None
 
 class VoiceRequest(BaseModel):
     text: str
     voice: Optional[str] = "af_heart"
+
+def update_db_progress(video_id, progress, url=None, key=None):
+    if not video_id or not url or not key:
+        return
+    try:
+        import httpx
+        with httpx.Client() as client:
+            headers = {
+                "apikey": key,
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+            res = client.patch(
+                f"{url}/rest/v1/videos?id=eq.{video_id}",
+                headers=headers,
+                json={"progress": progress}
+            )
+            logger.info(f"DB Progress {progress}% for {video_id}: {res.status_code}")
+    except Exception as e:
+        logger.error(f"Failed to update progress: {str(e)}")
 
 _wan, _kokoro = None, None
 
@@ -90,23 +113,37 @@ async def generate(req: VideoRequest):
             filename = f"{uuid.uuid4()}.mp4"
             filepath = os.path.join(OUTPUT_DIR, filename)
 
+            # Mark as started
+            update_db_progress(req.video_id, 5, req.supabase_url, req.supabase_key)
+
             # Move blocking inference to a thread to keep FastAPI alive
             def do_inference():
                 pipeline = get_wan()
+                
+                def progress_callback(pipe, step, timestep, callback_kwargs):
+                    num_steps = 30
+                    current_progress = int((step / num_steps) * 80) + 10 # Scale 10% to 90%
+                    update_db_progress(req.video_id, current_progress, req.supabase_url, req.supabase_key)
+                    return callback_kwargs
+
                 # Run Wan 2.1 Generation
                 result = pipeline(
                     req.prompt, 
                     num_frames=81, 
                     height=832, 
                     width=480, 
-                    num_inference_steps=30
+                    num_inference_steps=30,
+                    callback_on_step_end=progress_callback
                 ).frames[0]
+                
+                update_db_progress(req.video_id, 95, req.supabase_url, req.supabase_key)
                 
                 import imageio
                 imageio.mimwrite(filepath, [np.array(f) for f in result], fps=24, quality=8)
                 return f"/outputs/{filename}"
 
             url = await asyncio.to_thread(do_inference)
+            update_db_progress(req.video_id, 100, req.supabase_url, req.supabase_key)
             logger.info(f"Generation successful: {url}")
             return {"status": "completed", "video_url": url}
         except Exception as e:

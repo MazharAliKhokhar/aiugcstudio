@@ -39,6 +39,7 @@ export default function StudioPage() {
   const [videoId, setVideoId] = useState<string | null>(null)
   const [videoStatus, setVideoStatus] = useState<'pending'|'processing'|'completed'|'failed'|null>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [progress, setProgress] = useState<number>(0)
   const [isStitching, setIsStitching] = useState(false)
   const [isScripting, setIsScripting] = useState(false)
   const [bootingAt, setBootingAt] = useState<number | null>(null)
@@ -129,10 +130,16 @@ export default function StudioPage() {
         (payload) => {
           const newStatus = payload.new.status
           setVideoStatus(newStatus)
+          if (payload.new.progress !== undefined) {
+             setProgress(payload.new.progress)
+          }
+
           if (newStatus === 'completed') {
             setVideoUrl(payload.new.video_url)
+            setProgress(100)
           } else if (newStatus === 'failed') {
-            toast.error('Video generation failed. Please try again.')
+            const reason = payload.new.failure_reason || 'Unknown error'
+            toast.error(`Generation failed: ${reason}`)
             setIsGenerating(false)
             setStep(5) // Go back to generate step
           }
@@ -372,6 +379,7 @@ export default function StudioPage() {
                     videoUrl={videoUrl}
                     setVideoUrl={setVideoUrl}
                     videoStatus={videoStatus}
+                    progress={progress}
                   />
                 </CardContent>
               </motion.div>

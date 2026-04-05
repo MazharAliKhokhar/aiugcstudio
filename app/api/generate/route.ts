@@ -189,7 +189,12 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Token ${token}` } : {})
         },
-        body:    JSON.stringify({ prompt }),
+        body:    JSON.stringify({ 
+          prompt,
+          video_id: videoId as string,
+          supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          supabase_key: process.env.SUPABASE_SERVICE_ROLE_KEY
+        }),
         signal: AbortSignal.timeout(55000) // Slightly less than Vercel max to catch it here
       })
 
@@ -204,7 +209,11 @@ export async function POST(req: NextRequest) {
       // 9. Mark video as completed in DB (Using Admin for reliability)
       const admin = createAdminClient()
       await (admin.from('videos') as any)
-        .update({ video_url: fullVideoUrl, status: 'completed' })
+        .update({ 
+          video_url: fullVideoUrl, 
+          status: 'completed',
+          progress: 100
+        })
         .eq('id', videoId as string)
 
       // 10. Auto-Pause (Fire-and-forget cleanup)
@@ -219,7 +228,7 @@ export async function POST(req: NextRequest) {
       const admin = createAdminClient()
 
       // AUTO-REFUND logic: If it failed before we got a result, return the credits
-      console.log(`[Generate] Refusing ${requiredUnits} unit(s) to user ${user.id}`)
+      console.log(`[Generate] Refunding ${requiredUnits} unit(s) to user ${user.id}`)
       const { error: refundError } = await (admin as any).rpc('add_credits', {
         p_user_id: user.id,
         p_amount:  requiredUnits
@@ -229,7 +238,12 @@ export async function POST(req: NextRequest) {
 
       // Update video record to 'failed'
       if (videoId) {
-        await (admin.from('videos') as any).update({ status: 'failed' }).eq('id', videoId as string)
+        await (admin.from('videos') as any)
+          .update({ 
+            status: 'failed',
+            failure_reason: error.message || 'Generation timeout'
+          })
+          .eq('id', videoId as string)
       }
 
       // Even on failure, we should probably pause if we resumed it
