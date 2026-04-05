@@ -229,18 +229,34 @@ export const jarvis = {
     }
 
     if (instance.status === 'Running') {
-      // Try all available endpoints in order
-      const candidates = [
+      // 1. Gather all possible candidate URLs
+      const rawCandidates = [
+        process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim(), // Try the static one from .env first
         ...(instance.endpoints || []),
         instance.url?.split('/lab')[0] || ''
-      ].filter(Boolean)
+      ].filter(Boolean) as string[]
 
+      const candidates: string[] = []
+      for (const url of rawCandidates) {
+        const clean = url.endsWith('/') ? url.slice(0, -1) : url
+        if (!candidates.includes(clean)) candidates.push(clean)
+        
+        // Also try the .proxy variant if it's a .notebooks URL
+        if (clean.includes('.notebooks.jarvislabs.net')) {
+          const proxyVariant = clean.replace('.notebooks.jarvislabs.net', '.proxy.jarvislabs.net')
+          if (!candidates.includes(proxyVariant)) candidates.push(proxyVariant)
+        }
+      }
+
+      // 2. Scan all candidates for a healthy responding API
       for (const baseUrl of candidates) {
-        const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
-        const isHealthy = await this.heartbeat(cleanUrl, token)
-        if (isHealthy) {
-          console.log(`[Jarvis] GPU verified at ${cleanUrl}`)
-          return cleanUrl
+        // Try multiple health paths
+        for (const path of ['/health', '/']) {
+          const isHealthy = await this.heartbeat(baseUrl, path, token)
+          if (isHealthy) {
+            console.log(`[Jarvis] GPU verified at ${baseUrl}${path === '/' ? '' : path}`)
+            return baseUrl
+          }
         }
       }
     }
@@ -273,35 +289,35 @@ export const jarvis = {
 
   /**
    * Verifies if the FastAPI server inside the instance is responding to requests.
-   * Specifically checks for a 200 OK and JSON/Success response to distinguish from Jupyter login pages.
    */
-  async heartbeat(baseUrl: string, token: string | null = null): Promise<boolean> {
+  async heartbeat(baseUrl: string, path: string = '/health', token: string | null = null): Promise<boolean> {
     const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    const testUrl = `${cleanUrl}${path}`
     const headers: Record<string, string> = {}
     if (token) {
       headers['Authorization'] = `Token ${token}`
     }
 
     try {
-      console.log(`[Jarvis] Checking heartbeat at ${cleanUrl}/health...`)
-      const res = await fetch(`${cleanUrl}/health`, { 
+      console.log(`[Jarvis] Checking heartbeat at ${testUrl}...`)
+      const res = await fetch(testUrl, { 
         method: 'GET',
         headers,
-        signal: AbortSignal.timeout(5000), 
+        signal: AbortSignal.timeout(3000), 
       })
 
       if (res.status === 200) {
         const contentType = res.headers.get('content-type') || ''
         // If it's HTML, we likely hit a Jupyter dashboard login page, not our API
         if (contentType.includes('text/html')) {
-          console.warn(`[Jarvis] Heartbeat at ${cleanUrl} returned HTML (likely Jupyter), not FastAPI.`)
+          console.warn(`[Jarvis] Heartbeat at ${testUrl} returned HTML (likely Jupyter), not FastAPI.`)
           return false
         }
         return true
       }
       return false
     } catch (e) {
-      console.warn(`[Jarvis] Heartbeat failed for ${cleanUrl}:`, e instanceof Error ? e.message : 'Unknown error')
+      // Don't log full errors to avoid spamming console
       return false
     }
   }
