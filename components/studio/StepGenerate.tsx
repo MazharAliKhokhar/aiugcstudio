@@ -29,9 +29,7 @@ export function StepGenerate({ duration, setDuration, isGenerating, onGenerate, 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
       
-      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 shadow-sm">
-        <DurationToggle duration={duration} setDuration={setDuration} />
-      </div>
+      {/* Duration selection moved to Step 3 */}
 
       {isGenerating && progress > 0 && progress < 100 && (
          <div className="space-y-1.5 px-1 py-1">

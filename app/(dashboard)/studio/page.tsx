@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { StepProductUrl } from '@/components/studio/StepProductUrl'
 import { StepGoal } from '@/components/studio/StepGoal'
 import { StepAvatar } from '@/components/studio/StepAvatar'
+import { StepDuration } from '@/components/studio/StepDuration'
 import { StepScriptPreview } from '@/components/studio/StepScriptPreview'
 import { StepGenerate } from '@/components/studio/StepGenerate'
 import { Loader2, CheckCircle2, Copy, Sparkles } from 'lucide-react'
@@ -18,8 +19,8 @@ import { cn } from '@/lib/utils'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { ACTORS } from '@/lib/actors'
 
-// Steps: 1: URL, 2: Goal, 3: Avatar, 4: Script, 5: Generate, 6: Generating/Completed
-type Step = 1 | 2 | 3 | 4 | 5 | 6
+// Steps: 1: URL, 2: Goal, 3: Duration, 4: Avatar, 5: Script, 6: Generate, 7: Generating/Completed
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export default function StudioPage() {
   const [step, setStep] = useState<Step>(1)
@@ -65,8 +66,8 @@ export default function StudioPage() {
   }, [])
 
   useEffect(() => {
-    // Generate an initial prompt when reaching step 4 (Script)
-    if (step === 4 && (!prompt || !voiceScript) && !isScripting) {
+    // Generate an initial prompt when reaching step 5 (Script)
+    if (step === 5 && (!prompt || !voiceScript) && !isScripting) {
       const generateScript = async () => {
         setIsScripting(true)
         const toastId = toast.loading('DeepSeek R1 is crafting your script...')
@@ -141,7 +142,7 @@ export default function StudioPage() {
             const reason = payload.new.failure_reason || 'Unknown error'
             toast.error(`Generation failed: ${reason}`)
             setIsGenerating(false)
-            setStep(5) // Go back to generate step
+            setStep(6) // Go back to generate step
           }
         }
       )
@@ -200,7 +201,7 @@ export default function StudioPage() {
   const handleCancelAndPause = async () => {
     setIsGenerating(false)
     setBootingAt(null)
-    setStep(5)
+    setStep(6)
     
     const toastId = toast.loading('Cancelling and pausing GPU to save credits...')
     try {
@@ -244,7 +245,7 @@ export default function StudioPage() {
       // 3. Success -> Start tracking status
       setVideoId(data.videoId)
       setVideoStatus('pending')
-      setStep(6)
+      setStep(7)
       setBootingAt(null)
       
     } catch (err: any) {
@@ -289,14 +290,15 @@ export default function StudioPage() {
         <div className="mt-1 md:mt-2 space-y-2">
           <div className="flex justify-between text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-2">
             <span className={cn(step >= 1 && "text-primary border-b-2 border-primary pb-0.5")}>1. Product</span>
-            <span className={cn(step >= 2 && "text-primary border-b-2 border-primary pb-0.5")}>2. Objective</span>
-            <span className={cn(step >= 3 && "text-primary border-b-2 border-primary pb-0.5")}>3. Avatar</span>
-            <span className={cn(step >= 4 && "text-primary border-b-2 border-primary pb-0.5")}>4. Script</span>
-            <span className={cn(step >= 5 && "text-primary border-b-2 border-primary pb-0.5")}>5. Render</span>
+            <span className={cn(step >= 2 && "text-primary border-b-2 border-primary pb-0.5")}>2. Goal</span>
+            <span className={cn(step >= 3 && "text-primary border-b-2 border-primary pb-0.5")}>3. Time</span>
+            <span className={cn(step >= 4 && "text-primary border-b-2 border-primary pb-0.5")}>4. Avatar</span>
+            <span className={cn(step >= 5 && "text-primary border-b-2 border-primary pb-0.5")}>5. Script</span>
+            <span className={cn(step >= 6 && "text-primary border-b-2 border-primary pb-0.5")}>6. Render</span>
           </div>
           <div className="relative">
             <div className="absolute inset-0 bg-primary/5 blur-md rounded-full" />
-            <Progress value={(step / (videoStatus === 'completed' ? 6 : 5)) * 100} className="h-1 bg-slate-100 relative z-10" />
+            <Progress value={(step / (videoStatus === 'completed' ? 7 : 6)) * 100} className="h-1 bg-slate-100 relative z-10" />
           </div>
         </div>
       </div>
@@ -337,43 +339,58 @@ export default function StudioPage() {
             )}
 
             {step === 3 && (
-              <motion.div key="step-3" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-4 md:p-6 flex flex-col">
-                <StepAvatar 
-                  selectedActor={selectedActorId}
-                  setSelectedActor={setSelectedActorId}
-                  onNext={() => setStep(4)} 
-                  onBack={() => setStep(2)} 
-                />
+              <motion.div key="step-3" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-4 md:p-6">
+                <CardHeader className="px-0 pt-0">
+                  <CardTitle>3. Video Length</CardTitle>
+                  <CardDescription>How long should your viral ad be?</CardDescription>
+                </CardHeader>
+                <CardContent className="px-0">
+                  <StepDuration 
+                    duration={duration} setDuration={setDuration}
+                    onNext={() => setStep(4)} onBack={() => setStep(2)} 
+                  />
+                </CardContent>
               </motion.div>
             )}
 
             {step === 4 && (
               <motion.div key="step-4" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-4 md:p-6 flex flex-col">
+                <StepAvatar 
+                  selectedActor={selectedActorId}
+                  setSelectedActor={setSelectedActorId}
+                  onNext={() => setStep(5)} 
+                  onBack={() => setStep(3)} 
+                />
+              </motion.div>
+            )}
+
+            {step === 5 && (
+              <motion.div key="step-5" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-4 md:p-6 flex flex-col">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle>4. Script & Prompt</CardTitle>
+                  <CardTitle>5. Script & Prompt</CardTitle>
                   <CardDescription>Review what we'll send to the AI video model.</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <StepScriptPreview 
                     prompt={prompt} setPrompt={setPrompt} 
                     voiceScript={voiceScript} setVoiceScript={setVoiceScript}
-                    onNext={() => setStep(5)} onBack={() => setStep(3)} 
+                    onNext={() => setStep(6)} onBack={() => setStep(4)} 
                     isScripting={isScripting}
                   />
                 </CardContent>
               </motion.div>
             )}
 
-            {step === 5 && (
-              <motion.div key="step-5" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-4 md:p-6 flex flex-col justify-center">
+            {step === 6 && (
+              <motion.div key="step-6" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-4 md:p-6 flex flex-col justify-center">
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle>5. Final Output</CardTitle>
-                  <CardDescription>Confirm duration and credits before generating.</CardDescription>
+                  <CardTitle>6. Final Output</CardTitle>
+                  <CardDescription>Launch your video generation.</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0">
                   <StepGenerate 
                     duration={duration} setDuration={setDuration}
-                    isGenerating={isGenerating} onGenerate={handleGenerate} onBack={() => setStep(4)}
+                    isGenerating={isGenerating} onGenerate={handleGenerate} onBack={() => setStep(5)}
                     creditsAvailable={credits}
                     voiceScript={voiceScript}
                     videoUrl={videoUrl}
@@ -385,8 +402,8 @@ export default function StudioPage() {
               </motion.div>
             )}
 
-            {step === 6 && (
-              <motion.div key="step-6" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12 flex flex-col items-center justify-center text-center">
+            {step === 7 && (
+              <motion.div key="step-7" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12 flex flex-col items-center justify-center text-center">
                 
                 {videoStatus === 'completed' && videoUrl && !isStitching ? (
                   <div className="space-y-10 w-full max-w-2xl animate-in zoom-in duration-700">
