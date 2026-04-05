@@ -31,6 +31,11 @@ class VoiceRequest(BaseModel):
     text: str
     voice: Optional[str] = "af_heart"
 
+class StitchRequest(BaseModel):
+    video_url: str
+    audio_url: str
+    video_id: Optional[str] = None
+
 def update_db_progress(video_id, progress, url=None, key=None):
     if not video_id or not url or not key:
         return
@@ -195,4 +200,52 @@ async def voice(req: VoiceRequest):
         except Exception as e:
             logger.error(f"Voice generation failed: {str(e)}")
             raise HTTPException(500, detail=f"Voice Engine Error: {str(e)}")
+
+@app.post("/stitch")
+async def stitch(req: StitchRequest):
+    touch()
+    # Stitching uses CPU + Disk, so it's safer but still can be locked to avoid disk I/O bottlenecks
+    async with gpu_lock:
+        try:
+            import subprocess
+            logger.info(f"Stitching video {req.video_url} and audio {req.audio_url}...")
+            
+            # Resolve relative paths
+            def resolve(p):
+                if p.startswith("/outputs/"):
+                    return os.path.join(OUTPUT_DIR, p.replace("/outputs/", ""))
+                return p
+
+            v_in = resolve(req.video_url)
+            a_in = resolve(req.audio_url)
+            filename = f"mastered-{uuid.uuid4()}.mp4"
+            filepath = os.path.join(OUTPUT_DIR, filename)
+
+            # FFmpeg Command: Merge video/audio, copy video codec for speed, re-encode audio to AAC
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", v_in,
+                "-i", a_in,
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-map", "0:v:0",
+                "-map", "1:a:0",
+                "-shortest",
+                filepath
+            ]
+            
+            logger.info(f"Running master: {' '.join(cmd)}")
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if res.returncode != 0:
+                logger.error(f"FFmpeg error: {res.stderr}")
+                raise Exception(f"FFmpeg mastering failed: {res.stderr}")
+            
+            url = f"/outputs/{filename}"
+            logger.info(f"Mastering successful: {url}")
+            return {"status": "completed", "video_url": url}
+            
+        except Exception as e:
+            logger.error(f"Mastering failed: {str(e)}")
+            raise HTTPException(500, detail=f"Master Engine Error: {str(e)}")
 
