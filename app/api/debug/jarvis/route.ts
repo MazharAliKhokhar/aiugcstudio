@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     
     if (!apiKey) throw new Error('JARVISLABS_API_KEY is missing')
 
-    console.log('[Debug] Attempting to fetch instances from JarvisLabs API...')
+    console.log('[Debug] Attempting to fetch instances from backendprod.jarvislabs.net...')
     
     // 2. Try fetching all instances
     const startTime = Date.now()
@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json({
       success: true,
+      backend: 'https://backendprod.jarvislabs.net',
       timestamp: new Date().toISOString(),
       duration_ms: duration,
       env: {
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
         id: instances.instance_id,
         status: instances.status,
         url: instances.url || 'not set',
-        name: (instances as any).name || (instances as any).instance_name || 'unnamed'
+        name: instances.name || instances.instance_name || 'unnamed'
       }
     })
 
