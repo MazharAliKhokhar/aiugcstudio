@@ -22,25 +22,48 @@ export async function GET(req: NextRequest) {
     const instances = await jarvis.getStatus(instanceName || instanceId || 'Unknown')
     const duration = Date.now() - startTime
     
+    // Deep Scan of all possible endpoints
+    const candidates = [
+       ...(instances.endpoints || []),
+       instances.url?.split('/lab')[0] || ''
+    ].filter(Boolean)
+
+    const scanResults = await Promise.all(candidates.map(async (baseUrl) => {
+      const cleanUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+      const headers: Record<string, string> = apiKey ? { 'Authorization': `Token ${apiKey}` } : {}
+      
+      try {
+        const res = await fetch(`${cleanUrl}/health`, { 
+          method: 'GET', 
+          headers,
+          signal: AbortSignal.timeout(3000) 
+        })
+        return {
+          url: cleanUrl,
+          path: '/health',
+          status: res.status,
+          contentType: res.headers.get('content-type') || 'unknown',
+          ok: res.ok && !(res.headers.get('content-type') || '').includes('text/html')
+        }
+      } catch (e: any) {
+        return { url: cleanUrl, error: e.message }
+      }
+    }))
+
     return NextResponse.json({
       success: true,
-      backend: 'https://backendprod.jarvislabs.net',
-      endpoint: '/users/fetch',
       timestamp: new Date().toISOString(),
-      duration_ms: duration,
       env: {
-        has_api_key: !!apiKey,
-        key_preview: `${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 3)}`,
-        instance_name: instanceName || 'not set',
-        instance_id: instanceId || 'not set'
+        instance_name: instanceName,
+        apiKeySet: !!apiKey
       },
       match: {
-        id: instances.instance_id || (instances as any).id || 'not found',
+        id: instances.machine_id || instances.instance_id || (instances as any).id,
         status: instances.status,
-        url: instances.url,
-        name: instances.name || instances.instance_name,
-        raw: instances // This will show all fields returned by the API
-      }
+        name: instances.name || instances.instance_name
+      },
+      scan: scanResults,
+      raw: instances 
     })
 
   } catch (err: any) {
