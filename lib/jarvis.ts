@@ -42,49 +42,38 @@ const RESOLVED_URL_TTL_MS = 60000 // 60s
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const key = getApiKey()
-  // We try Token first (standard for this API), then Bearer and X-API-KEY as backups.
-  const authMethods = [
-    { headers: { 'Authorization': `Token ${key}` } },
-    { headers: { 'Authorization': `Bearer ${key}` } },
-    { headers: { 'X-API-KEY': key } }
+  
+  // Rotating headers for maximum compatibility across regional/legacy APIs
+  const authMethods: Record<string, string>[] = [
+    { 'Authorization': `Token ${key}` },
+    { 'Authorization': `Bearer ${key}` },
+    { 'X-API-KEY': key }
   ]
 
   let lastStatus = 0
   let lastError = ''
 
-  for (const method of authMethods) {
+  for (const headers of authMethods) {
     try {
-      console.log(`[Jarvis] Trying Auth: ${Object.keys(method.headers)[0]} to ${url}`)
-      
       const res = await fetch(url, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
           ...options.headers,
-          ...(method.headers as any)
+          ...headers
         },
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(45000) // Increased for slow boot responses
       })
-
-      if (res.ok) return res
       
+      if (res.ok) return res
       lastStatus = res.status
       lastError = await res.text().catch(() => 'No error body')
-      
-      // If it's a 401 or 403, try the next auth method.
-      if (res.status === 401 || res.status === 403) {
-        console.warn(`[Jarvis] Auth method ${Object.keys(method.headers)[0]} failed with ${res.status}. Retrying...`)
-        continue
-      }
-      
-      // If it's any other error (like 404 or 500), don't bother retrying with different auth.
-      break
-    } catch (e: any) {
-      lastError = e.message || 'Unknown network error'
+      console.warn(`[Jarvis] ${url} failed with ${lastStatus}: ${lastError.substring(0, 50)}`)
+    } catch (err: any) {
+      lastError = err.message
     }
   }
 
-  throw new Error(`Jarvis API Request Failed (${lastStatus}): ${lastError}`)
+  throw new Error(`Jarvis Request Failed (${lastStatus}): ${lastError}`)
 }
 
 export const jarvis = {
@@ -97,37 +86,45 @@ export const jarvis = {
     console.log('[Jarvis] Caches cleared.')
   },
 
-  async resume(instance: JarvisInstance) {
-    const template = instance.framework || instance.template || 'pytorch'
-    const id = instance.instance_id
-    console.log(`[Jarvis] Resuming instance ${id} (${template})...`)
-    
-    // SDK payload for resume
-    const payload = {
+  async resume(instance: any): Promise<void> {
+    const id = instance.machine_id || instance.instance_id || (instance as any).id
+    const template = (instance as any).framework || 'pytorch'
+
+    console.log(`[Jarvis] Hardened Resume triggered for ID ${id}. Sending dual-signal wake-up...`)
+
+    // 1. Send signal to Modern API (v1 REST)
+    const modernUrl = `https://api.jarvislabs.ai/v1/instances/${id}?action=resume`
+    const modernP = fetchWithAuth(modernUrl, { method: 'PUT' })
+      .then(() => console.log(`[Jarvis] Modern Resume Signal Accepted for ${id}`))
+      .catch(e => console.warn(`[Jarvis] Modern Resume Signal Rejected: ${e.message}`))
+
+    // 2. Send signal to Legacy SDK API
+    const legacyUrl = `${JARVIS_API_BASE}/templates/${template}/resume`
+    const legacyPayload = {
       machine_id: id,
       instance_id: id,
       framework_id: (instance as any).framework_id,
       framework: template,
       image_format: (instance as any).image_format || 'pytorch',
       name: instance.name || instance.instance_name,
-      gpu_type: (instance as any).gpu_type,
-      num_gpu: (instance as any).num_gpu || (instance as any).num_gpus,
-      storage: instance.storage,
-      is_high_disk: instance.is_high_disk,
+      gpu_type: instance.gpu_type || 'RTX6000Ada',
+      num_gpu: instance.num_gpu || 1,
+      storage: instance.storage || 50,
+      is_high_disk: instance.is_high_disk || false,
       is_vm: instance.is_vm || false
     }
 
-    const res = await fetchWithAuth(`${JARVIS_API_BASE}/templates/${template}/resume`, {
+    const legacyP = fetchWithAuth(legacyUrl, {
       method: 'POST',
-      body: JSON.stringify(payload)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(legacyPayload)
     })
+      .then(() => console.log(`[Jarvis] Legacy Resume Signal Accepted for ${id}`))
+      .catch(e => console.warn(`[Jarvis] Legacy Resume Signal Rejected: ${e.message}`))
 
-    if (!res.ok) {
-      const detail = await res.text()
-      throw new Error(`Failed to resume instance: ${res.status} ${detail}`)
-    }
-    this.clearCache() // Invalidate cache after state change
-    return true
+    // We proceed once AT LEAST ONE signal is processed (or both fail)
+    // We don't block the whole UI for this, as we poll later
+    await Promise.allSettled([modernP, legacyP])
   },
 
   async pause(instance: JarvisInstance) {

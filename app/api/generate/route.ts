@@ -95,6 +95,40 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // 6. Resolve Jarvis GPU Config
+    const jarvisId    = process.env.JARVISLABS_INSTANCE_ID?.trim()
+    const jarvisName  = process.env.JARVISLABS_INSTANCE_NAME?.trim()
+    const jarvisKey   = process.env.JARVISLABS_API_KEY?.trim()
+    const jarvisIdentifier = jarvisName || jarvisId
+
+    if (!jarvisIdentifier || !jarvisKey) {
+      return NextResponse.json({ 
+        error: 'Missing Environment Variables. Please add JARVISLABS_API_KEY and JARVISLABS_INSTANCE_NAME (or ID) to your Vercel Project Settings.' 
+      }, { status: 500 })
+    }
+
+    // 7. Auto-Start & Resolve GPU
+    const { jarvis } = await import('@/lib/jarvis')
+    let resolvedJarvisUrl: string | null = null
+    
+    try {
+      resolvedJarvisUrl = await jarvis.checkReady(jarvisIdentifier)
+      
+      if (!resolvedJarvisUrl) {
+         return NextResponse.json({ 
+           status: 'booting', 
+           message: 'GPU is warming up (60-90s). Please stay on this page.' 
+         }, { status: 202 })
+      }
+    } catch (err: any) {
+      console.error('[Generate] GPU Connection Error:', err.message)
+      return NextResponse.json({ 
+        error: `GPU Connection Error: ${err.message}. Please check if the instance is available in your Jarvislabs dashboard.`
+      }, { status: 500 })
+    }
+
+    // ─── Only if GPU is READY: Deduct Credits and Create Record ───
+    
     // 4. Atomic Credit Deduction (SKIP if this is a retry of a pending video)
     const requiredUnits = getCreditCost(duration)
     let videoId: string | null = null
@@ -143,38 +177,6 @@ export async function POST(req: NextRequest) {
       }
       const videoData = await insertVideoRow(supabase, videoPayload)
       videoId = videoData.id
-    }
-
-    // 6. Resolve Jarvis GPU Config
-    const jarvisId    = process.env.JARVISLABS_INSTANCE_ID?.trim()
-    const jarvisName  = process.env.JARVISLABS_INSTANCE_NAME?.trim()
-    const jarvisKey   = process.env.JARVISLABS_API_KEY?.trim()
-    const jarvisIdentifier = jarvisName || jarvisId
-
-    if (!jarvisIdentifier || !jarvisKey) {
-      return NextResponse.json({ 
-        error: 'Missing Environment Variables. Please add JARVISLABS_API_KEY and JARVISLABS_INSTANCE_NAME (or ID) to your Vercel Project Settings.' 
-      }, { status: 500 })
-    }
-
-    // 7. Auto-Start & Resolve GPU
-    const { jarvis } = await import('@/lib/jarvis')
-    let resolvedJarvisUrl: string | null = null
-    
-    try {
-      resolvedJarvisUrl = await jarvis.checkReady(jarvisIdentifier)
-      
-      if (!resolvedJarvisUrl) {
-         return NextResponse.json({ 
-           status: 'booting', 
-           message: 'GPU is warming up (60-90s). Please stay on this page.' 
-         }, { status: 202 })
-      }
-    } catch (err: any) {
-      console.error('[Generate] GPU Connection Error:', err.message)
-      return NextResponse.json({ 
-        error: `GPU Connection Error: ${err.message}. Please check if the instance is available in your Jarvislabs dashboard.`
-      }, { status: 500 })
     }
 
     try {
