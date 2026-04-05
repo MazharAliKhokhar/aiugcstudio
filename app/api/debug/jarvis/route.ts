@@ -35,11 +35,11 @@ export async function GET(req: NextRequest) {
         instance_id: instanceId || 'not set'
       },
       match: {
-        id: instances.instance_id,
+        id: instances.instance_id || (instances as any).id || 'not found',
         status: instances.status,
-        url: instances.url || 'not set',
-        name: instances.name || instances.instance_name || 'unnamed',
-        template: (instances as any).framework || instances.template || 'pytorch'
+        url: instances.url,
+        name: instances.name || instances.instance_name,
+        raw: instances // This will show all fields returned by the API
       }
     })
 
