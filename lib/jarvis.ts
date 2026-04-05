@@ -63,13 +63,16 @@ export const jarvis = {
 
   async heartbeat(url: string): Promise<boolean> {
     if (!url) return false
+    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
     try {
-      const res = await fetch(`${url}/health`, {
+      // We use a short timeout for heartbeat to avoid blocking
+      const res = await fetch(`${cleanUrl}/health`, {
         signal: AbortSignal.timeout(HEARTBEAT_TIMEOUT_MS)
       })
       return res.ok
     } catch (err: any) {
-      console.log(`[Jarvis] Heartbeat failed for ${url}:`, err.message)
+      // Silently log heartbeat failures as they are expected during boot
+      console.log(`[Jarvis] Heartbeat failed for ${cleanUrl}: ${err.message}`)
       return false
     }
   },
@@ -92,31 +95,51 @@ export const jarvis = {
   },
 
   /**
-   * Waits until the instance is Running AND its FastAPI server is responding.
-   * This is used by the stitch API to ensure the GPU is ready before processing.
+   * Resolves the current proxy URL for a given instance ID by querying the API.
+   * This is more reliable than using a static environment variable.
    */
-  async waitForReady(instanceId: string | number, maxAttempts = 15): Promise<void> {
-    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
-    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
+  async getResolvedUrl(instanceId: string | number): Promise<string> {
+    const instance = await this.getStatus(instanceId)
+    if (!instance.url) {
+      // Fallback to env variable if API returns empty URL (rare)
+      const fallback = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
+      if (!fallback) throw new Error(`Instance ${instanceId} has no URL and no fallback is configured.`)
+      return fallback
+    }
+    // Jarvis API returns URLs like "https://XXXX.proxy.jarvislabs.net"
+    return instance.url.endsWith('/') ? instance.url.slice(0, -1) : instance.url
+  },
 
+  /**
+   * Waits until the instance is Running AND its FastAPI server is responding.
+   * Dynamically resolves the URL to handle cases where the proxy ID has changed.
+   */
+  async waitForReady(instanceId: string | number, maxAttempts = 20): Promise<string> {
+    console.log(`[Jarvis] Waiting for GPU instance ${instanceId} to be ready...`)
+    
     for (let i = 0; i < maxAttempts; i++) {
       try {
-        const isHealthy = await this.heartbeat(jarvisUrl)
-        if (isHealthy) {
-          console.log(`[Jarvis] GPU ready after ${i + 1} attempt(s).`)
-          return
-        }
-
         const instance = await this.getStatus(instanceId)
-        if (instance.status === 'Paused' && i === 0) {
+        
+        if (instance.status === 'Paused') {
           console.log('[Jarvis] Instance is Paused. Resuming...')
           await this.resume(instanceId)
+        } else if (instance.status === 'Running') {
+          const currentUrl = instance.url || process.env.NEXT_PUBLIC_JARVIS_API_URL
+          if (currentUrl) {
+            const isHealthy = await this.heartbeat(currentUrl)
+            if (isHealthy) {
+              console.log(`[Jarvis] GPU ready at ${currentUrl}`)
+              return currentUrl
+            }
+          }
         }
+        
+        console.log(`[Jarvis] Status: ${instance.status}. Polling attempt ${i + 1}/${maxAttempts}...`)
       } catch (err: any) {
-        console.warn(`[Jarvis] Polling attempt ${i + 1} failed:`, err.message)
+        console.warn(`[Jarvis] Polling attempt ${i + 1} encountered an error:`, err.message)
       }
 
-      console.log(`[Jarvis] Waiting for GPU (${i + 1}/${maxAttempts})...`)
       await new Promise(r => setTimeout(r, POLL_INTERVAL_MS))
     }
     throw new Error('Jarvis GPU failed to become ready within the timeout period.')

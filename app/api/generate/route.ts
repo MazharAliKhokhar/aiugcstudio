@@ -123,59 +123,60 @@ export async function POST(req: NextRequest) {
     const videoData = await insertVideoRow(supabase, videoPayload)
     const videoId = videoData.id
 
-    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
     const jarvisId  = process.env.JARVISLABS_INSTANCE_ID?.trim()
     const jarvisKey = process.env.JARVISLABS_API_KEY?.trim()
 
-    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
     if (!jarvisId || !jarvisKey) {
       return NextResponse.json({ 
         error: 'Missing Environment Variables. Please add JARVISLABS_API_KEY and JARVISLABS_INSTANCE_ID to your Vercel Project Settings.' 
       }, { status: 500 })
     }
 
-    // 6. Check GPU Readiness (Warming up check)
-    if (jarvisId) {
-      try {
-        const { jarvis } = await import('@/lib/jarvis')
-        
-        // Optimistic check: If the GPU is already responding, skip status polling
-        const isHealthy = await jarvis.heartbeat(jarvisUrl)
-        
-        if (!isHealthy) {
-          console.log('[Generate] GPU not responding to heartbeat. Checking Global API status...')
-          const status = await jarvis.getStatus(jarvisId)
+    let resolvedJarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim() || ''
 
-          if (status.status !== 'Running') {
-            console.log('[Generate] GPU is booting/warming up — asking client to retry')
-            if (status.status === 'Paused') {
-              await jarvis.resume(jarvisId).catch((re) => {
-                console.error('[Generate] Resume failed:', re.message)
-              })
-            }
-            return NextResponse.json({ 
-              status: 'booting', 
-              message: 'GPU is warming up (60-90s). Please stay on this page.' 
-            }, { status: 202 })
+    // 6. Check GPU Readiness (Warming up check)
+    try {
+      const { jarvis } = await import('@/lib/jarvis')
+      
+      // Get the latest status and URL from Jarvis API
+      const status = await jarvis.getStatus(jarvisId)
+      if (status.url) resolvedJarvisUrl = status.url.endsWith('/') ? status.url.slice(0, -1) : status.url
+
+      // Optimistic check: If the GPU is already responding, skip status polling
+      const isHealthy = await jarvis.heartbeat(resolvedJarvisUrl)
+      
+      if (!isHealthy) {
+        console.log('[Generate] GPU not responding to heartbeat. Checking status...')
+
+        if (status.status !== 'Running') {
+          console.log('[Generate] GPU is booting/warming up — asking client to retry')
+          if (status.status === 'Paused') {
+            await jarvis.resume(jarvisId).catch((re) => {
+              console.error('[Generate] Resume failed:', re.message)
+            })
           }
-          
-          // Re-check heartbeat if we just found out it was "Running" but heartbeat failed
-          const secondHeartbeat = await jarvis.heartbeat(jarvisUrl)
-          if (!secondHeartbeat) {
-             throw new Error('GPU is Running but FastAPI is still booting. Try again in 30s.')
-          }
+          return NextResponse.json({ 
+            status: 'booting', 
+            message: 'GPU is warming up (60-90s). Please stay on this page.' 
+          }, { status: 202 })
         }
-      } catch (err: any) {
-        console.error('[Generate] GPU Connection Error:', err.message)
-        return NextResponse.json({ 
-          error: `GPU Connection Error: ${err.message}. Check your API Key, Instance ID, and URL.`
-        }, { status: 500 })
+        
+        // Re-check heartbeat if we just found out it was "Running" but heartbeat failed
+        const secondHeartbeat = await jarvis.heartbeat(resolvedJarvisUrl)
+        if (!secondHeartbeat) {
+           throw new Error('GPU is Running but FastAPI is still booting. Try again in 30s.')
+        }
       }
+    } catch (err: any) {
+      console.error('[Generate] GPU Connection Error:', err.message)
+      return NextResponse.json({ 
+        error: `GPU Connection Error: ${err.message}. Check your API Key, Instance ID, and URL.`
+      }, { status: 500 })
     }
 
     // 7. Send generation request to Wan 2.1 on Jarvislabs
-    console.log('[Generate] GPU is healthy. Triggering generation...')
-    const genResponse = await fetch(`${jarvisUrl}/generate`, {
+    console.log(`[Generate] GPU is healthy at ${resolvedJarvisUrl}. Triggering generation...`)
+    const genResponse = await fetch(`${resolvedJarvisUrl}/generate`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ prompt })
@@ -187,7 +188,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { video_url } = await genResponse.json()
-    const fullVideoUrl = toAbsoluteUrl(video_url, jarvisUrl)
+    const fullVideoUrl = toAbsoluteUrl(video_url, resolvedJarvisUrl)
 
     // 8. Mark video as completed
     await (supabase.from('videos') as any)

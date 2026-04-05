@@ -53,24 +53,24 @@ export async function POST(req: NextRequest) {
     const outputPath = path.join(tempDir, 'output.mp4')
 
     // 4. Verify Jarvis config
-    const jarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL
-    const jarvisId  = process.env.JARVISLABS_INSTANCE_ID
-    if (!jarvisUrl) throw new Error('NEXT_PUBLIC_JARVIS_API_URL is not configured')
+    const jarvisId = process.env.JARVISLABS_INSTANCE_ID
+    if (!jarvisId) throw new Error('JARVISLABS_INSTANCE_ID is not configured')
 
-    // Boot GPU if paused (non-fatal — proceed anyway if check fails)
-    if (jarvisId) {
-      try {
-        const { jarvis } = await import('@/lib/jarvis')
-        await jarvis.waitForReady(jarvisId)
-      } catch (e: any) {
-        console.warn('[Stitch] GPU boot check failed (will attempt anyway):', e.message)
-      }
+    let resolvedJarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL || ''
+
+    // Boot GPU if paused and resolve the latest proxy URL
+    try {
+      const { jarvis } = await import('@/lib/jarvis')
+      resolvedJarvisUrl = await jarvis.waitForReady(jarvisId)
+    } catch (e: any) {
+      console.warn('[Stitch] GPU readiness check failed:', e.message)
+      if (!resolvedJarvisUrl) throw new Error(`GPU is not ready and no fallback URL is available: ${e.message}`)
     }
 
     // 5a. Fetch video + generate voice concurrently to save time
     const [videoRes, voiceRes] = await Promise.all([
       fetch(videoUrl),
-      fetch(`${jarvisUrl}/voice`, {
+      fetch(`${resolvedJarvisUrl}/voice`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ text: voiceScript, voice: 'af_heart' }) // Kokoro voice
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     if (!voiceRes.ok)  throw new Error(`Jarvis Voice API error: ${await voiceRes.text()}`)
 
     const { audio_url } = await voiceRes.json()
-    const fullAudioUrl = toAbsoluteUrl(audio_url, jarvisUrl)
+    const fullAudioUrl = toAbsoluteUrl(audio_url, resolvedJarvisUrl)
 
     const audioRes = await fetch(fullAudioUrl)
     if (!audioRes.ok) throw new Error(`Failed to download audio from Jarvis: ${audioRes.statusText}`)
