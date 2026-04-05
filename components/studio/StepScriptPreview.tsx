@@ -18,9 +18,9 @@ interface StepScriptPreviewProps {
 
 export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScript, onNext, onBack, isScripting }: StepScriptPreviewProps) {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-6">
-        <div className="space-y-4">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-4">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="prompt-script" className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" /> Visual Prompt Scripting
@@ -43,7 +43,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe the scenes visually for the video model..."
-              className="relative min-h-[calc(40vh-100px)] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-slate-900 shadow-sm font-medium"
+              className="relative min-h-[160px] bg-slate-50 border-slate-200 rounded-2xl p-4 text-base leading-relaxed resize-none focus-visible:ring-primary/40 scrollbar-hide text-slate-900 shadow-sm font-medium"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -56,7 +56,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="voice-script" className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
               <Mic className="w-5 h-5 text-primary" /> AI Voiceover Copy
@@ -70,7 +70,7 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
               value={voiceScript}
               onChange={(e) => setVoiceScript(e.target.value)}
               placeholder="What should the AI actor say? Use high-converting sales copy principles."
-              className="relative min-h-[calc(20vh-50px)] bg-slate-50 border-slate-200 rounded-[24px] p-6 text-lg leading-relaxed resize-none focus-visible:ring-primary/40 text-slate-900 shadow-sm font-medium"
+              className="relative min-h-[100px] bg-slate-50 border-slate-200 rounded-2xl p-4 text-base leading-relaxed resize-none focus-visible:ring-primary/40 text-slate-900 shadow-sm font-medium"
               maxLength={1000}
             />
           </div>
@@ -85,16 +85,16 @@ export function StepScriptPreview({ prompt, setPrompt, voiceScript, setVoiceScri
         </div>
       </div>
 
-      <div className="flex gap-6 pt-10 mt-auto">
-        <Button variant="outline" onClick={onBack} className="w-40 h-16 rounded-3xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
-          <ArrowLeft className="mr-3 w-5 h-5" /> Back
+      <div className="flex gap-4 pt-6 mt-auto">
+        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
+          <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
         <Button 
           onClick={onNext} 
-          className="flex-1 h-16 text-xl font-black uppercase tracking-tighter rounded-3xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all disabled:opacity-50 disabled:grayscale text-white border-0" 
+          className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all disabled:opacity-50 disabled:grayscale text-white border-0" 
           disabled={!prompt.trim() || !voiceScript.trim() || isScripting}
         >
-          {isScripting ? 'AI Scripting...' : 'Final Step: Render Ad'} <ArrowRight className="ml-4 w-6 h-6" />
+          {isScripting ? 'AI Scripting...' : 'Final Step: Render Ad'} <ArrowRight className="ml-4 w-5 h-5" />
         </Button>
       </div>
     </div>

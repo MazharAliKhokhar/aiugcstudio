@@ -304,15 +304,15 @@ export function AdminDashboardClient({ data, error, query }: Props) {
                   <option value="failed">Failed</option>
                   <option value="pending">Pending</option>
                 </select>
-                <form action={async () => {
-                  const res = await bulkRefundStuckVideos()
-                  if (res.success) { toast.success(res.message); router.refresh() }
-                  else toast.error(res.message)
-                }}>
-                  <Button variant="destructive" size="sm" className="gap-2">
-                    <AlertCircle className="w-4 h-4" /> Refund Stuck
-                  </Button>
-                </form>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2"
+                  disabled={isPending}
+                  onClick={() => handleAction(async () => await bulkRefundStuckVideos(), new FormData())}
+                >
+                  <AlertCircle className="w-4 h-4" /> Refund Stuck
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -343,19 +343,15 @@ export function AdminDashboardClient({ data, error, query }: Props) {
                               </Button>
                             </td>
                             <td className="px-6 py-4">
-                              <form action={async (fd) => {
-                                const res = await updateVideoDetails(fd)
-                                if (res.success) { toast.success(res.message); router.refresh() }
-                                else toast.error(res.message)
-                              }} className="flex items-center gap-2">
+                              <form action={(fd) => handleAction(updateVideoDetails, fd)} className="flex items-center gap-2">
                                 <input type="hidden" name="videoId" value={v.id} />
-                                <select name="status" defaultValue={v.status} className="bg-background border border-border text-xs font-bold uppercase rounded px-2 h-7">
+                                <select name="status" defaultValue={v.status} className="bg-background border border-border text-xs font-bold uppercase rounded px-2 h-7 focus:outline-none focus:ring-1 focus:ring-primary">
                                   <option value="pending">Pending</option>
                                   <option value="processing">Processing</option>
                                   <option value="failed">Failed</option>
                                   <option value="completed">Completed</option>
                                 </select>
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-green-500">
+                                <Button type="submit" size="icon" variant="ghost" className="h-7 w-7 text-green-500" disabled={isPending}>
                                   <Save className="h-3 w-3" />
                                 </Button>
                               </form>
@@ -368,29 +364,36 @@ export function AdminDashboardClient({ data, error, query }: Props) {
                                   </a>
                                 )}
                                 {(v.status === 'processing' || v.status === 'pending') && (
-                                  <form action={async (fd) => {
-                                    const res = await refundVideo(fd)
-                                    if (res.success) { toast.success(res.message); router.refresh() }
-                                    else toast.error(res.message)
-                                  }}>
-                                    <input type="hidden" name="videoId" value={v.id} />
-                                    <input type="hidden" name="userId" value={v.user_id} />
-                                    <Button size="icon" variant="outline" className="h-8 w-8 text-orange-500" title="Refund Credits">
-                                      <Clock className="h-4 w-4" />
-                                    </Button>
-                                  </form>
-                                )}
-                                <form action={async (fd) => {
-                                  if (!confirm('Delete video?')) return
-                                  const res = await deleteVideo(fd)
-                                  if (res.success) { toast.success(res.message); router.refresh() }
-                                  else toast.error(res.message)
-                                }}>
-                                  <input type="hidden" name="videoId" value={v.id} />
-                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500">
-                                    <Trash className="w-4 h-4" />
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8 text-orange-500"
+                                    title="Refund Credits"
+                                    disabled={isPending}
+                                    onClick={() => {
+                                      const fd = new FormData()
+                                      fd.append('videoId', v.id)
+                                      fd.append('userId', v.user_id)
+                                      handleAction(refundVideo, fd)
+                                    }}
+                                  >
+                                    <Clock className="h-4 w-4" />
                                   </Button>
-                                </form>
+                                )}
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-red-500"
+                                  disabled={isPending}
+                                  onClick={() => {
+                                    if (!confirm('Delete video?')) return
+                                    const fd = new FormData()
+                                    fd.append('videoId', v.id)
+                                    handleAction(deleteVideo, fd)
+                                  }}
+                                >
+                                  <Trash className="w-4 h-4" />
+                                </Button>
                               </div>
                             </td>
                           </tr>
@@ -408,11 +411,7 @@ export function AdminDashboardClient({ data, error, query }: Props) {
                                       <div className="mt-1 text-sm bg-background p-4 rounded-xl border whitespace-pre-wrap">{v.script || 'No script'}</div>
                                     </div>
                                   </div>
-                                  <form action={async (fd) => {
-                                    const res = await updateVideoDetails(fd)
-                                    if (res.success) { toast.success(res.message); router.refresh() }
-                                    else toast.error(res.message)
-                                  }} className="space-y-4 p-6 bg-muted rounded-2xl border">
+                                  <form action={(fd) => handleAction(updateVideoDetails, fd)} className="space-y-4 p-6 bg-muted rounded-2xl border">
                                     <input type="hidden" name="videoId" value={v.id} />
                                     <h4 className="font-extrabold text-sm uppercase flex items-center gap-2"><Edit className="w-4 h-4" /> Manual Override</h4>
                                     <div className="space-y-2">

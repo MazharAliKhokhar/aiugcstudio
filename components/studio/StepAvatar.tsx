@@ -26,12 +26,12 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
   })
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col h-full">
-      <div className="space-y-6">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col h-full">
+      <div className="space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h3 className="text-2xl font-black uppercase italic tracking-tight text-slate-900 mb-1">3. Select Human Hook</h3>
-            <p className="text-slate-500 text-base font-medium">Choose a photorealistic AI actor to front your ad.</p>
+            <h3 className="text-xl font-black uppercase italic tracking-tight text-slate-900 mb-0.5">3. Select Human Hook</h3>
+            <p className="text-slate-500 text-sm font-medium">Choose a photorealistic AI actor to front your ad.</p>
           </div>
 
           <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0">
@@ -59,11 +59,11 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search actors (e.g. James, Sophia)..." 
-            className="pl-14 h-16 rounded-3xl bg-slate-50 border-slate-200 focus:border-primary/40 transition-all font-semibold text-slate-900 text-lg"
+            className="pl-14 h-14 rounded-2xl bg-slate-50 border-slate-200 focus:border-primary/40 transition-all font-semibold text-slate-900 text-base"
           />
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-3 pr-1">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 pr-1">
           {filteredActors.map((actor) => (
             <div 
               key={actor.id}
@@ -97,16 +97,16 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
         </div>
       </div>
 
-      <div className="sticky bottom-0 -mx-6 md:-mx-12 -mb-6 md:-mb-12 mt-10 p-6 md:p-12 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-6 z-20">
-        <Button variant="outline" onClick={onBack} className="w-40 h-16 rounded-3xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
-          <ArrowLeft className="mr-3 w-5 h-5" /> Back
+      <div className="sticky bottom-0 -mx-5 md:-mx-10 -mb-5 md:-mb-10 mt-4 p-4 md:p-8 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-4 z-20">
+        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
+          <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
         <Button 
           onClick={onNext} 
           disabled={!selectedActor}
-          className="flex-1 h-16 text-xl font-black uppercase tracking-tighter rounded-3xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
+          className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
         >
-          Secure Actor <ArrowRight className="ml-4 w-6 h-6" />
+          Secure Actor <ArrowRight className="ml-4 w-5 h-5" />
         </Button>
       </div>
     </div>

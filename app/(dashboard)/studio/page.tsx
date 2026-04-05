@@ -242,8 +242,8 @@ export default function StudioPage() {
   }
 
   return (
-    <div className="max-w-[96vw] mx-auto py-4 md:py-6 px-4 md:px-0">
-      <div className="mb-4 md:mb-6 space-y-2">
+    <div className="max-w-[1200px] mx-auto py-2 md:py-4 px-4 md:px-0">
+      <div className="mb-2 md:mb-4 space-y-1">
         <h1 className="text-3xl md:text-4xl font-[1000] tracking-tighter uppercase italic text-slate-900 flex items-center gap-3">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 shrink-0">
             <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary" />
@@ -251,7 +251,7 @@ export default function StudioPage() {
           <span className="truncate">Generation Studio</span>
         </h1>
         
-        <div className="mt-4 md:mt-8 space-y-4">
+        <div className="mt-2 md:mt-4 space-y-3">
           <div className="flex justify-between text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-slate-400 px-2">
             <span className={cn(step >= 1 && "text-primary border-b-2 border-primary pb-1")}>1. Product</span>
             <span className={cn(step >= 2 && "text-primary border-b-2 border-primary pb-1")}>2. Objective</span>
@@ -267,11 +267,11 @@ export default function StudioPage() {
       </div>
 
       <ErrorBoundary>
-        <Card className="bg-white border-slate-200 shadow-2xl shadow-slate-200/50 relative min-h-[600px] rounded-[32px] md:rounded-[48px] mb-8">
+        <Card className="bg-white border-slate-200 shadow-2xl shadow-slate-200/50 relative min-h-[500px] rounded-[32px] md:rounded-[40px] mb-6">
           <AnimatePresence mode="popLayout" custom={1}>
             
             {step === 1 && (
-              <motion.div key="step-1" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12">
+              <motion.div key="step-1" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-5 md:p-10">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>1. Product Details</CardTitle>
                   <CardDescription>What are we selling today?</CardDescription>
@@ -287,7 +287,7 @@ export default function StudioPage() {
             )}
 
             {step === 2 && (
-              <motion.div key="step-2" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12">
+              <motion.div key="step-2" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-5 md:p-10">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>2. Ad Objective</CardTitle>
                   <CardDescription>How should the AI frame the video?</CardDescription>
@@ -302,7 +302,7 @@ export default function StudioPage() {
             )}
 
             {step === 3 && (
-              <motion.div key="step-3" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12 flex flex-col">
+              <motion.div key="step-3" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-5 md:p-10 flex flex-col">
                 <StepAvatar 
                   selectedActor={selectedActorId}
                   setSelectedActor={setSelectedActorId}
@@ -313,7 +313,7 @@ export default function StudioPage() {
             )}
 
             {step === 4 && (
-              <motion.div key="step-4" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12 flex flex-col">
+              <motion.div key="step-4" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-5 md:p-10 flex flex-col">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>4. Script & Prompt</CardTitle>
                   <CardDescription>Review what we'll send to the AI video model.</CardDescription>
@@ -330,7 +330,7 @@ export default function StudioPage() {
             )}
 
             {step === 5 && (
-              <motion.div key="step-5" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12 flex flex-col justify-center">
+              <motion.div key="step-5" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-5 md:p-10 flex flex-col justify-center">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>5. Final Output</CardTitle>
                   <CardDescription>Confirm duration and credits before generating.</CardDescription>
@@ -350,7 +350,7 @@ export default function StudioPage() {
             )}
 
             {step === 6 && (
-              <motion.div key="step-6" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-8 md:p-16 flex flex-col items-center justify-center text-center">
+              <motion.div key="step-6" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="p-6 md:p-12 flex flex-col items-center justify-center text-center">
                 
                 {videoStatus === 'completed' && videoUrl && !isStitching ? (
                   <div className="space-y-10 w-full max-w-2xl animate-in zoom-in duration-700">
