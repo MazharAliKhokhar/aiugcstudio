@@ -63,7 +63,7 @@ def get_wan():
         except ImportError:
             from diffusers.pipelines.wan.pipeline_wan import WanPipeline
             
-        _wan = WanPipeline.from_pretrained("Wan-AI/Wan2.1-T2V-1.3B", torch_dtype=torch.float16).to("cuda")
+        _wan = WanPipeline.from_pretrained("Wan-AI/Wan2.1-T2V-1.3B-Diffusers", torch_dtype=torch.float16).to("cuda")
         logger.info("[READY] Wan 2.1 is LOADED and READY.")
     return _wan
 
