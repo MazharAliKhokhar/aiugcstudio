@@ -30,40 +30,40 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
       <div className="space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h3 className="text-xl font-black uppercase italic tracking-tight text-slate-900 mb-0.5">3. Select Human Hook</h3>
-            <p className="text-slate-500 text-sm font-medium">Choose a photorealistic AI actor to front your ad.</p>
+            <h3 className="text-lg font-black uppercase italic tracking-tight text-slate-900 mb-0.5">3. Select Human Hook</h3>
+            <p className="text-slate-500 text-xs font-medium">Choose a photorealistic AI actor to front your ad.</p>
           </div>
 
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0">
+          <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shrink-0">
             <button 
               onClick={() => setFilter('all')}
-              className={cn("px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all", 
+              className={cn("px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", 
                 filter === 'all' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:text-slate-600")}
             >All</button>
             <button 
               onClick={() => setFilter('male')}
-              className={cn("px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all", 
+              className={cn("px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", 
                 filter === 'male' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:text-slate-600")}
             >Male</button>
             <button 
               onClick={() => setFilter('female')}
-              className={cn("px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all", 
+              className={cn("px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", 
                 filter === 'female' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:text-slate-600")}
             >Female</button>
           </div>
         </div>
 
         <div className="relative group/search">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within/search:text-primary transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/search:text-primary transition-colors" />
           <Input 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search actors..." 
-            className="pl-12 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-primary/40 transition-all font-semibold text-slate-900 text-sm"
+            className="pl-11 h-9 rounded-xl bg-slate-50 border-slate-200 focus:border-primary/40 transition-all font-semibold text-slate-900 text-xs"
           />
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 pr-1">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5 pr-1">
           {filteredActors.map((actor) => (
             <div 
               key={actor.id}
@@ -85,9 +85,9 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-              <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white italic drop-shadow-md">{actor.name}</span>
-                {selectedActor === actor.id && <CheckCircle2 className="w-5 h-5 text-primary fill-white p-[1px] rounded-full shadow-lg" />}
+              <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-white italic drop-shadow-md">{actor.name}</span>
+                {selectedActor === actor.id && <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-white p-[1px] rounded-full shadow-lg" />}
               </div>
             </div>
           ))}
@@ -97,16 +97,16 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
         </div>
       </div>
 
-      <div className="sticky bottom-0 -mx-5 md:-mx-10 -mb-5 md:-mb-10 mt-3 p-3 md:p-6 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-3 z-20">
-        <Button variant="outline" onClick={onBack} className="w-28 h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
+      <div className="sticky bottom-0 -mx-5 md:-mx-10 -mb-5 md:-mb-10 mt-2 p-2 md:p-4 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-2 z-20">
+        <Button variant="outline" onClick={onBack} className="w-24 h-10 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
           <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
         <Button 
           onClick={onNext} 
           disabled={!selectedActor}
-          className="flex-1 h-11 text-base font-black uppercase tracking-tighter rounded-xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
+          className="flex-1 h-10 text-base font-black uppercase tracking-tighter rounded-xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
         >
-          Secure Actor <ArrowRight className="ml-4 w-5 h-5" />
+          Secure Actor <ArrowRight className="ml-4 w-4 h-4" />
         </Button>
       </div>
     </div>
