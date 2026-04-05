@@ -24,11 +24,11 @@ export function DurationToggle({ duration, setDuration }: DurationToggleProps) {
             <RadioGroupItem value={d.toString()} id={`duration-${d}`} className="peer sr-only" />
             <Label
               htmlFor={`duration-${d}`}
-              className="flex flex-col items-center justify-center rounded-2xl border-2 border-slate-100 bg-white p-4 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:shadow-2xl peer-data-[state=checked]:shadow-primary/20 cursor-pointer transition-all gap-2 relative overflow-hidden shadow-sm group/btn"
+              className="flex flex-col items-center justify-center rounded-xl border-2 border-slate-100 bg-white p-3 hover:bg-slate-50 hover:border-slate-200 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 peer-data-[state=checked]:shadow-2xl peer-data-[state=checked]:shadow-primary/20 cursor-pointer transition-all gap-1 relative overflow-hidden shadow-sm group/btn"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl rounded-full translate-x-12 -translate-y-12 peer-data-[state=checked]:bg-primary/20 transition-colors" />
-              <Clock className="w-6 h-6 text-primary peer-data-[state=checked]:scale-110 transition-transform" />
-              <span className="font-[1000] text-2xl md:text-3xl text-slate-900 italic tracking-tighter peer-data-[state=checked]:text-primary transition-colors">{d}s</span>
+              <Clock className="w-5 h-5 text-primary peer-data-[state=checked]:scale-110 transition-transform" />
+              <span className="font-[1000] text-xl md:text-2xl text-slate-900 italic tracking-tighter peer-data-[state=checked]:text-primary transition-colors">{d}s</span>
               <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 peer-data-[state=checked]:text-slate-600 transition-colors">
                 <Coins className="w-4 h-4 text-primary" />
                 {DURATION_CREDIT_COSTS[d]} Units

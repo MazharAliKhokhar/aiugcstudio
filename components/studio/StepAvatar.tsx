@@ -58,8 +58,8 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
           <Input 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search actors (e.g. James, Sophia)..." 
-            className="pl-14 h-14 rounded-2xl bg-slate-50 border-slate-200 focus:border-primary/40 transition-all font-semibold text-slate-900 text-base"
+            placeholder="Search actors..." 
+            className="pl-12 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-primary/40 transition-all font-semibold text-slate-900 text-sm"
           />
         </div>
 
@@ -97,14 +97,14 @@ export function StepAvatar({ selectedActor, setSelectedActor, onNext, onBack }: 
         </div>
       </div>
 
-      <div className="sticky bottom-0 -mx-5 md:-mx-10 -mb-5 md:-mb-10 mt-4 p-4 md:p-8 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-4 z-20">
-        <Button variant="outline" onClick={onBack} className="w-32 h-14 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
+      <div className="sticky bottom-0 -mx-5 md:-mx-10 -mb-5 md:-mb-10 mt-3 p-3 md:p-6 bg-white/80 backdrop-blur-md border-t border-slate-100 flex gap-3 z-20">
+        <Button variant="outline" onClick={onBack} className="w-28 h-11 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black uppercase italic tracking-tighter transition-all">
           <ArrowLeft className="mr-2 w-4 h-4" /> Back
         </Button>
         <Button 
           onClick={onNext} 
           disabled={!selectedActor}
-          className="flex-1 h-14 text-lg font-black uppercase tracking-tighter rounded-2xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
+          className="flex-1 h-11 text-base font-black uppercase tracking-tighter rounded-xl bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all text-white border-0"
         >
           Secure Actor <ArrowRight className="ml-4 w-5 h-5" />
         </Button>
