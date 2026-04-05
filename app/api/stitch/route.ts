@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     })
 
     // 9. Fire-and-forget pause
-    jarvis.safePause(jarvisIdentifier)
+    // jarvis.safePause(jarvisIdentifier)
 
     // 10. Return Stitched Video as Stream
     const stats = await fs.stat(outputPath)

@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
         .eq('id', videoId as string)
 
       // 10. Auto-Pause (Fire-and-forget cleanup)
-      jarvis.safePause(jarvisIdentifier)
+      // jarvis.safePause(jarvisIdentifier)
 
       console.log(`[Generate] Successfully completed video ${videoId}`)
       return NextResponse.json({ success: true, videoId, videoUrl: fullVideoUrl })
@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Even on failure, we should probably pause if we resumed it
-      jarvis.safePause(jarvisIdentifier)
+      // jarvis.safePause(jarvisIdentifier)
       return NextResponse.json({ error: error.message || 'Generation failed' }, { status: 500 })
     }
 

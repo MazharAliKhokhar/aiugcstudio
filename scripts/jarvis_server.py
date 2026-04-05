@@ -94,7 +94,8 @@ async def watchdog():
 
 @app.on_event("startup")
 async def startup():
-    asyncio.create_task(watchdog())
+    # asyncio.create_task(watchdog())
+    logger.info("Always-On Mode: Startup Watchdog Disabled.")
 
 @app.get("/health")
 async def health():
