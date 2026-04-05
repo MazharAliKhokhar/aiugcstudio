@@ -8,6 +8,7 @@ const JARVIS_API_BASE = 'https://backendprod.jarvislabs.net'
 const POLL_INTERVAL_MS = 20000 // 20s
 
 interface JarvisInstance {
+  id: string | number
   instance_id: string | number
   status: 'Running' | 'Paused' | 'Booting' | string
   url: string | null
@@ -146,7 +147,8 @@ export const jarvis = {
       
       // Try finding by ID first
       let target = instances.find(i => 
-        i?.instance_id?.toString() === instanceIdOrName?.toString()
+        i?.instance_id?.toString() === instanceIdOrName?.toString() ||
+        (i as any)?.id?.toString() === instanceIdOrName?.toString()
       )
       
       // If not found by ID, try finding by Name (case-insensitive)
@@ -158,6 +160,15 @@ export const jarvis = {
       }
 
       if (!target) throw new Error(`Instance/Machine '${instanceIdOrName}' not found in your Jarvislabs account.`)
+      
+      // Normalize ID
+      if (!target.instance_id && (target as any).id) {
+        target.instance_id = (target as any).id
+      }
+      if (!target.id && target.instance_id) {
+        (target as any).id = target.instance_id
+      }
+
       return target
     } catch (err: any) {
       console.error('[Jarvis] getStatus failed:', err.message)
