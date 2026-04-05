@@ -118,6 +118,11 @@ export async function POST(req: NextRequest) {
 
     // 6. Read and return the final stitched video
     const outputBuffer = await fs.readFile(outputPath)
+
+    // 7. Auto-Pause (Fire-and-forget cleanup)
+    const { jarvis } = await import('@/lib/jarvis')
+    jarvis.safePause(jarvisIdentifier)
+
     return new NextResponse(outputBuffer, {
       headers: {
         'Content-Type':        'video/mp4',
@@ -127,10 +132,21 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('[Stitch] Error:', error)
+    // Also pause on error if we had a jarvisIdentifier
+    try {
+      const jarvisId    = process.env.JARVISLABS_INSTANCE_ID?.trim()
+      const jarvisName  = process.env.JARVISLABS_INSTANCE_NAME?.trim()
+      const jarvisIdentifier = jarvisName || jarvisId
+      if (jarvisIdentifier) {
+        const { jarvis } = await import('@/lib/jarvis')
+        jarvis.safePause(jarvisIdentifier)
+      }
+    } catch (e) {}
+
     return NextResponse.json({ error: error.message || 'Stitching failed' }, { status: 500 })
 
   } finally {
-    // 7. Always clean up temp files to avoid disk accumulation
+    // 8. Always clean up temp files to avoid disk accumulation
     fs.rm(tempDir, { recursive: true, force: true }).catch(() => {})
   }
 }

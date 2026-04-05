@@ -112,6 +112,25 @@ export const jarvis = {
     return true
   },
 
+  /**
+   * Safe version of pause that resolves the instance first and swallows errors.
+   * Useful for "fire-and-forget" cleanup in API routes.
+   */
+  async safePause(instanceIdOrName: string | number) {
+    try {
+      console.log(`[Jarvis] Triggering Safe Pause for '${instanceIdOrName}'...`)
+      const instance = await this.getStatus(instanceIdOrName)
+      if (instance.status === 'Running') {
+        await this.pause(instance)
+        console.log(`[Jarvis] Safe Pause successful for ${instance.instance_id}`)
+      } else {
+        console.log(`[Jarvis] Safe Pause skipped: Status is already ${instance.status}`)
+      }
+    } catch (err: any) {
+      console.warn(`[Jarvis] Safe Pause failed (non-critical):`, err.message || err)
+    }
+  },
+
   async getStatus(instanceIdOrName: string | number): Promise<JarvisInstance> {
     try {
       // JLClient uses /users/fetch to get all instances
