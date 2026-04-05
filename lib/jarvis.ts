@@ -126,13 +126,15 @@ export const jarvis = {
       const instances: JarvisInstance[] = Array.isArray(data) ? data : (data.instances || [])
       
       // Try finding by ID first
-      let target = instances.find(i => i.instance_id.toString() === instanceIdOrName.toString())
+      let target = instances.find(i => 
+        i?.instance_id?.toString() === instanceIdOrName?.toString()
+      )
       
       // If not found by ID, try finding by Name (case-insensitive)
       if (!target) {
         target = instances.find(i => 
-          i.name?.toLowerCase() === instanceIdOrName.toString().toLowerCase() ||
-          i.instance_name?.toLowerCase() === instanceIdOrName.toString().toLowerCase()
+          i?.name?.toLowerCase() === instanceIdOrName?.toString().toLowerCase() ||
+          i?.instance_name?.toLowerCase() === instanceIdOrName?.toString().toLowerCase()
         )
       }
 
