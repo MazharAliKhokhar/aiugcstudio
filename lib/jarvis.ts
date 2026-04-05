@@ -21,23 +21,34 @@ function getApiKey(): string {
 }
 
 function authHeaders() {
-  return { 'X-API-KEY': getApiKey(), 'Content-Type': 'application/json' }
+  const key = getApiKey()
+  return { 
+    'Authorization': `Bearer ${key}`,
+    'X-API-KEY': key, // Keep as fallback
+    'Content-Type': 'application/json' 
+  }
 }
 
 /** Basic retry wrapper for fetches */
 async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
+  let lastError: any = null
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(15000) })
+      console.log(`[Jarvis] Fetching: ${url} (Attempt ${i + 1}/${retries})`)
+      // We use a slightly longer timeout for stability
+      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(20000) })
       if (res.ok || i === retries - 1) return res
-      console.warn(`[Jarvis] Fetch retry ${i + 1}/${retries} for ${url} - Status: ${res.status}`)
+      
+      const errBody = await res.text().catch(() => 'No body')
+      console.warn(`[Jarvis] Fetch retry ${i + 1}/${retries} - Status: ${res.status} Body: ${errBody}`)
     } catch (err: any) {
-      if (i === retries - 1) throw err
-      console.warn(`[Jarvis] Fetch failed, retrying (${i + 1}/${retries})...`, err.message)
+      lastError = err
+      if (i === retries - 1) break
+      console.warn(`[Jarvis] Fetch failed, retrying (${i + 1}/${retries})...`, err.message || err)
       await new Promise(r => setTimeout(r, 1000 * (i + 1)))
     }
   }
-  throw new Error('Fetch failed after retries')
+  throw new Error(`Jarvis Network Failure: ${lastError?.message || 'Unknown error'} after ${retries} attempts to ${url}`)
 }
 
 async function instanceAction(instanceId: string | number, action: 'resume' | 'pause') {
