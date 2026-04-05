@@ -56,10 +56,15 @@ _wan, _kokoro = None, None
 def get_wan():
     global _wan
     if not _wan:
-        logger.info("Initializing Wan 2.1 Video Pipeline...")
-        from diffusers import WanVideoPipeline
-        _wan = WanVideoPipeline.from_pretrained("wan-ai/Wan2.1-T2V-1.3B", torch_dtype=torch.float16).to("cuda")
-        logger.info("Wan 2.1 Loaded.")
+        logger.info("[LOADING] Loading Wan 2.1 Model (1.3B)...")
+        # Use the explicit deep path found on this machine
+        try:
+            from diffusers import WanPipeline
+        except ImportError:
+            from diffusers.pipelines.wan.pipeline_wan import WanPipeline
+            
+        _wan = WanPipeline.from_pretrained("Wan-AI/Wan2.1-T2V-1.3B", torch_dtype=torch.float16).to("cuda")
+        logger.info("[READY] Wan 2.1 is LOADED and READY.")
     return _wan
 
 def get_kokoro():
