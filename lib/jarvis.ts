@@ -63,9 +63,22 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
 
 // ─── Caching ──────────────────────────────────────────────────────────────────
 let statusCache: { data: JarvisInstance[], timestamp: number } | null = null
-const CACHE_TTL_MS = 10000 // 10s
+const CACHE_TTL_MS = 10000 // 10s for instance status list
+
+// Cache for the final validated proxy URL of a specific instance
+let resolvedUrlCache: Record<string, { url: string, timestamp: number }> = {}
+const RESOLVED_URL_TTL_MS = 60000 // 60s
 
 export const jarvis = {
+  /**
+   * Clears all internal caches. Use this if an instance state changes unexpectedly.
+   */
+  clearCache() {
+    statusCache = null
+    resolvedUrlCache = {}
+    console.log('[Jarvis] Caches cleared.')
+  },
+
   async resume(instance: JarvisInstance) {
     const template = instance.framework || instance.template || 'pytorch'
     const id = instance.instance_id
@@ -96,6 +109,7 @@ export const jarvis = {
       const detail = await res.text()
       throw new Error(`Failed to resume instance: ${res.status} ${detail}`)
     }
+    this.clearCache() // Invalidate cache after state change
     return true
   },
 
@@ -116,6 +130,7 @@ export const jarvis = {
       const detail = await res.text()
       throw new Error(`Failed to pause instance: ${res.status} ${detail}`)
     }
+    this.clearCache() // Invalidate cache after state change
     return true
   },
 
@@ -194,6 +209,13 @@ export const jarvis = {
    * Prefers .proxy.jarvislabs.net for public API access.
    */
   async getResolvedUrl(instanceIdOrName: string | number): Promise<string> {
+    const key = instanceIdOrName.toString()
+    
+    // Check resolved URL cache (longer TTL than status cache)
+    if (resolvedUrlCache[key] && Date.now() - resolvedUrlCache[key].timestamp < RESOLVED_URL_TTL_MS) {
+      return resolvedUrlCache[key].url
+    }
+
     const instance = await this.getStatus(instanceIdOrName)
     
     // Resolve the Base URL (Prefer endpoints[0] or derived .proxy URL)
@@ -224,7 +246,11 @@ export const jarvis = {
       baseUrl = fallback
     }
 
-    return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    const finalUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    
+    // Cache the result
+    resolvedUrlCache[key] = { url: finalUrl, timestamp: Date.now() }
+    return finalUrl
   },
 
   /**
@@ -247,7 +273,6 @@ export const jarvis = {
    */
   async checkReady(instanceIdOrName: string | number): Promise<string | null> {
     const instance = await this.getStatus(instanceIdOrName)
-    const token = await this.getToken(instanceIdOrName)
     
     if (instance.status === 'Paused') {
       console.log(`[Jarvis] Instance ${instance.instance_id} is Paused. Resuming...`)
@@ -256,34 +281,38 @@ export const jarvis = {
     }
 
     if (instance.status === 'Running') {
-      // 1. Gather all possible candidate URLs
+      // Use getResolvedUrl which now supports caching
+      const baseUrl = await this.getResolvedUrl(instanceIdOrName)
+      const token = await this.getToken(instanceIdOrName)
+      
+      // Try multiple health paths on the resolved URL
+      for (const path of ['/health', '/']) {
+        const isHealthy = await this.heartbeat(baseUrl, path, token)
+        if (isHealthy) {
+          console.log(`[Jarvis] GPU verified healthy at ${baseUrl}${path === '/' ? '' : path}`)
+          return baseUrl
+        }
+      }
+      
+      // If the primary resolved URL is not responding, try scanning all candidates once
+      console.log(`[Jarvis] Primary URL ${baseUrl} not responding. Scanning all candidates...`)
       const rawCandidates = [
-        process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim(), // Try the static one from .env first
+        process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim(),
         ...(instance.endpoints || []),
         instance.url?.split('/lab')[0] || ''
       ].filter(Boolean) as string[]
 
-      const candidates: string[] = []
       for (const url of rawCandidates) {
         const clean = url.endsWith('/') ? url.slice(0, -1) : url
-        if (!candidates.includes(clean)) candidates.push(clean)
-        
-        // Also try the .proxy variant if it's a .notebooks URL
+        const targets = [clean]
         if (clean.includes('.notebooks.jarvislabs.net')) {
-          const proxyVariant = clean.replace('.notebooks.jarvislabs.net', '.proxy.jarvislabs.net')
-          if (!candidates.includes(proxyVariant)) candidates.push(proxyVariant)
+          targets.push(clean.replace('.notebooks.jarvislabs.net', '.proxy.jarvislabs.net'))
         }
-      }
 
-      // 2. Scan all candidates for a healthy responding API
-      for (const baseUrl of candidates) {
-        // Try multiple health paths
-        for (const path of ['/health', '/']) {
-          const isHealthy = await this.heartbeat(baseUrl, path, token)
-          if (isHealthy) {
-            console.log(`[Jarvis] GPU verified at ${baseUrl}${path === '/' ? '' : path}`)
-            return baseUrl
-          }
+        for (const testUrl of targets) {
+          if (testUrl === baseUrl) continue // Already checked
+          if (await this.heartbeat(testUrl, '/health', token)) return testUrl
+          if (await this.heartbeat(testUrl, '/', token)) return testUrl
         }
       }
     }
@@ -349,3 +378,4 @@ export const jarvis = {
     }
   }
 }
+

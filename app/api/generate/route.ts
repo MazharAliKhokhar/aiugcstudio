@@ -181,7 +181,6 @@ export async function POST(req: NextRequest) {
       // 8. Send generation request to Wan 2.1 on Jarvislabs
       console.log(`[Generate] GPU is healthy at ${resolvedJarvisUrl}. Triggering generation...`)
       const token = await jarvis.getToken(jarvisIdentifier)
-      const authHeaders: Record<string, string> = token ? { 'Authorization': `Token ${token}` } : {}
 
       // ONLY generate video here. Voiceover is handled in the stitch route to avoid redundant work.
       const videoRes = await fetch(`${resolvedJarvisUrl}/generate`, {
@@ -190,43 +189,54 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Token ${token}` } : {})
         },
-        body:    JSON.stringify({ prompt })
+        body:    JSON.stringify({ prompt }),
+        signal: AbortSignal.timeout(55000) // Slightly less than Vercel max to catch it here
       })
 
-      if (!videoRes.ok) throw new Error(`Video Engine error: ${videoRes.statusText}`)
+      if (!videoRes.ok) {
+        const errBody = await videoRes.text().catch(() => 'No error body')
+        throw new Error(`Video Engine error (${videoRes.status}): ${errBody || videoRes.statusText}`)
+      }
 
       const { video_url } = await videoRes.json()
       const fullVideoUrl = toAbsoluteUrl(video_url, resolvedJarvisUrl)
 
-      // 9. Mark video as completed in DB
-      await (supabase.from('videos') as any)
+      // 9. Mark video as completed in DB (Using Admin for reliability)
+      const admin = createAdminClient()
+      await (admin.from('videos') as any)
         .update({ video_url: fullVideoUrl, status: 'completed' })
-        .eq('id', videoId)
+        .eq('id', videoId as string)
 
       // 10. Auto-Pause (Fire-and-forget cleanup)
       jarvis.safePause(jarvisIdentifier)
 
+      console.log(`[Generate] Successfully completed video ${videoId}`)
       return NextResponse.json({ success: true, videoId, videoUrl: fullVideoUrl })
 
     } catch (error: any) {
       console.error('[Generate] Generation process failed:', error.message)
       
+      const admin = createAdminClient()
+
       // AUTO-REFUND logic: If it failed before we got a result, return the credits
-      console.log(`[Generate] Refunding ${requiredUnits} unit(s) to user ${user.id}`)
-      await (supabase as any).rpc('add_credits', {
+      console.log(`[Generate] Refusing ${requiredUnits} unit(s) to user ${user.id}`)
+      const { error: refundError } = await (admin as any).rpc('add_credits', {
         p_user_id: user.id,
         p_amount:  requiredUnits
       })
 
+      if (refundError) console.error('[Generate] Refund RPC failed:', refundError)
+
       // Update video record to 'failed'
       if (videoId) {
-        await (supabase.from('videos') as any).update({ status: 'failed' }).eq('id', videoId)
+        await (admin.from('videos') as any).update({ status: 'failed' }).eq('id', videoId as string)
       }
 
       // Even on failure, we should probably pause if we resumed it
       jarvis.safePause(jarvisIdentifier)
       return NextResponse.json({ error: error.message || 'Generation failed' }, { status: 500 })
     }
+
   } catch (error: any) {
     console.error('[Generate] Unhandled error:', error)
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
