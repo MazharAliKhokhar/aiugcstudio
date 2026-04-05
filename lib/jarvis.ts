@@ -20,6 +20,7 @@ interface JarvisInstance {
   framework_id?: string | number
   gpu_type?: string
   num_gpu?: number
+  endpoints?: string[]
   storage?: number
   is_high_disk?: boolean
   is_vm?: boolean
@@ -181,6 +182,15 @@ export const jarvis = {
    */
   async getResolvedUrl(instanceIdOrName: string | number): Promise<string> {
     const instance = await this.getStatus(instanceIdOrName)
+    
+    // JarvisLabs 'url' points to Jupyter (8888). 
+    // The 'endpoints' array contains URLs for other ports (8080, etc.)
+    // We prefer the first custom endpoint if available.
+    if (instance.endpoints && instance.endpoints.length > 0) {
+      const apiUrl = instance.endpoints[0]
+      return apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl
+    }
+
     if (!instance.url) {
       const fallback = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
       if (!fallback) throw new Error(`Instance ${instanceIdOrName} has no URL and no fallback is configured.`)
