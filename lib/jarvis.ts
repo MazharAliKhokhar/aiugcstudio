@@ -32,35 +32,6 @@ function getApiKey(): string {
   return key
 }
 
-function authHeaders() {
-  const key = getApiKey()
-  return { 
-    'Authorization': `Token ${key}`,
-    'Content-Type': 'application/json' 
-  }
-}
-
-/** Basic retry wrapper for fetches */
-async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
-  let lastError: any = null
-  for (let i = 0; i < retries; i++) {
-    try {
-      console.log(`[Jarvis] Fetching: ${url} (Attempt ${i + 1}/${retries})`)
-      const res = await fetch(url, { ...options, signal: AbortSignal.timeout(25000) })
-      if (res.ok || i === retries - 1) return res
-      
-      const errBody = await res.text().catch(() => 'No body')
-      console.warn(`[Jarvis] Fetch retry ${i + 1}/${retries} - Status: ${res.status} Body: ${errBody}`)
-    } catch (err: any) {
-      lastError = err
-      if (i === retries - 1) break
-      console.warn(`[Jarvis] Fetch failed, retrying (${i + 1}/${retries})...`, err.message || err)
-      await new Promise(r => setTimeout(r, 1000 * (i + 1)))
-    }
-  }
-  throw new Error(`Jarvis Network Failure: ${lastError?.message || 'Unknown error'} after ${retries} attempts to ${url}`)
-}
-
 // ─── Caching ──────────────────────────────────────────────────────────────────
 let statusCache: { data: JarvisInstance[], timestamp: number } | null = null
 const CACHE_TTL_MS = 10000 // 10s for instance status list
@@ -68,6 +39,53 @@ const CACHE_TTL_MS = 10000 // 10s for instance status list
 // Cache for the final validated proxy URL of a specific instance
 let resolvedUrlCache: Record<string, { url: string, timestamp: number }> = {}
 const RESOLVED_URL_TTL_MS = 60000 // 60s
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const key = getApiKey()
+  // We try Token first (standard for this API), then Bearer and X-API-KEY as backups.
+  const authMethods = [
+    { headers: { 'Authorization': `Token ${key}` } },
+    { headers: { 'Authorization': `Bearer ${key}` } },
+    { headers: { 'X-API-KEY': key } }
+  ]
+
+  let lastStatus = 0
+  let lastError = ''
+
+  for (const method of authMethods) {
+    try {
+      console.log(`[Jarvis] Trying Auth: ${Object.keys(method.headers)[0]} to ${url}`)
+      
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+          ...(method.headers as any)
+        },
+        signal: AbortSignal.timeout(10000)
+      })
+
+      if (res.ok) return res
+      
+      lastStatus = res.status
+      lastError = await res.text().catch(() => 'No error body')
+      
+      // If it's a 401 or 403, try the next auth method.
+      if (res.status === 401 || res.status === 403) {
+        console.warn(`[Jarvis] Auth method ${Object.keys(method.headers)[0]} failed with ${res.status}. Retrying...`)
+        continue
+      }
+      
+      // If it's any other error (like 404 or 500), don't bother retrying with different auth.
+      break
+    } catch (e: any) {
+      lastError = e.message || 'Unknown network error'
+    }
+  }
+
+  throw new Error(`Jarvis API Request Failed (${lastStatus}): ${lastError}`)
+}
 
 export const jarvis = {
   /**
@@ -99,9 +117,8 @@ export const jarvis = {
       is_vm: instance.is_vm || false
     }
 
-    const res = await fetchWithRetry(`${JARVIS_API_BASE}/templates/${template}/resume`, {
+    const res = await fetchWithAuth(`${JARVIS_API_BASE}/templates/${template}/resume`, {
       method: 'POST',
-      headers: authHeaders(),
       body: JSON.stringify(payload)
     })
 
@@ -120,9 +137,8 @@ export const jarvis = {
     
     console.log(`[Jarvis] Pausing instance ${id} via ${endpoint}...`)
     
-    const res = await fetchWithRetry(`${JARVIS_API_BASE}${endpoint}`, {
+    const res = await fetchWithAuth(`${JARVIS_API_BASE}${endpoint}`, {
       method: 'POST',
-      headers: authHeaders(),
       body: JSON.stringify({ machine_id: id.toString() })
     })
 
@@ -161,12 +177,8 @@ export const jarvis = {
       if (statusCache && Date.now() - statusCache.timestamp < CACHE_TTL_MS) {
         instances = statusCache.data
       } else {
-        // JLClient uses /users/fetch to get all instances
-        const res = await fetchWithRetry(`${JARVIS_API_BASE}/users/fetch`, { headers: authHeaders() })
-        if (!res.ok) {
-          const errText = await res.text()
-          throw new Error(`Failed to fetch Jarvis instances: ${res.status} ${errText}`)
-        }
+        // Core Fetch with Auth Retries
+        const res = await fetchWithAuth(`${JARVIS_API_BASE}/users/fetch`)
         const data = await res.json()
         instances = Array.isArray(data) ? data : (data.instances || [])
         
