@@ -3,7 +3,7 @@
  * Manages the Jarvislabs.ai GPU instance lifecycle.
  */
 
-// We use the India production backend for IN1 region where the user's GPU is located.
+/// India-01 region backend prod
 const JARVIS_API_BASE = 'https://backendprod.jarvislabs.net'
 const POLL_INTERVAL_MS = 20000 // 20s
 
@@ -13,6 +13,14 @@ interface JarvisInstance {
   url: string | null
   name?: string
   instance_name?: string
+  template?: string
+  framework?: string
+  framework_id?: string | number
+  gpu_type?: string
+  num_gpu?: number
+  storage?: number
+  is_high_disk?: boolean
+  is_vm?: boolean
 }
 
 function getApiKey(): string {
@@ -50,42 +58,72 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
   throw new Error(`Jarvis Network Failure: ${lastError?.message || 'Unknown error'} after ${retries} attempts to ${url}`)
 }
 
-async function instanceAction(instanceId: string | number, action: 'resume' | 'pause') {
-  console.log(`[Jarvis] Performing '${action}' on instance ${instanceId}...`)
-  const path = action === 'resume' ? '/misc/resume' : '/misc/pause'
-  
-  // Official Jarvislabs backend expects machine_id
-  const res = await fetchWithRetry(`${JARVIS_API_BASE}${path}`, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify({ machine_id: instanceId.toString() })
-  })
-
-  if (!res.ok) {
-    const detail = await res.text()
-    throw new Error(`Failed to ${action} instance ${instanceId}: ${res.status} ${detail}`)
-  }
-  return true
-}
-
 export const jarvis = {
-  async resume(instanceId: string | number) {
-    return instanceAction(instanceId, 'resume')
+  async resume(instance: JarvisInstance) {
+    const template = instance.framework || instance.template || 'pytorch'
+    const id = instance.instance_id
+    console.log(`[Jarvis] Resuming instance ${id} (${template})...`)
+    
+    // SDK payload for resume
+    const payload = {
+      machine_id: id,
+      instance_id: id,
+      framework_id: (instance as any).framework_id,
+      framework: template,
+      image_format: (instance as any).image_format || 'pytorch',
+      name: instance.name || instance.instance_name,
+      gpu_type: (instance as any).gpu_type,
+      num_gpu: (instance as any).num_gpu || (instance as any).num_gpus,
+      storage: instance.storage,
+      is_high_disk: instance.is_high_disk,
+      is_vm: instance.is_vm || false
+    }
+
+    const res = await fetchWithRetry(`${JARVIS_API_BASE}/templates/${template}/resume`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+      const detail = await res.text()
+      throw new Error(`Failed to resume instance: ${res.status} ${detail}`)
+    }
+    return true
   },
 
-  async pause(instanceId: string | number) {
-    return instanceAction(instanceId, 'pause')
+  async pause(instance: JarvisInstance) {
+    const id = instance.instance_id
+    const isVm = instance.is_vm || (instance as any).template === 'vm'
+    const endpoint = isVm ? '/templates/vm/pause' : '/misc/pause'
+    
+    console.log(`[Jarvis] Pausing instance ${id} via ${endpoint}...`)
+    
+    const res = await fetchWithRetry(`${JARVIS_API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ machine_id: id.toString() })
+    })
+
+    if (!res.ok) {
+      const detail = await res.text()
+      throw new Error(`Failed to pause instance: ${res.status} ${detail}`)
+    }
+    return true
   },
 
   async getStatus(instanceIdOrName: string | number): Promise<JarvisInstance> {
     try {
-      // New SDK uses /instances/ with trailing slash
-      const res = await fetchWithRetry(`${JARVIS_API_BASE}/instances/`, { headers: authHeaders() })
+      // JLClient uses /users/fetch to get all instances
+      const res = await fetchWithRetry(`${JARVIS_API_BASE}/users/fetch`, { headers: authHeaders() })
       if (!res.ok) {
         const errText = await res.text()
         throw new Error(`Failed to fetch Jarvis instances: ${res.status} ${errText}`)
       }
-      const instances: JarvisInstance[] = await res.json()
+      const data = await res.json()
+      
+      // Data might be an array or { instances: [] } depending on the exact version
+      const instances: JarvisInstance[] = Array.isArray(data) ? data : (data.instances || [])
       
       // Try finding by ID first
       let target = instances.find(i => i.instance_id.toString() === instanceIdOrName.toString())
@@ -130,8 +168,8 @@ export const jarvis = {
         const instance = await this.getStatus(instanceIdOrName)
         
         if (instance.status === 'Paused') {
-          console.log(`[Jarvis] Instance ${instance.instance_id} ('${instanceIdOrName}') is Paused. Resuming...`)
-          await this.resume(instance.instance_id)
+          console.log(`[Jarvis] Instance ${instance.instance_id} is Paused. Resuming...`)
+          await this.resume(instance)
         } else if (instance.status === 'Running') {
           const currentUrl = instance.url || process.env.NEXT_PUBLIC_JARVIS_API_URL
           if (currentUrl) {
