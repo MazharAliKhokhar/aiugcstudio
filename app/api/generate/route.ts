@@ -159,7 +159,11 @@ export async function POST(req: NextRequest) {
     try {
       // 8. Send generation request to Wan 2.1 on Jarvislabs
       console.log(`[Generate] GPU is healthy at ${resolvedJarvisUrl}. Triggering generation...`)
-      const genResponse = await fetch(`${resolvedJarvisUrl}/generate`, {
+      
+      const token = await jarvis.getToken(jarvisIdentifier)
+      const apiUrl = `${resolvedJarvisUrl}/generate${token ? `?token=${token}` : ''}`
+      
+      const genResponse = await fetch(apiUrl, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ prompt })

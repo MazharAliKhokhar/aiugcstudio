@@ -178,25 +178,39 @@ export const jarvis = {
   },
 
   /**
-   * Resolves the current proxy URL for a given instance ID or name by querying the API.
+   * Resolves the current proxy URL for a given instance ID or name.
    */
   async getResolvedUrl(instanceIdOrName: string | number): Promise<string> {
     const instance = await this.getStatus(instanceIdOrName)
     
-    // JarvisLabs 'url' points to Jupyter (8888). 
-    // The 'endpoints' array contains URLs for other ports (8080, etc.)
-    // We prefer the first custom endpoint if available.
+    // Resolve the Base URL (Prefer endpoints[0] for the HTTP API port 8080)
+    let baseUrl = ''
     if (instance.endpoints && instance.endpoints.length > 0) {
-      const apiUrl = instance.endpoints[0]
-      return apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl
+      baseUrl = instance.endpoints[0]
+    } else if (instance.url) {
+      baseUrl = instance.url.split('/lab')[0]
     }
 
-    if (!instance.url) {
+    if (!baseUrl) {
       const fallback = process.env.NEXT_PUBLIC_JARVIS_API_URL?.trim()
       if (!fallback) throw new Error(`Instance ${instanceIdOrName} has no URL and no fallback is configured.`)
-      return fallback
+      baseUrl = fallback
     }
-    return instance.url.endsWith('/') ? instance.url.slice(0, -1) : instance.url
+
+    return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+  },
+
+  /**
+   * Extracts the Jupyter token for the given instance to bypass the proxy login.
+   */
+  async getToken(instanceIdOrName: string | number): Promise<string | null> {
+    try {
+      const instance = await this.getStatus(instanceIdOrName)
+      const tokenMatch = instance.url?.match(/token=([^&]+)/)
+      return tokenMatch ? tokenMatch[1] : null
+    } catch (e) {
+      return null
+    }
   },
 
   /**
