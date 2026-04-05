@@ -27,6 +27,7 @@ function toAbsoluteUrl(p: string, base: string): string {
 }
 
 // ─── Route Handler ────────────────────────────────────────────────────────────
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   const tempDir = path.join(os.tmpdir(), `stitch-${Date.now()}`)
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // 2. Input Validation
-    const { videoUrl, voiceScript } = await req.json()
+    const { videoUrl, voiceScript, videoId } = await req.json()
     if (!videoUrl || !voiceScript) {
       return NextResponse.json({ error: 'Missing videoUrl or voiceScript' }, { status: 400 })
     }
@@ -64,15 +65,22 @@ export async function POST(req: NextRequest) {
       throw new Error('Missing JARVISLABS_API_KEY or JARVISLABS_INSTANCE_NAME (or ID)')
     }
 
-    let resolvedJarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL || ''
+    let resolvedJarvisUrl: string | null = process.env.NEXT_PUBLIC_JARVIS_API_URL || ''
 
     // Boot GPU if paused and resolve the latest proxy URL
     try {
       const { jarvis } = await import('@/lib/jarvis')
-      resolvedJarvisUrl = await jarvis.waitForReady(jarvisIdentifier)
+      resolvedJarvisUrl = await jarvis.checkReady(jarvisIdentifier)
+      
+      if (!resolvedJarvisUrl) {
+         return NextResponse.json({ 
+           status: 'booting', 
+           message: 'GPU is warming up for post-processing...' 
+         }, { status: 202 })
+      }
     } catch (e: any) {
       console.warn('[Stitch] GPU readiness check failed:', e.message)
-      if (!resolvedJarvisUrl) throw new Error(`GPU is not ready and no fallback URL is available: ${e.message}`)
+      if (!resolvedJarvisUrl) throw new Error(`GPU is not ready: ${e.message}`)
     }
 
     // 5a. Fetch video + generate voice concurrently to save time

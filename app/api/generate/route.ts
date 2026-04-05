@@ -62,6 +62,7 @@ async function insertVideoRow(supabase: any, payload: any) {
 }
 
 // ─── Route Handler ────────────────────────────────────────────────────────────
+export const maxDuration = 60 // Increase Vercel timeout to 60s (requires Pro/Enterprise for higher)
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -137,10 +138,17 @@ export async function POST(req: NextRequest) {
 
     // 7. Auto-Start & Resolve GPU
     const { jarvis } = await import('@/lib/jarvis')
-    let resolvedJarvisUrl = process.env.NEXT_PUBLIC_JARVIS_API_URL || ''
+    let resolvedJarvisUrl: string | null = null
     
     try {
-      resolvedJarvisUrl = await jarvis.waitForReady(jarvisIdentifier)
+      resolvedJarvisUrl = await jarvis.checkReady(jarvisIdentifier)
+      
+      if (!resolvedJarvisUrl) {
+         return NextResponse.json({ 
+           status: 'booting', 
+           message: 'GPU is warming up (60-90s). Please stay on this page.' 
+         }, { status: 202 })
+      }
     } catch (err: any) {
       console.error('[Generate] GPU Connection Error:', err.message)
       return NextResponse.json({ 

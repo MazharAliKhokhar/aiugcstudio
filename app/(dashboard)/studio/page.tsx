@@ -147,7 +147,6 @@ export default function StudioPage() {
     if (videoStatus === 'completed' && videoUrl && !videoUrl.startsWith('blob:') && !isStitching) {
       const processPostGeneration = async () => {
         setIsStitching(true)
-        const toastId = toast.loading('Warming up Private GPU & Rendering...')
         
         try {
           const stitchRes = await fetch('/api/stitch', {
@@ -160,6 +159,13 @@ export default function StudioPage() {
             })
           })
 
+          // Handle GPU Warming Up during Stitching
+          if (stitchRes.status === 202) {
+            console.log('[Stitch] GPU warming up for mastering, retrying in 10s...')
+            setTimeout(processPostGeneration, 10000)
+            return
+          }
+
           if (!stitchRes.ok) {
             const errData = await stitchRes.json()
             throw new Error(errData.error || 'Server-side stitching failed')
@@ -168,11 +174,11 @@ export default function StudioPage() {
           const finalBlob = await stitchRes.blob()
           const finalUrl = URL.createObjectURL(finalBlob)
           
-          toast.success('Your viral ad is ready!', { id: toastId })
+          toast.success('Your viral ad is ready!')
           setVideoUrl(finalUrl)
           
         } catch (err: any) {
-          toast.error(err.message || 'Stitching failed, showing original video.', { id: toastId })
+          toast.error(err.message || 'Stitching failed, showing original video.')
           console.error('Post processing error:', err)
         } finally {
           setIsStitching(false)

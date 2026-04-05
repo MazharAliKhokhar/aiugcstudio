@@ -179,6 +179,38 @@ export const jarvis = {
   },
 
   /**
+   * Performs a single readiness check (no polling).
+   * If the instance is Paused, it triggers a resume and returns null.
+   * If the instance is Running, it checks the heartbeat.
+   *   - If healthy, it returns the URL.
+   *   - If not healthy (FastAPI still booting), it returns null.
+   */
+  async checkReady(instanceIdOrName: string | number): Promise<string | null> {
+    const instance = await this.getStatus(instanceIdOrName)
+    
+    if (instance.status === 'Paused') {
+      console.log(`[Jarvis] Instance ${instance.instance_id} is Paused. Resuming...`)
+      await this.resume(instance)
+      return null
+    }
+
+    if (instance.status === 'Running') {
+      const currentUrl = instance.url || process.env.NEXT_PUBLIC_JARVIS_API_URL
+      if (currentUrl) {
+        const isHealthy = await this.heartbeat(currentUrl)
+        if (isHealthy) {
+          console.log(`[Jarvis] GPU ready at ${currentUrl}`)
+          return currentUrl
+        }
+      }
+    }
+
+    console.log(`[Jarvis] GPU is in '${instance.status}' state but not yet responding.`)
+    return null
+  },
+
+  /**
+   * @deprecated Use checkReady() in serverless routes to avoid timeouts.
    * Waits until the instance is Running AND its FastAPI server is responding.
    */
   async waitForReady(instanceIdOrName: string | number, maxAttempts = 20): Promise<string> {
@@ -186,23 +218,10 @@ export const jarvis = {
     
     for (let i = 0; i < maxAttempts; i++) {
       try {
-        const instance = await this.getStatus(instanceIdOrName)
+        const url = await this.checkReady(instanceIdOrName)
+        if (url) return url
         
-        if (instance.status === 'Paused') {
-          console.log(`[Jarvis] Instance ${instance.instance_id} is Paused. Resuming...`)
-          await this.resume(instance)
-        } else if (instance.status === 'Running') {
-          const currentUrl = instance.url || process.env.NEXT_PUBLIC_JARVIS_API_URL
-          if (currentUrl) {
-            const isHealthy = await this.heartbeat(currentUrl)
-            if (isHealthy) {
-              console.log(`[Jarvis] GPU ready at ${currentUrl}`)
-              return currentUrl
-            }
-          }
-        }
-        
-        console.log(`[Jarvis] Status: ${instance.status}. Polling attempt ${i + 1}/${maxAttempts}...`)
+        console.log(`[Jarvis] Polling attempt ${i + 1}/${maxAttempts}...`)
       } catch (err: any) {
         console.warn(`[Jarvis] Polling attempt ${i + 1} encountered an error:`, err.message || err)
       }
