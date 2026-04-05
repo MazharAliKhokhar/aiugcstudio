@@ -41,6 +41,7 @@ export default function StudioPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [isStitching, setIsStitching] = useState(false)
   const [isScripting, setIsScripting] = useState(false)
+  const [bootingAt, setBootingAt] = useState<number | null>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -189,8 +190,24 @@ export default function StudioPage() {
     }
   }, [videoStatus, videoUrl, isStitching, voiceScript, videoId])
 
+  const handleCancelAndPause = async () => {
+    setIsGenerating(false)
+    setBootingAt(null)
+    setStep(5)
+    
+    const toastId = toast.loading('Cancelling and pausing GPU to save credits...')
+    try {
+      const res = await fetch('/api/jarvis/pause', { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to pause GPU')
+      toast.success('GPU paused successfully.', { id: toastId })
+    } catch (err: any) {
+      toast.error(`Pause error: ${err.message}`, { id: toastId })
+    }
+  }
+
   const handleGenerate = async () => {
     setIsGenerating(true)
+    if (!bootingAt) setBootingAt(Date.now())
     
     try {
       // 1. Initial attempt
@@ -204,7 +221,10 @@ export default function StudioPage() {
       
       // 2. Handle GPU Warming Up (Booting)
       if (res.status === 202 && data.status === 'booting') {
-        toast.info('GPU is waking up. Retrying in 10s...', { duration: 8000 })
+        toast.info('GPU is waking up. Checking again in 10s...', { 
+          duration: 3000,
+          description: 'This is a one-time startup. Your credits are safe.' 
+        })
         // Recursive retry after 10s
         setTimeout(handleGenerate, 10000)
         return
@@ -218,6 +238,7 @@ export default function StudioPage() {
       setVideoId(data.videoId)
       setVideoStatus('pending')
       setStep(6)
+      setBootingAt(null)
       
     } catch (err: any) {
       console.error('[Studio/Generate] Error:', err)
@@ -226,6 +247,7 @@ export default function StudioPage() {
          setTimeout(handleGenerate, 5000)
       } else {
          setIsGenerating(false)
+         setBootingAt(null)
       }
     }
   }
@@ -408,6 +430,20 @@ export default function StudioPage() {
                     <div className="relative px-12">
                       <Progress value={isStitching ? 95 : videoStatus === 'pending' ? 15 : 65} className="h-4 bg-slate-100 rounded-full" />
                     </div>
+
+                    {/* Show Cancel button if stuck in booting for > 45s */}
+                    {bootingAt && Date.now() - bootingAt > 45000 && (
+                      <div className="mt-8 animate-in slide-in-from-bottom duration-500">
+                        <p className="text-slate-400 text-sm mb-4">Taking longer than expected?</p>
+                        <Button 
+                          variant="outline" 
+                          className="rounded-2xl border-slate-200 text-slate-500 hover:bg-slate-50"
+                          onClick={handleCancelAndPause}
+                        >
+                          Cancel & Pause GPU
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 

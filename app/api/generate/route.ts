@@ -95,34 +95,55 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 4. Atomic Credit Deduction
+    // 4. Atomic Credit Deduction (SKIP if this is a retry of a pending video)
     const requiredUnits = getCreditCost(duration)
-    const { data: newBalance, error: deductError } = await (supabase as any).rpc('deduct_credits', {
-      p_user_id: user.id,
-      p_amount:  requiredUnits
-    })
+    let videoId: string | null = null
+    let alreadyDeducted = false
 
-    if (deductError) {
-      console.error('[Generate] Credit deduction RPC error:', deductError)
-      return NextResponse.json({ error: 'Failed to process credits. Please try again.' }, { status: 500 })
-    }
-    if (newBalance === -1) {
-      return NextResponse.json(
-        { error: `Insufficient credits. Need ${requiredUnits} unit(s).` },
-        { status: 402 }
-      )
+    // Check if a pending video for this prompt already exists (prevents double-deduction on retries)
+    const { data: existingPending } = await (supabase.from('videos') as any)
+      .select('id, status')
+      .eq('user_id', user.id)
+      .eq('prompt', prompt)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (existingPending) {
+      videoId = existingPending.id
+      alreadyDeducted = true
+      console.log(`[Generate] Found existing pending video ${videoId}, skipping credit deduction.`)
     }
 
-    // 5. Create pending video record (standard client + admin fallback)
-    const videoPayload = {
-      user_id:  user.id,
-      prompt,
-      status:   'pending',
-      duration,
-      script:   `Product: ${productName || 'N/A'}\nURL: ${url}\nGoal: ${goal}`
+    if (!alreadyDeducted) {
+      const { data: newBalance, error: deductError } = await (supabase as any).rpc('deduct_credits', {
+        p_user_id: user.id,
+        p_amount:  requiredUnits
+      })
+
+      if (deductError) {
+        console.error('[Generate] Credit deduction RPC error:', deductError)
+        return NextResponse.json({ error: 'Failed to process credits. Please try again.' }, { status: 500 })
+      }
+      if (newBalance === -1) {
+        return NextResponse.json(
+          { error: `Insufficient credits. Need ${requiredUnits} unit(s).` },
+          { status: 402 }
+        )
+      }
+
+      // 5. Create pending video record (only if not already created)
+      const videoPayload = {
+        user_id:  user.id,
+        prompt,
+        status:   'pending',
+        duration,
+        script:   `Product: ${productName || 'N/A'}\nURL: ${url}\nGoal: ${goal}`
+      }
+      const videoData = await insertVideoRow(supabase, videoPayload)
+      videoId = videoData.id
     }
-    const videoData = await insertVideoRow(supabase, videoPayload)
-    const videoId = videoData.id
 
     // 6. Resolve Jarvis GPU Config
     const jarvisId    = process.env.JARVISLABS_INSTANCE_ID?.trim()
@@ -159,39 +180,23 @@ export async function POST(req: NextRequest) {
     try {
       // 8. Send generation request to Wan 2.1 on Jarvislabs
       console.log(`[Generate] GPU is healthy at ${resolvedJarvisUrl}. Triggering generation...`)
-      const { jarvis } = await import('@/lib/jarvis')
       const token = await jarvis.getToken(jarvisIdentifier)
       const authHeaders: Record<string, string> = token ? { 'Authorization': `Token ${token}` } : {}
 
-      const [videoRes, voiceRes] = await Promise.all([
-        fetch(`${resolvedJarvisUrl}/generate`, {
-          method:  'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Token ${token}` } : {})
-          },
-          body:    JSON.stringify({ prompt })
-        }),
-        fetch(`${resolvedJarvisUrl}/voice`, {
-          method:  'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Token ${token}` } : {})
-          },
-          body:    JSON.stringify({ text: prompt, voice: 'af_heart' }) // Use prompt for simple voiceover
-        })
-      ])
+      // ONLY generate video here. Voiceover is handled in the stitch route to avoid redundant work.
+      const videoRes = await fetch(`${resolvedJarvisUrl}/generate`, {
+        method:  'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Token ${token}` } : {})
+        },
+        body:    JSON.stringify({ prompt })
+      })
 
-      if (!videoRes.ok)  throw new Error(`Failed to fetch video: ${videoRes.statusText}`)
-      if (!voiceRes.ok)  throw new Error(`Jarvis Voice API error: ${await voiceRes.text()}`)
+      if (!videoRes.ok) throw new Error(`Video Engine error: ${videoRes.statusText}`)
 
       const { video_url } = await videoRes.json()
       const fullVideoUrl = toAbsoluteUrl(video_url, resolvedJarvisUrl)
-
-      const { audio_url } = await voiceRes.json()
-      const fullAudioUrl = toAbsoluteUrl(audio_url, resolvedJarvisUrl)
-      const audioRes = await fetch(fullAudioUrl, { headers: authHeaders })
-      if (!audioRes.ok) throw new Error(`Failed to download audio from Jarvis: ${audioRes.statusText}`)
 
       // 9. Mark video as completed in DB
       await (supabase.from('videos') as any)
@@ -205,6 +210,19 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
       console.error('[Generate] Generation process failed:', error.message)
+      
+      // AUTO-REFUND logic: If it failed before we got a result, return the credits
+      console.log(`[Generate] Refunding ${requiredUnits} unit(s) to user ${user.id}`)
+      await (supabase as any).rpc('add_credits', {
+        p_user_id: user.id,
+        p_amount:  requiredUnits
+      })
+
+      // Update video record to 'failed'
+      if (videoId) {
+        await (supabase.from('videos') as any).update({ status: 'failed' }).eq('id', videoId)
+      }
+
       // Even on failure, we should probably pause if we resumed it
       jarvis.safePause(jarvisIdentifier)
       return NextResponse.json({ error: error.message || 'Generation failed' }, { status: 500 })

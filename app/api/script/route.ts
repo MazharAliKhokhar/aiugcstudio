@@ -3,9 +3,9 @@ import { z } from 'zod'
 
 const ScriptRequestSchema = z.object({
   url: z.string().url(),
-  productName: z.string().min(1),
-  goal: z.string(),
-  actorDescription: z.string()
+  productName: z.string().optional().or(z.literal('')),
+  goal: z.string().optional().default('sales'),
+  actorDescription: z.string().optional().default('professional UGC creator')
 })
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions'

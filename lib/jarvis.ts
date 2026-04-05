@@ -61,6 +61,10 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
   throw new Error(`Jarvis Network Failure: ${lastError?.message || 'Unknown error'} after ${retries} attempts to ${url}`)
 }
 
+// ─── Caching ──────────────────────────────────────────────────────────────────
+let statusCache: { data: JarvisInstance[], timestamp: number } | null = null
+const CACHE_TTL_MS = 10000 // 10s
+
 export const jarvis = {
   async resume(instance: JarvisInstance) {
     const template = instance.framework || instance.template || 'pytorch'
@@ -136,16 +140,24 @@ export const jarvis = {
 
   async getStatus(instanceIdOrName: string | number): Promise<JarvisInstance> {
     try {
-      // JLClient uses /users/fetch to get all instances
-      const res = await fetchWithRetry(`${JARVIS_API_BASE}/users/fetch`, { headers: authHeaders() })
-      if (!res.ok) {
-        const errText = await res.text()
-        throw new Error(`Failed to fetch Jarvis instances: ${res.status} ${errText}`)
-      }
-      const data = await res.json()
+      let instances: JarvisInstance[] = []
       
-      // Data might be an array or { instances: [] } depending on the exact version
-      const instances: JarvisInstance[] = Array.isArray(data) ? data : (data.instances || [])
+      // 1. Check cache first to avoid rate-limiting
+      if (statusCache && Date.now() - statusCache.timestamp < CACHE_TTL_MS) {
+        instances = statusCache.data
+      } else {
+        // JLClient uses /users/fetch to get all instances
+        const res = await fetchWithRetry(`${JARVIS_API_BASE}/users/fetch`, { headers: authHeaders() })
+        if (!res.ok) {
+          const errText = await res.text()
+          throw new Error(`Failed to fetch Jarvis instances: ${res.status} ${errText}`)
+        }
+        const data = await res.json()
+        instances = Array.isArray(data) ? data : (data.instances || [])
+        
+        // Update cache
+        statusCache = { data: instances, timestamp: Date.now() }
+      }
       
       // Try finding by ID first
       let target = instances.find(i => 
@@ -179,16 +191,31 @@ export const jarvis = {
 
   /**
    * Resolves the current proxy URL for a given instance ID or name.
+   * Prefers .proxy.jarvislabs.net for public API access.
    */
   async getResolvedUrl(instanceIdOrName: string | number): Promise<string> {
     const instance = await this.getStatus(instanceIdOrName)
     
-    // Resolve the Base URL (Prefer endpoints[0] for the HTTP API port 8080)
+    // Resolve the Base URL (Prefer endpoints[0] or derived .proxy URL)
     let baseUrl = ''
-    if (instance.endpoints && instance.endpoints.length > 0) {
-      baseUrl = instance.endpoints[0]
+    
+    // Try to find a .proxy URL in endpoints first
+    const proxyEndpoint = instance.endpoints?.find(e => e.includes('.proxy.jarvislabs.net'))
+    
+    if (proxyEndpoint) {
+      baseUrl = proxyEndpoint
+    } else if (instance.endpoints && instance.endpoints.length > 0) {
+      // If no .proxy found, try converting the first .notebooks one
+      const first = instance.endpoints[0]
+      baseUrl = first.includes('.notebooks.jarvislabs.net') 
+        ? first.replace('.notebooks.jarvislabs.net', '.proxy.jarvislabs.net')
+        : first
     } else if (instance.url) {
-      baseUrl = instance.url.split('/lab')[0]
+      // Fallback to main URL conversion
+      const main = instance.url.split('/lab')[0]
+      baseUrl = main.includes('.notebooks.jarvislabs.net')
+        ? main.replace('.notebooks.jarvislabs.net', '.proxy.jarvislabs.net')
+        : main
     }
 
     if (!baseUrl) {
