@@ -57,23 +57,31 @@ def get_wan():
     global _wan
     if not _wan:
         logger.info("[LOADING] Loading Wan 2.1 Model (1.3B)...")
-        # Use the explicit deep path found on this machine
+        # Use the local 15GB weights in /root/models/wan21
         try:
             from diffusers import WanPipeline
         except ImportError:
             from diffusers.pipelines.wan.pipeline_wan import WanPipeline
             
-        _wan = WanPipeline.from_pretrained("Wan-AI/Wan2.1-T2V-1.3B-Diffusers", torch_dtype=torch.float16).to("cuda")
-        logger.info("[READY] Wan 2.1 is LOADED and READY.")
+        _wan = WanPipeline.from_pretrained(
+            "/root/models/wan21", 
+            torch_dtype=torch.float16,
+            local_files_only=True
+        ).to("cuda")
+        logger.info("[READY] Wan 2.1 is LOADED from Local Storage.")
     return _wan
 
 def get_kokoro():
     global _kokoro
     if not _kokoro:
-        logger.info("Initializing Kokoro TTS Pipeline...")
+        logger.info("Initializing Kokoro TTS Pipeline (Local Storage)...")
         from kokoro import KPipeline
-        _kokoro = KPipeline(lang_code="a")
-        logger.info("Kokoro Loaded.")
+        # Point to the official local 1GB weights
+        _kokoro = KPipeline(
+            lang_code="a",
+            model_dir="/root/models/kokoro"
+        )
+        logger.info("Kokoro Loaded from Local Storage.")
     return _kokoro
 
 def touch():
