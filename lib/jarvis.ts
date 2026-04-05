@@ -35,7 +35,7 @@ function getApiKey(): string {
 function authHeaders() {
   const key = getApiKey()
   return { 
-    'Authorization': `Bearer ${key}`,
+    'Authorization': `Token ${key}`,
     'Content-Type': 'application/json' 
   }
 }
